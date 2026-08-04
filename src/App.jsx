@@ -393,11 +393,11 @@ function TrendCard({ data, range }) {
 function PriceCard({ data }) {
   return (
     <section className="analytics-card price-card">
-      <div className="card-heading"><div><span className="eyebrow">TŐZSDEI ÁR</span><h3>Aktuális másnapi ár</h3></div><span className="unit">EUR/MWh</span></div>
-      <strong className="price-value">{decimalFormatter.format(data.system.dayAheadPriceEurMWh)}</strong>
+      <div className="card-heading"><div><span className="eyebrow">TŐZSDEI ÁR</span><h3>Másnapi HUPX-ár</h3></div><span className="unit">EUR/MWh</span></div>
+      <strong className="price-value unavailable">—</strong>
+      <span className="availability">NINCS LICENCELT KÖZVETLEN FEED</span>
       <div className="data-line"><span>Forrás</span><b>{data.source.price}</b></div>
-      <div className="data-line"><span>Mérési idő</span><b>{formatLocalTime(data.measuredAt)}</b></div>
-      <p>Piaci adat, nem lakossági tarifa.</p>
+      <p>Közvetítőből származó árat nem közlünk. A kártya csak közvetlenül felhasználható HUPX-adatkapcsolattal aktiválódik.</p>
     </section>
   );
 }
@@ -433,18 +433,20 @@ function SourcesDrawer({ data, onClose }) {
         <button className="drawer-close" onClick={onClose} aria-label="Bezárás"><X size={20} /></button>
         <span className="eyebrow">ADATFORRÁSOK ÉS MÓDSZERTAN</span>
         <h2 id="sources-title">Minden számnak legyen gazdája</h2>
-        <p>A prototípus csak olyan pillanatképet publikál, amely minden kötelező ellenőrzésen átment. Hiányzó értéket nem töltünk ki kitalált számmal.</p>
+        <p>Csak olyan pillanatképet publikálunk, amely minden kötelező ellenőrzésen átment. Hiányzó értéket nem töltünk ki becsléssel vagy közvetítői adattal.</p>
 
         <div className="source-list">
-          <div><Database size={20} /><span><b>Elsődleges rendszeradatok</b><small>{data.source.primary}</small></span></div>
-          <div><Lightning size={20} /><span><b>Piaci ár</b><small>{data.source.price}</small></span></div>
-          <div><ArrowsLeftRight size={20} /><span><b>Prototípus adatkapcsolat</b><small>{data.source.intermediary}</small></span></div>
+          <div><Database size={20} /><span><b>Terhelés és termelési mix</b><small>{data.source.primary} · 20001-es diagram</small></span></div>
+          <div><ArrowsLeftRight size={20} /><span><b>Határkeresztező áramlások</b><small>{data.source.primary} · 5229-es diagram</small></span></div>
+          <div><Lightning size={20} /><span><b>Hálózati frekvencia</b><small>{data.source.primary} · 4444-es diagram</small></span></div>
+          <div><Lightning size={20} /><span><b>Piaci ár</b><small>{data.source.price} · közvetlen feed hiányában nincs közölve</small></span></div>
         </div>
 
         <div className="quality-box">
           <div><span>Forrásmix összege</span><b>{data.quality.mixGapMW.toFixed(1)} MW eltérés</b></div>
           <div><span>Határáramlások</span><b>{data.quality.flowGapMW.toFixed(1)} MW eltérés</b></div>
           <div><span>Rendszermérleg</span><b>{data.quality.systemGapMW.toFixed(1)} MW ismert rés</b></div>
+          <div><span>Feedek időeltérése</span><b>legfeljebb {data.quality.maxFeedOffsetMinutes.toFixed(1)} perc</b></div>
           <div><span>Kötelező ellenőrzések</span><b>{data.quality.checksPassed}/{data.quality.checksTotal} sikeres</b></div>
         </div>
 
@@ -453,8 +455,8 @@ function SourcesDrawer({ data, onClose }) {
           <span><b>Mért adat:</b> {formatLocalTime(data.measuredAt, true)}<br /><b>Pillanatkép készült:</b> {formatLocalTime(data.generatedAt, true)}</span>
         </div>
 
-        <p className="caveat">A jelenlegi adatkapcsolat prototípus-megoldás. Éles publikálás előtt közvetlen MAVIR- és megfelelően licencelt piaci adatbetöltés szükséges.</p>
-        <a href="https://www.mavir.hu/web/mavir/rendszerterheles" target="_blank" rel="noreferrer">MAVIR hivatalos rendszeradatok</a>
+        <p className="caveat">{data.source.caveat} A Paks-érték a teljes magyar nukleáris, a Mátra-érték a teljes lignit kategóriából következik.</p>
+        <a href={data.source.systemUrl} target="_blank" rel="noreferrer">MAVIR hivatalos rendszeradatok</a>
       </aside>
     </div>
   );

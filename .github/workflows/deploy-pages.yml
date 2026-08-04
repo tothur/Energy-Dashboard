@@ -42,13 +42,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Refresh and validate energy data
-        id: refresh
-        continue-on-error: true
         run: npm run data:update
-
-      - name: Report snapshot fallback
-        if: steps.refresh.outcome == 'failure'
-        run: echo "::warning::Live refresh failed; deploying the last committed snapshot after validation. The UI will expose its age."
 
       - name: Verify publishable snapshot
         run: node --test tests/energy-data.test.mjs

@@ -1,6 +1,6 @@
 # Energiatérkép
 
-Responsive Hungarian electricity-system dashboard inspired by the information density of [holadelej.hu](https://holadelej.hu/), with energy production first, a national flow map second, and energy-only analytical cards below.
+Responsive Hungarian electricity-system dashboard with energy production first, a national flow map second, and energy-only analytical cards below.
 
 ## Data integrity
 
@@ -15,7 +15,9 @@ The frontend only renders `public/data/energy-latest.json` after `validateNormal
 
 Missing metrics remain unavailable. In particular, the prototype does not estimate carbon intensity from an insufficiently detailed generation mix.
 
-The current prototype adapter reads the public `holadelej.hu/api/data` payload, whose system values are attributed to MAVIR and whose market-price field is attributed to Energy-Charts / SMARD. The dashboard exposes that intermediary in its methodology drawer. A production deployment should replace the adapter with direct MAVIR ingestion and an appropriately licensed market-data feed; the normalized schema and validation gates can remain unchanged.
+The scheduled updater downloads three 15-minute XLSX feeds directly from MAVIR's public RTDW service: chart 20001 for load and production mix, chart 5229 for physical cross-border flows, and chart 4444 for grid frequency. The snapshot is published only when source freshness, timestamp alignment, system balance, production mix, cross-border reconciliation, and history completeness all pass validation. The measured cross-border sum gap remains visible in the methodology drawer instead of being silently adjusted.
+
+The HUPX day-ahead price remains explicitly unavailable. The dashboard does not republish a market price from an intermediary; that card will only be enabled when an appropriately licensed direct HUPX feed is available.
 
 ## Commands
 

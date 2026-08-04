@@ -1,94 +1,100 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-08-04T21:17:37.011Z",
-  "upstreamGeneratedAt": "2026-08-04T21:16:44.260Z",
-  "measuredAt": "2026-08-04T21:16:01.000Z",
+  "generatedAt": "2026-08-04T21:44:18.538Z",
+  "measuredAt": "2026-08-04T21:44:18.000Z",
   "status": "verified_snapshot",
   "source": {
-    "primary": "MAVIR",
-    "price": "Energy-Charts / SMARD",
-    "intermediary": "holadelej.hu public data endpoint",
-    "sourceUrl": "https://holadelej.hu/api/data",
-    "caveat": "Prototype adapter. Production should ingest directly from MAVIR and licensed market feeds."
+    "primary": "MAVIR RTDW",
+    "systemUrl": "https://rtdwweb.mavir.hu/rtdwweb/webuser/chart/20001/",
+    "flowsUrl": "https://rtdwweb.mavir.hu/rtdwweb/webuser/chart/5229/",
+    "frequencyUrl": "https://rtdwweb.mavir.hu/rtdwweb/webuser/chart/4444/",
+    "price": "HUPX",
+    "priceStatus": "unavailable_without_licensed_direct_feed",
+    "measurements": {
+      "systemAt": "2026-08-04T21:44:18.000Z",
+      "flowsAt": "2026-08-04T21:44:18.000Z",
+      "frequencyAt": "2026-08-04T21:44:18.000Z"
+    },
+    "caveat": "Minden közzétett rendszeradat közvetlenül a MAVIR nyilvános RTDW-exportjából származik."
   },
   "system": {
-    "frequencyHz": 49.951,
-    "consumptionMW": 5811,
-    "generationMW": 2479,
-    "netImportMW": 3334,
-    "domesticCoveragePct": 42.7,
-    "dayAheadPriceEurMWh": 211.85,
+    "frequencyHz": 49.995,
+    "consumptionMW": 5658,
+    "generationMW": 2449,
+    "netImportMW": 3253,
+    "domesticCoveragePct": 43.3,
+    "dayAheadPriceEurMWh": null,
     "carbonIntensityGco2Kwh": null,
     "carbonIntensityStatus": "insufficient_source_detail"
   },
   "mix": [
     {
       "key": "Atom",
-      "mw": 226.1,
-      "share": 9.1
+      "mw": 225.3,
+      "share": 9.2
     },
     {
       "key": "Nap",
-      "mw": 0,
-      "share": 0
+      "mw": 47.2,
+      "share": 1.9
     },
     {
       "key": "Fosszilis",
-      "mw": 1969.9,
-      "share": 79.5
+      "mw": 1879,
+      "share": 76.7
     },
     {
       "key": "Egyéb megújuló",
-      "mw": 209.6,
-      "share": 8.5
+      "mw": 231,
+      "share": 9.4
     },
     {
       "key": "Egyéb",
-      "mw": 73.2,
-      "share": 3
+      "mw": 65.9,
+      "share": 2.7
     }
   ],
   "flows": [
     {
       "code": "AT",
       "country": "Ausztria",
-      "mw": 1388,
+      "mw": 1300,
       "direction": "import"
     },
     {
       "code": "SK",
       "country": "Szlovákia",
-      "mw": 2282,
+      "mw": 2342,
       "direction": "import"
     },
     {
       "code": "UA",
       "country": "Ukrajna",
-      "mw": 63,
+      "mw": 30,
       "direction": "import"
     },
     {
       "code": "RO",
       "country": "Románia",
-      "mw": -274,
+      "mw": -337,
       "direction": "export"
     },
     {
       "code": "RS",
       "country": "Szerbia",
-      "mw": 43,
+      "mw": 54,
       "direction": "import"
     },
     {
       "code": "HR",
       "country": "Horvátország",
-      "mw": -304,
+      "mw": -295,
       "direction": "export"
     },
     {
       "code": "SI",
       "country": "Szlovénia",
-      "mw": 136,
+      "mw": 129,
       "direction": "import"
     }
   ],
@@ -97,7 +103,7 @@
       "key": "paks",
       "name": "Paks",
       "type": "nuclear",
-      "mw": 226,
+      "mw": 225,
       "x": 46,
       "y": 69
     },
@@ -105,7 +111,7 @@
       "key": "matra",
       "name": "Mátra",
       "type": "fossil",
-      "mw": 425,
+      "mw": 401,
       "x": 63,
       "y": 37
     },
@@ -128,169 +134,599 @@
   ],
   "history24h": [
     {
-      "time": "2026-08-03T21:16:15.000Z",
-      "loadMW": 5824,
-      "generationMW": 2487,
-      "importMW": 3277
+      "time": "2026-08-03T21:44:18.000Z",
+      "loadMW": 5482,
+      "generationMW": 2376,
+      "importMW": 3088
     },
     {
-      "time": "2026-08-03T22:16:15.000Z",
-      "loadMW": 5412,
-      "generationMW": 2294,
-      "importMW": 3071
+      "time": "2026-08-03T21:59:18.000Z",
+      "loadMW": 5384,
+      "generationMW": 2241,
+      "importMW": 3106
     },
     {
-      "time": "2026-08-03T23:16:15.000Z",
-      "loadMW": 5034,
-      "generationMW": 2140,
-      "importMW": 2851
+      "time": "2026-08-03T22:14:18.000Z",
+      "loadMW": 5263,
+      "generationMW": 2315,
+      "importMW": 3142
     },
     {
-      "time": "2026-08-04T00:16:15.000Z",
-      "loadMW": 4673,
-      "generationMW": 1862,
-      "importMW": 2768
+      "time": "2026-08-03T22:29:18.000Z",
+      "loadMW": 5183,
+      "generationMW": 2319,
+      "importMW": 2948
     },
     {
-      "time": "2026-08-04T01:16:15.000Z",
-      "loadMW": 4533,
-      "generationMW": 1765,
-      "importMW": 2726
+      "time": "2026-08-03T22:44:18.000Z",
+      "loadMW": 5086,
+      "generationMW": 2246,
+      "importMW": 2864
     },
     {
-      "time": "2026-08-04T02:16:15.000Z",
-      "loadMW": 4469,
-      "generationMW": 1749,
-      "importMW": 2677
+      "time": "2026-08-03T22:59:18.000Z",
+      "loadMW": 4991,
+      "generationMW": 2109,
+      "importMW": 2839
     },
     {
-      "time": "2026-08-04T03:16:15.000Z",
-      "loadMW": 4583,
-      "generationMW": 1792,
+      "time": "2026-08-03T23:14:18.000Z",
+      "loadMW": 4875,
+      "generationMW": 2058,
+      "importMW": 2883
+    },
+    {
+      "time": "2026-08-03T23:29:18.000Z",
+      "loadMW": 4777,
+      "generationMW": 2012,
+      "importMW": 2817
+    },
+    {
+      "time": "2026-08-03T23:44:18.000Z",
+      "loadMW": 4696,
+      "generationMW": 1906,
+      "importMW": 2765
+    },
+    {
+      "time": "2026-08-03T23:59:18.000Z",
+      "loadMW": 4624,
+      "generationMW": 1852,
       "importMW": 2790
     },
     {
-      "time": "2026-08-04T04:16:15.000Z",
-      "loadMW": 4771,
-      "generationMW": 1924,
-      "importMW": 2847
+      "time": "2026-08-04T00:14:18.000Z",
+      "loadMW": 4594,
+      "generationMW": 1849,
+      "importMW": 2772
     },
     {
-      "time": "2026-08-04T05:16:15.000Z",
-      "loadMW": 5324,
-      "generationMW": 2717,
-      "importMW": 2607
+      "time": "2026-08-04T00:29:18.000Z",
+      "loadMW": 4565,
+      "generationMW": 1824,
+      "importMW": 2745
     },
     {
-      "time": "2026-08-04T06:16:15.000Z",
-      "loadMW": 5868,
-      "generationMW": 4188,
-      "importMW": 1680
+      "time": "2026-08-04T00:44:18.000Z",
+      "loadMW": 4559,
+      "generationMW": 1805,
+      "importMW": 2742
     },
     {
-      "time": "2026-08-04T07:16:15.000Z",
-      "loadMW": 6407,
-      "generationMW": 5689,
-      "importMW": 718
+      "time": "2026-08-04T00:59:18.000Z",
+      "loadMW": 4523,
+      "generationMW": 1792,
+      "importMW": 2754
     },
     {
-      "time": "2026-08-04T08:16:15.000Z",
-      "loadMW": 6908,
-      "generationMW": 6471,
-      "importMW": 437
+      "time": "2026-08-04T01:14:18.000Z",
+      "loadMW": 4485,
+      "generationMW": 1807,
+      "importMW": 2731
     },
     {
-      "time": "2026-08-04T09:16:15.000Z",
-      "loadMW": 7380,
-      "generationMW": 7209,
-      "importMW": 171
+      "time": "2026-08-04T01:29:18.000Z",
+      "loadMW": 4504,
+      "generationMW": 1814,
+      "importMW": 2678
     },
     {
-      "time": "2026-08-04T10:16:15.000Z",
+      "time": "2026-08-04T01:44:18.000Z",
+      "loadMW": 4436,
+      "generationMW": 1797,
+      "importMW": 2690
+    },
+    {
+      "time": "2026-08-04T01:59:18.000Z",
+      "loadMW": 4459,
+      "generationMW": 1783,
+      "importMW": 2639
+    },
+    {
+      "time": "2026-08-04T02:14:18.000Z",
+      "loadMW": 4477,
+      "generationMW": 1776,
+      "importMW": 2676
+    },
+    {
+      "time": "2026-08-04T02:29:18.000Z",
+      "loadMW": 4507,
+      "generationMW": 1770,
+      "importMW": 2701
+    },
+    {
+      "time": "2026-08-04T02:44:18.000Z",
+      "loadMW": 4540,
+      "generationMW": 1775,
+      "importMW": 2738
+    },
+    {
+      "time": "2026-08-04T02:59:18.000Z",
+      "loadMW": 4619,
+      "generationMW": 1805,
+      "importMW": 2765
+    },
+    {
+      "time": "2026-08-04T03:14:18.000Z",
+      "loadMW": 4664,
+      "generationMW": 1822,
+      "importMW": 2815
+    },
+    {
+      "time": "2026-08-04T03:29:18.000Z",
+      "loadMW": 4685,
+      "generationMW": 1834,
+      "importMW": 2842
+    },
+    {
+      "time": "2026-08-04T03:44:18.000Z",
+      "loadMW": 4687,
+      "generationMW": 1854,
+      "importMW": 2852
+    },
+    {
+      "time": "2026-08-04T03:59:18.000Z",
+      "loadMW": 4761,
+      "generationMW": 1954,
+      "importMW": 2834
+    },
+    {
+      "time": "2026-08-04T04:14:18.000Z",
+      "loadMW": 4951,
+      "generationMW": 2056,
+      "importMW": 2807
+    },
+    {
+      "time": "2026-08-04T04:29:18.000Z",
+      "loadMW": 5131,
+      "generationMW": 2293,
+      "importMW": 2895
+    },
+    {
+      "time": "2026-08-04T04:44:18.000Z",
+      "loadMW": 5262,
+      "generationMW": 2527,
+      "importMW": 2838
+    },
+    {
+      "time": "2026-08-04T04:59:18.000Z",
+      "loadMW": 5400,
+      "generationMW": 2848,
+      "importMW": 2735
+    },
+    {
+      "time": "2026-08-04T05:14:18.000Z",
+      "loadMW": 5503,
+      "generationMW": 3200,
+      "importMW": 2552
+    },
+    {
+      "time": "2026-08-04T05:29:18.000Z",
+      "loadMW": 5692,
+      "generationMW": 3572,
+      "importMW": 2303
+    },
+    {
+      "time": "2026-08-04T05:44:18.000Z",
+      "loadMW": 5800,
+      "generationMW": 3969,
+      "importMW": 2120
+    },
+    {
+      "time": "2026-08-04T05:59:18.000Z",
+      "loadMW": 5912,
+      "generationMW": 4396,
+      "importMW": 1832
+    },
+    {
+      "time": "2026-08-04T06:14:18.000Z",
+      "loadMW": 6069,
+      "generationMW": 4817,
+      "importMW": 1515
+    },
+    {
+      "time": "2026-08-04T06:29:18.000Z",
+      "loadMW": 6203,
+      "generationMW": 5241,
+      "importMW": 1253
+    },
+    {
+      "time": "2026-08-04T06:44:18.000Z",
+      "loadMW": 6324,
+      "generationMW": 5604,
+      "importMW": 963
+    },
+    {
+      "time": "2026-08-04T06:59:18.000Z",
+      "loadMW": 6511,
+      "generationMW": 5914,
+      "importMW": 720
+    },
+    {
+      "time": "2026-08-04T07:14:18.000Z",
+      "loadMW": 6592,
+      "generationMW": 5999,
+      "importMW": 596
+    },
+    {
+      "time": "2026-08-04T07:29:18.000Z",
+      "loadMW": 6709,
+      "generationMW": 6130,
+      "importMW": 593
+    },
+    {
+      "time": "2026-08-04T07:44:18.000Z",
+      "loadMW": 6843,
+      "generationMW": 6358,
+      "importMW": 578
+    },
+    {
+      "time": "2026-08-04T07:59:18.000Z",
+      "loadMW": 6983,
+      "generationMW": 6508,
+      "importMW": 484
+    },
+    {
+      "time": "2026-08-04T08:14:18.000Z",
+      "loadMW": 7097,
+      "generationMW": 6888,
+      "importMW": 475
+    },
+    {
+      "time": "2026-08-04T08:29:18.000Z",
+      "loadMW": 7249,
+      "generationMW": 6957,
+      "importMW": 209
+    },
+    {
+      "time": "2026-08-04T08:44:18.000Z",
+      "loadMW": 7331,
+      "generationMW": 7111,
+      "importMW": 291
+    },
+    {
+      "time": "2026-08-04T08:59:18.000Z",
+      "loadMW": 7428,
+      "generationMW": 7312,
+      "importMW": 220
+    },
+    {
+      "time": "2026-08-04T09:14:18.000Z",
+      "loadMW": 7514,
+      "generationMW": 7458,
+      "importMW": 116
+    },
+    {
+      "time": "2026-08-04T09:29:18.000Z",
+      "loadMW": 7577,
+      "generationMW": 7521,
+      "importMW": 56
+    },
+    {
+      "time": "2026-08-04T09:44:18.000Z",
+      "loadMW": 7658,
+      "generationMW": 7606,
+      "importMW": 56
+    },
+    {
+      "time": "2026-08-04T09:59:18.000Z",
+      "loadMW": 7659,
+      "generationMW": 7685,
+      "importMW": 52
+    },
+    {
+      "time": "2026-08-04T10:14:18.000Z",
+      "loadMW": 7682,
+      "generationMW": 7641,
+      "importMW": -26
+    },
+    {
+      "time": "2026-08-04T10:29:18.000Z",
+      "loadMW": 7739,
+      "generationMW": 7607,
+      "importMW": 41
+    },
+    {
+      "time": "2026-08-04T10:44:18.000Z",
+      "loadMW": 7801,
+      "generationMW": 7610,
+      "importMW": 132
+    },
+    {
+      "time": "2026-08-04T10:59:18.000Z",
+      "loadMW": 7874,
+      "generationMW": 7575,
+      "importMW": 191
+    },
+    {
+      "time": "2026-08-04T11:14:18.000Z",
+      "loadMW": 7896,
+      "generationMW": 7607,
+      "importMW": 299
+    },
+    {
+      "time": "2026-08-04T11:29:18.000Z",
+      "loadMW": 7887,
+      "generationMW": 7588,
+      "importMW": 289
+    },
+    {
+      "time": "2026-08-04T11:44:18.000Z",
+      "loadMW": 7848,
+      "generationMW": 7502,
+      "importMW": 299
+    },
+    {
+      "time": "2026-08-04T11:59:18.000Z",
+      "loadMW": 7777,
+      "generationMW": 7356,
+      "importMW": 346
+    },
+    {
+      "time": "2026-08-04T12:14:18.000Z",
+      "loadMW": 7844,
+      "generationMW": 7289,
+      "importMW": 421
+    },
+    {
+      "time": "2026-08-04T12:29:18.000Z",
+      "loadMW": 7887,
+      "generationMW": 7191,
+      "importMW": 555
+    },
+    {
+      "time": "2026-08-04T12:44:18.000Z",
+      "loadMW": 7867,
+      "generationMW": 7117,
+      "importMW": 696
+    },
+    {
+      "time": "2026-08-04T12:59:18.000Z",
+      "loadMW": 7775,
+      "generationMW": 7000,
+      "importMW": 749
+    },
+    {
+      "time": "2026-08-04T13:14:18.000Z",
+      "loadMW": 7676,
+      "generationMW": 6831,
+      "importMW": 775
+    },
+    {
+      "time": "2026-08-04T13:29:18.000Z",
       "loadMW": 7644,
-      "generationMW": 7613,
-      "importMW": 31
+      "generationMW": 6664,
+      "importMW": 845
     },
     {
-      "time": "2026-08-04T11:16:15.000Z",
-      "loadMW": 7828,
-      "generationMW": 7599,
-      "importMW": 228
+      "time": "2026-08-04T13:44:18.000Z",
+      "loadMW": 7635,
+      "generationMW": 6485,
+      "importMW": 980
     },
     {
-      "time": "2026-08-04T12:16:15.000Z",
-      "loadMW": 7839,
-      "generationMW": 7433,
-      "importMW": 405
+      "time": "2026-08-04T13:59:18.000Z",
+      "loadMW": 7559,
+      "generationMW": 6490,
+      "importMW": 1150
     },
     {
-      "time": "2026-08-04T13:16:15.000Z",
-      "loadMW": 7802,
-      "generationMW": 7034,
-      "importMW": 766
+      "time": "2026-08-04T14:14:18.000Z",
+      "loadMW": 7593,
+      "generationMW": 6111,
+      "importMW": 1068
     },
     {
-      "time": "2026-08-04T14:16:15.000Z",
-      "loadMW": 7608,
-      "generationMW": 6437,
-      "importMW": 1170
+      "time": "2026-08-04T14:29:18.000Z",
+      "loadMW": 7587,
+      "generationMW": 5961,
+      "importMW": 1483
     },
     {
-      "time": "2026-08-04T15:16:15.000Z",
-      "loadMW": 7487,
-      "generationMW": 5729,
-      "importMW": 1758
+      "time": "2026-08-04T14:44:18.000Z",
+      "loadMW": 7585,
+      "generationMW": 5877,
+      "importMW": 1626
     },
     {
-      "time": "2026-08-04T16:16:15.000Z",
-      "loadMW": 7099,
-      "generationMW": 4799,
-      "importMW": 2299
+      "time": "2026-08-04T14:59:18.000Z",
+      "loadMW": 7475,
+      "generationMW": 5648,
+      "importMW": 1708
     },
     {
-      "time": "2026-08-04T17:16:15.000Z",
-      "loadMW": 6910,
-      "generationMW": 3758,
-      "importMW": 3151
+      "time": "2026-08-04T15:14:18.000Z",
+      "loadMW": 7300,
+      "generationMW": 5430,
+      "importMW": 1827
     },
     {
-      "time": "2026-08-04T18:16:15.000Z",
-      "loadMW": 6664,
-      "generationMW": 3275,
-      "importMW": 3388
+      "time": "2026-08-04T15:29:18.000Z",
+      "loadMW": 7199,
+      "generationMW": 5237,
+      "importMW": 1870
     },
     {
-      "time": "2026-08-04T19:16:15.000Z",
-      "loadMW": 6479,
-      "generationMW": 2960,
+      "time": "2026-08-04T15:44:18.000Z",
+      "loadMW": 7121,
+      "generationMW": 4974,
+      "importMW": 1962
+    },
+    {
+      "time": "2026-08-04T15:59:18.000Z",
+      "loadMW": 7053,
+      "generationMW": 4647,
+      "importMW": 2148
+    },
+    {
+      "time": "2026-08-04T16:14:18.000Z",
+      "loadMW": 7022,
+      "generationMW": 4341,
+      "importMW": 2406
+    },
+    {
+      "time": "2026-08-04T16:29:18.000Z",
+      "loadMW": 6971,
+      "generationMW": 4012,
+      "importMW": 2681
+    },
+    {
+      "time": "2026-08-04T16:44:18.000Z",
+      "loadMW": 6952,
+      "generationMW": 3803,
+      "importMW": 2959
+    },
+    {
+      "time": "2026-08-04T16:59:18.000Z",
+      "loadMW": 6887,
+      "generationMW": 3748,
+      "importMW": 3149
+    },
+    {
+      "time": "2026-08-04T17:14:18.000Z",
+      "loadMW": 6828,
+      "generationMW": 3472,
+      "importMW": 3139
+    },
+    {
+      "time": "2026-08-04T17:29:18.000Z",
+      "loadMW": 6746,
+      "generationMW": 3402,
+      "importMW": 3357
+    },
+    {
+      "time": "2026-08-04T17:44:18.000Z",
+      "loadMW": 6682,
+      "generationMW": 3296,
+      "importMW": 3344
+    },
+    {
+      "time": "2026-08-04T17:59:18.000Z",
+      "loadMW": 6645,
+      "generationMW": 3228,
+      "importMW": 3386
+    },
+    {
+      "time": "2026-08-04T18:14:18.000Z",
+      "loadMW": 6585,
+      "generationMW": 3178,
+      "importMW": 3417
+    },
+    {
+      "time": "2026-08-04T18:29:18.000Z",
+      "loadMW": 6576,
+      "generationMW": 3174,
+      "importMW": 3406
+    },
+    {
+      "time": "2026-08-04T18:44:18.000Z",
+      "loadMW": 6523,
+      "generationMW": 3167,
+      "importMW": 3402
+    },
+    {
+      "time": "2026-08-04T18:59:18.000Z",
+      "loadMW": 6453,
+      "generationMW": 3016,
+      "importMW": 3356
+    },
+    {
+      "time": "2026-08-04T19:14:18.000Z",
+      "loadMW": 6363,
+      "generationMW": 2903,
+      "importMW": 3436
+    },
+    {
+      "time": "2026-08-04T19:29:18.000Z",
+      "loadMW": 6266,
+      "generationMW": 2853,
+      "importMW": 3460
+    },
+    {
+      "time": "2026-08-04T19:44:18.000Z",
+      "loadMW": 6131,
+      "generationMW": 2688,
       "importMW": 3414
     },
     {
-      "time": "2026-08-04T20:16:15.000Z",
-      "loadMW": 6145,
-      "generationMW": 2669,
-      "importMW": 3430
+      "time": "2026-08-04T19:59:18.000Z",
+      "loadMW": 6049,
+      "generationMW": 2670,
+      "importMW": 3442
     },
     {
-      "time": "2026-08-04T21:16:15.000Z",
-      "loadMW": 6004,
-      "generationMW": 2558,
-      "importMW": 3400
+      "time": "2026-08-04T20:14:18.000Z",
+      "loadMW": 6135,
+      "generationMW": 2651,
+      "importMW": 3380
+    },
+    {
+      "time": "2026-08-04T20:29:18.000Z",
+      "loadMW": 6149,
+      "generationMW": 2642,
+      "importMW": 3484
+    },
+    {
+      "time": "2026-08-04T20:44:18.000Z",
+      "loadMW": 6024,
+      "generationMW": 2601,
+      "importMW": 3506
+    },
+    {
+      "time": "2026-08-04T20:59:18.000Z",
+      "loadMW": 5962,
+      "generationMW": 2624,
+      "importMW": 3423
+    },
+    {
+      "time": "2026-08-04T21:14:18.000Z",
+      "loadMW": 5882,
+      "generationMW": 2549,
+      "importMW": 3338
+    },
+    {
+      "time": "2026-08-04T21:29:18.000Z",
+      "loadMW": 5777,
+      "generationMW": 2525,
+      "importMW": 3334
+    },
+    {
+      "time": "2026-08-04T21:44:18.000Z",
+      "loadMW": 5658,
+      "generationMW": 2449,
+      "importMW": 3253
     }
   ],
   "quality": {
     "requiredFeeds": [
-      "load",
-      "flows",
-      "mix",
-      "nuclear",
-      "freq",
-      "price"
+      "MAVIR 20001",
+      "MAVIR 5229",
+      "MAVIR 4444"
     ],
-    "systemGapMW": -1.7,
-    "flowGapMW": -0.2,
-    "mixGapMW": 0,
-    "checksPassed": 4,
-    "checksTotal": 4
+    "systemGapMW": -43.3,
+    "flowGapMW": -29.6,
+    "mixGapMW": -0.2,
+    "maxFeedOffsetMinutes": 0,
+    "checksPassed": 6,
+    "checksTotal": 6
   }
 }

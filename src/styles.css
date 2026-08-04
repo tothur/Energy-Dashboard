@@ -201,6 +201,7 @@ h1, h2, h3 { font-weight: 600; }
 .chart-tooltip strong { color: #fff; }
 .price-value, .large-metric { display: block; margin-top: 18px; font-family: "IBM Plex Mono", monospace; font-size: clamp(30px, 2.7vw, 42px); line-height: 1; }
 .price-value { color: #f0d36d; }
+.price-value.unavailable { color: #617584; }
 .data-line { display: flex; justify-content: space-between; gap: 10px; margin-top: 13px; padding-top: 8px; border-top: 1px solid #253746; color: #8094a2; font-size: 10px; }
 .data-line b { color: #b6c4cc; font-weight: 500; text-align: right; }
 .analytics-card p { margin-top: 10px; color: #7f93a2; font-size: 10px; line-height: 1.35; }
