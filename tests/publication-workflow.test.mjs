@@ -23,6 +23,7 @@ test("Pages publication supports main pushes, manual runs, and frequent refreshe
   assert.match(workflow, /branches:\s*\n\s*- main/);
   assert.match(workflow, /cron: "\*\/15 \* \* \* \*"/);
   assert.match(workflow, /workflow_dispatch:/);
+  assert.match(workflow, /node-version: "24"/);
   assert.match(workflow, /path: \.\/dist\/client/);
   assert.match(workflow, /pages: write/);
   assert.match(workflow, /id-token: write/);

@@ -19,6 +19,8 @@ The current prototype adapter reads the public `holadelej.hu/api/data` payload, 
 
 ## Commands
 
+Node.js 22.13 or newer is required; GitHub Actions uses Node.js 24.
+
 ```bash
 pnpm install --frozen-lockfile
 npm run data:update
