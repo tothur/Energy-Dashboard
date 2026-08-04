@@ -17,6 +17,8 @@ test("Pages publication refreshes and validates data before deployment", () => {
   assert.ok(verify > refresh, "data verification must follow refresh");
   assert.ok(build > verify, "build must follow data verification");
   assert.ok(upload > build, "only a successfully built site may be uploaded");
+  assert.match(workflow, /id: refresh\s+continue-on-error: true/);
+  assert.match(workflow, /steps\.refresh\.outcome == 'failure'/);
 });
 
 test("Pages publication supports main pushes, manual runs, and frequent refreshes", () => {

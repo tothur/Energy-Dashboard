@@ -8,7 +8,11 @@ const outputPath = path.join(projectRoot, "public", "data", "energy-latest.json"
 const sourceUrl = "https://holadelej.hu/api/data";
 
 const response = await fetch(sourceUrl, {
-  headers: { accept: "application/json", "user-agent": "EnergyDashboardPrototype/0.1" },
+  headers: {
+    accept: "application/json",
+    referer: "https://holadelej.hu/",
+    "user-agent": "Energy-Dashboard/1.0 (+https://github.com/tothur/Energy-Dashboard)",
+  },
   signal: AbortSignal.timeout(20_000),
 });
 

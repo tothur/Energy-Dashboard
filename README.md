@@ -35,7 +35,7 @@ npm run build
 
 `.github/workflows/deploy-pages.yml` refreshes and validates the energy snapshot, builds the static app, runs the complete test suite, and deploys `dist/client` to GitHub Pages. It runs on every push to `main`, on manual dispatch, and every 15 minutes.
 
-The scheduled job does not create automated data commits. A failed refresh or validation stops the workflow before upload, leaving the last successful Pages deployment online.
+The scheduled job does not create automated data commits. If the live fetch is temporarily blocked, the workflow validates and publishes the last committed good snapshot; the UI exposes its timestamp and marks it stale. If that fallback snapshot fails validation, publication stops before upload and the previous successful Pages deployment remains online.
 
 ## Key files
 
