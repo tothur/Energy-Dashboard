@@ -1,0 +1,296 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-08-04T21:17:37.011Z",
+  "upstreamGeneratedAt": "2026-08-04T21:16:44.260Z",
+  "measuredAt": "2026-08-04T21:16:01.000Z",
+  "status": "verified_snapshot",
+  "source": {
+    "primary": "MAVIR",
+    "price": "Energy-Charts / SMARD",
+    "intermediary": "holadelej.hu public data endpoint",
+    "sourceUrl": "https://holadelej.hu/api/data",
+    "caveat": "Prototype adapter. Production should ingest directly from MAVIR and licensed market feeds."
+  },
+  "system": {
+    "frequencyHz": 49.951,
+    "consumptionMW": 5811,
+    "generationMW": 2479,
+    "netImportMW": 3334,
+    "domesticCoveragePct": 42.7,
+    "dayAheadPriceEurMWh": 211.85,
+    "carbonIntensityGco2Kwh": null,
+    "carbonIntensityStatus": "insufficient_source_detail"
+  },
+  "mix": [
+    {
+      "key": "Atom",
+      "mw": 226.1,
+      "share": 9.1
+    },
+    {
+      "key": "Nap",
+      "mw": 0,
+      "share": 0
+    },
+    {
+      "key": "Fosszilis",
+      "mw": 1969.9,
+      "share": 79.5
+    },
+    {
+      "key": "Egyéb megújuló",
+      "mw": 209.6,
+      "share": 8.5
+    },
+    {
+      "key": "Egyéb",
+      "mw": 73.2,
+      "share": 3
+    }
+  ],
+  "flows": [
+    {
+      "code": "AT",
+      "country": "Ausztria",
+      "mw": 1388,
+      "direction": "import"
+    },
+    {
+      "code": "SK",
+      "country": "Szlovákia",
+      "mw": 2282,
+      "direction": "import"
+    },
+    {
+      "code": "UA",
+      "country": "Ukrajna",
+      "mw": 63,
+      "direction": "import"
+    },
+    {
+      "code": "RO",
+      "country": "Románia",
+      "mw": -274,
+      "direction": "export"
+    },
+    {
+      "code": "RS",
+      "country": "Szerbia",
+      "mw": 43,
+      "direction": "import"
+    },
+    {
+      "code": "HR",
+      "country": "Horvátország",
+      "mw": -304,
+      "direction": "export"
+    },
+    {
+      "code": "SI",
+      "country": "Szlovénia",
+      "mw": 136,
+      "direction": "import"
+    }
+  ],
+  "plants": [
+    {
+      "key": "paks",
+      "name": "Paks",
+      "type": "nuclear",
+      "mw": 226,
+      "x": 46,
+      "y": 69
+    },
+    {
+      "key": "matra",
+      "name": "Mátra",
+      "type": "fossil",
+      "mw": 425,
+      "x": 63,
+      "y": 37
+    },
+    {
+      "key": "dunamenti",
+      "name": "Dunamenti",
+      "type": "fossil",
+      "mw": null,
+      "x": 49,
+      "y": 49
+    },
+    {
+      "key": "gonyu",
+      "name": "Gönyű",
+      "type": "fossil",
+      "mw": null,
+      "x": 30,
+      "y": 37
+    }
+  ],
+  "history24h": [
+    {
+      "time": "2026-08-03T21:16:15.000Z",
+      "loadMW": 5824,
+      "generationMW": 2487,
+      "importMW": 3277
+    },
+    {
+      "time": "2026-08-03T22:16:15.000Z",
+      "loadMW": 5412,
+      "generationMW": 2294,
+      "importMW": 3071
+    },
+    {
+      "time": "2026-08-03T23:16:15.000Z",
+      "loadMW": 5034,
+      "generationMW": 2140,
+      "importMW": 2851
+    },
+    {
+      "time": "2026-08-04T00:16:15.000Z",
+      "loadMW": 4673,
+      "generationMW": 1862,
+      "importMW": 2768
+    },
+    {
+      "time": "2026-08-04T01:16:15.000Z",
+      "loadMW": 4533,
+      "generationMW": 1765,
+      "importMW": 2726
+    },
+    {
+      "time": "2026-08-04T02:16:15.000Z",
+      "loadMW": 4469,
+      "generationMW": 1749,
+      "importMW": 2677
+    },
+    {
+      "time": "2026-08-04T03:16:15.000Z",
+      "loadMW": 4583,
+      "generationMW": 1792,
+      "importMW": 2790
+    },
+    {
+      "time": "2026-08-04T04:16:15.000Z",
+      "loadMW": 4771,
+      "generationMW": 1924,
+      "importMW": 2847
+    },
+    {
+      "time": "2026-08-04T05:16:15.000Z",
+      "loadMW": 5324,
+      "generationMW": 2717,
+      "importMW": 2607
+    },
+    {
+      "time": "2026-08-04T06:16:15.000Z",
+      "loadMW": 5868,
+      "generationMW": 4188,
+      "importMW": 1680
+    },
+    {
+      "time": "2026-08-04T07:16:15.000Z",
+      "loadMW": 6407,
+      "generationMW": 5689,
+      "importMW": 718
+    },
+    {
+      "time": "2026-08-04T08:16:15.000Z",
+      "loadMW": 6908,
+      "generationMW": 6471,
+      "importMW": 437
+    },
+    {
+      "time": "2026-08-04T09:16:15.000Z",
+      "loadMW": 7380,
+      "generationMW": 7209,
+      "importMW": 171
+    },
+    {
+      "time": "2026-08-04T10:16:15.000Z",
+      "loadMW": 7644,
+      "generationMW": 7613,
+      "importMW": 31
+    },
+    {
+      "time": "2026-08-04T11:16:15.000Z",
+      "loadMW": 7828,
+      "generationMW": 7599,
+      "importMW": 228
+    },
+    {
+      "time": "2026-08-04T12:16:15.000Z",
+      "loadMW": 7839,
+      "generationMW": 7433,
+      "importMW": 405
+    },
+    {
+      "time": "2026-08-04T13:16:15.000Z",
+      "loadMW": 7802,
+      "generationMW": 7034,
+      "importMW": 766
+    },
+    {
+      "time": "2026-08-04T14:16:15.000Z",
+      "loadMW": 7608,
+      "generationMW": 6437,
+      "importMW": 1170
+    },
+    {
+      "time": "2026-08-04T15:16:15.000Z",
+      "loadMW": 7487,
+      "generationMW": 5729,
+      "importMW": 1758
+    },
+    {
+      "time": "2026-08-04T16:16:15.000Z",
+      "loadMW": 7099,
+      "generationMW": 4799,
+      "importMW": 2299
+    },
+    {
+      "time": "2026-08-04T17:16:15.000Z",
+      "loadMW": 6910,
+      "generationMW": 3758,
+      "importMW": 3151
+    },
+    {
+      "time": "2026-08-04T18:16:15.000Z",
+      "loadMW": 6664,
+      "generationMW": 3275,
+      "importMW": 3388
+    },
+    {
+      "time": "2026-08-04T19:16:15.000Z",
+      "loadMW": 6479,
+      "generationMW": 2960,
+      "importMW": 3414
+    },
+    {
+      "time": "2026-08-04T20:16:15.000Z",
+      "loadMW": 6145,
+      "generationMW": 2669,
+      "importMW": 3430
+    },
+    {
+      "time": "2026-08-04T21:16:15.000Z",
+      "loadMW": 6004,
+      "generationMW": 2558,
+      "importMW": 3400
+    }
+  ],
+  "quality": {
+    "requiredFeeds": [
+      "load",
+      "flows",
+      "mix",
+      "nuclear",
+      "freq",
+      "price"
+    ],
+    "systemGapMW": -1.7,
+    "flowGapMW": -0.2,
+    "mixGapMW": 0,
+    "checksPassed": 4,
+    "checksTotal": 4
+  }
+}
