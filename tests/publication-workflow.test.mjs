@@ -50,3 +50,8 @@ test("an open dashboard polls for newly published snapshots", () => {
   assert.match(app, /v=\$\{Date\.now\(\)\}/);
   assert.match(app, /visibilitychange/);
 });
+
+test("the dashboard links to the related Climate Dashboard", () => {
+  assert.match(app, /https:\/\/tothur\.github\.io\/Climate-Dashboard\//);
+  assert.match(app, /aria-label="Climate Dashboard megnyitása új lapon"/);
+});

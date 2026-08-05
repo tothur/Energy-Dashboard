@@ -219,8 +219,15 @@ h1, h2, h3 { font-weight: 600; }
 .availability.available { color: #86dda1; border-color: rgba(134,221,161,.45); }
 
 footer { min-height: 38px; display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 8px 7px 0; color: #748997; font-size: 11px; }
-footer span { display: flex; align-items: center; gap: 7px; }
+.footer-note { display: flex; align-items: center; gap: 7px; }
+.footer-actions { display: flex; align-items: center; justify-content: flex-end; gap: 18px; }
 footer button { padding: 4px 0; border: 0; border-bottom: 1px solid #577687; background: transparent; color: #91bacd; cursor: pointer; }
+.sibling-dashboard-link { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 9px; min-width: 212px; padding: 7px 9px; border: 1px solid #2c4352; border-radius: 3px; background: #0a1721; color: #91bacd; text-decoration: none; transition: border-color 160ms ease, background 160ms ease, color 160ms ease; }
+.sibling-dashboard-link > svg:first-child { color: var(--cyan); }
+.sibling-dashboard-link:hover { border-color: #4c8490; background: #0d202b; color: #d4e4ea; }
+.sibling-dashboard-copy { display: grid; gap: 1px; }
+.sibling-dashboard-copy small { color: #708895; font-family: "IBM Plex Mono", monospace; font-size: 7px; letter-spacing: .09em; }
+.sibling-dashboard-copy b { color: inherit; font-family: "IBM Plex Mono", monospace; font-size: 10px; font-weight: 600; letter-spacing: .035em; }
 
 .drawer-backdrop { position: fixed; inset: 0; z-index: 20; display: flex; justify-content: flex-end; background: rgba(2, 7, 11, .7); backdrop-filter: blur(4px); }
 .sources-drawer { position: relative; width: min(460px, 100%); height: 100%; overflow-y: auto; padding: 34px 30px; background: #0c1924; border-left: 1px solid #3d5363; box-shadow: -16px 0 40px rgba(0,0,0,.38); }
@@ -298,6 +305,9 @@ footer button { padding: 4px 0; border: 0; border-bottom: 1px solid #577687; bac
   .analytics-grid { grid-template-columns: 1fr; }
   .trend-card { grid-column: auto; }
   footer { align-items: flex-start; flex-direction: column; padding-top: 12px; }
+  .footer-actions { width: 100%; align-items: stretch; flex-direction: column; gap: 12px; }
+  .sibling-dashboard-link { width: 100%; }
+  footer button { align-self: flex-start; }
 }
 
 @media (prefers-reduced-motion: reduce) {
