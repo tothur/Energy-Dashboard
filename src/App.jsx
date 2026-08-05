@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowsLeftRight,
   Atom,
@@ -36,13 +36,23 @@ const MIX_META = {
 };
 
 const FLOW_POSITIONS = {
-  AT: { left: "5%", top: "30%" },
-  SK: { left: "48%", top: "2%" },
+  AT: { left: "4%", top: "31%" },
+  SK: { left: "47%", top: "2%" },
   UA: { right: "4%", top: "14%" },
   RO: { right: "2%", top: "52%" },
-  RS: { left: "58%", bottom: "3%" },
+  RS: { left: "59%", bottom: "3%" },
   HR: { left: "25%", bottom: "3%" },
-  SI: { left: "5%", bottom: "23%" },
+  SI: { left: "4%", bottom: "23%" },
+};
+
+const FLOW_ENDPOINTS = {
+  AT: { x: 0.285, y: 0.45, bendX: 0, bendY: -0.04 },
+  SK: { x: 0.51, y: 0.265, bendX: 0.02, bendY: 0 },
+  UA: { x: 0.745, y: 0.34, bendX: 0, bendY: -0.035 },
+  RO: { x: 0.748, y: 0.59, bendX: 0.025, bendY: 0 },
+  RS: { x: 0.61, y: 0.765, bendX: 0.025, bendY: 0 },
+  HR: { x: 0.405, y: 0.735, bendX: -0.02, bendY: 0 },
+  SI: { x: 0.29, y: 0.625, bendX: 0, bendY: 0.035 },
 };
 
 const FLOW_LABEL = {
@@ -85,16 +95,31 @@ function useEnergyData() {
 
   useEffect(() => {
     let active = true;
-    fetch(publicAsset("data/energy-latest.json"), { cache: "no-store" })
-      .then((response) => {
+    let inFlight = false;
+    const load = async (initial = false) => {
+      if (inFlight) return;
+      inFlight = true;
+      try {
+        const separator = publicAsset("data/energy-latest.json").includes("?") ? "&" : "?";
+        const response = await fetch(`${publicAsset("data/energy-latest.json")}${separator}v=${Date.now()}`, { cache: "no-store" });
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        return response.json();
-      })
-      .then((payload) => validateNormalizedEnergyData(payload))
-      .then((data) => active && setState({ status: "ready", data, error: null }))
-      .catch((error) => active && setState({ status: "error", data: null, error }));
+        const data = validateNormalizedEnergyData(await response.json());
+        if (active) setState({ status: "ready", data, error: null });
+      } catch (error) {
+        if (active && initial) setState({ status: "error", data: null, error });
+      } finally {
+        inFlight = false;
+      }
+    };
+
+    load(true);
+    const timer = window.setInterval(() => load(false), 2 * 60_000);
+    const onVisibilityChange = () => document.visibilityState === "visible" && load(false);
+    document.addEventListener("visibilitychange", onVisibilityChange);
     return () => {
       active = false;
+      window.clearInterval(timer);
+      document.removeEventListener("visibilitychange", onVisibilityChange);
     };
   }, []);
 
@@ -242,7 +267,7 @@ function BalancePanel({ data }) {
           <span className="eyebrow">RENDSZERMÉRLEG</span>
           <h2 id="balance-title">Termelés + import = fogyasztás</h2>
         </div>
-        <span className="verified"><CheckCircle size={16} weight="fill" /> 4/4 ellenőrzés</span>
+        <span className="verified"><CheckCircle size={16} weight="fill" /> {data.quality.checksPassed}/{data.quality.checksTotal} ellenőrzés</span>
       </div>
 
       <div className="balance-metrics">
@@ -268,13 +293,136 @@ function FlowMarker({ flow, selected, onSelect }) {
       data-code={flow.code}
       style={FLOW_POSITIONS[flow.code]}
       onClick={() => onSelect(flow.code)}
+      onMouseEnter={() => onSelect(flow.code)}
+      onFocus={() => onSelect(flow.code)}
       aria-label={`${flow.country}: ${imported ? "import" : "export"} ${formatMW(Math.abs(flow.mw))} megawatt`}
     >
       <span>{FLOW_LABEL[flow.code]}</span>
+      <em>{imported ? "import" : "export"}</em>
       <strong>{formatMW(Math.abs(flow.mw))} <small>MW</small></strong>
       <ArrowsLeftRight size={18} weight="bold" />
     </button>
   );
+}
+
+function pointOnQuadratic(start, control, end, t) {
+  const inverse = 1 - t;
+  return {
+    x: inverse * inverse * start.x + 2 * inverse * t * control.x + t * t * end.x,
+    y: inverse * inverse * start.y + 2 * inverse * t * control.y + t * t * end.y,
+  };
+}
+
+function tangentOnQuadratic(start, control, end, t) {
+  return {
+    x: 2 * (1 - t) * (control.x - start.x) + 2 * t * (end.x - control.x),
+    y: 2 * (1 - t) * (control.y - start.y) + 2 * t * (end.y - control.y),
+  };
+}
+
+function AnimatedFlowLayer({ flows, selectedCode, stageRef }) {
+  const canvasRef = useRef(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    const stage = stageRef.current;
+    if (!canvas || !stage) return undefined;
+
+    const context = canvas.getContext("2d");
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    let frame;
+    let width = 0;
+    let height = 0;
+
+    const resize = () => {
+      const rect = stage.getBoundingClientRect();
+      width = rect.width;
+      height = rect.height;
+      const ratio = Math.min(window.devicePixelRatio || 1, 2);
+      canvas.width = Math.round(width * ratio);
+      canvas.height = Math.round(height * ratio);
+      canvas.style.width = `${width}px`;
+      canvas.style.height = `${height}px`;
+      context.setTransform(ratio, 0, 0, ratio, 0, 0);
+    };
+
+    const drawChevron = (point, tangent, color, alpha, scale) => {
+      const angle = Math.atan2(tangent.y, tangent.x);
+      context.save();
+      context.translate(point.x, point.y);
+      context.rotate(angle);
+      context.globalAlpha = alpha;
+      context.strokeStyle = color;
+      context.lineWidth = 2.1 * scale;
+      context.lineCap = "round";
+      context.beginPath();
+      context.moveTo(-7 * scale, -5 * scale);
+      context.lineTo(0, 0);
+      context.lineTo(-7 * scale, 5 * scale);
+      context.stroke();
+      context.restore();
+    };
+
+    const render = (time = 0) => {
+      context.clearRect(0, 0, width, height);
+      const stageRect = stage.getBoundingClientRect();
+
+      flows.forEach((flow) => {
+        const marker = stage.querySelector(`[data-code="${flow.code}"]`);
+        const endpoint = FLOW_ENDPOINTS[flow.code];
+        if (!marker || !endpoint) return;
+        const markerRect = marker.getBoundingClientRect();
+        const outer = {
+          x: markerRect.left - stageRect.left + markerRect.width / 2,
+          y: markerRect.top - stageRect.top + markerRect.height / 2,
+        };
+        const inner = { x: endpoint.x * width, y: endpoint.y * height };
+        const imported = flow.direction === "import";
+        const start = imported ? outer : inner;
+        const end = imported ? inner : outer;
+        const control = {
+          x: (start.x + end.x) / 2 + endpoint.bendX * width,
+          y: (start.y + end.y) / 2 + endpoint.bendY * height,
+        };
+        const selected = selectedCode === flow.code;
+        const color = imported ? "#f49a43" : "#40d8dc";
+
+        context.save();
+        context.beginPath();
+        context.moveTo(start.x, start.y);
+        context.quadraticCurveTo(control.x, control.y, end.x, end.y);
+        context.strokeStyle = color;
+        context.globalAlpha = selected ? 0.78 : 0.32;
+        context.lineWidth = selected ? 3 : 1.5;
+        context.shadowColor = color;
+        context.shadowBlur = selected ? 14 : 5;
+        context.stroke();
+        context.restore();
+
+        const duration = Math.max(1.7, 3.6 - Math.min(Math.abs(flow.mw) / 1400, 1.5));
+        const particleCount = selected ? 6 : 4;
+        for (let index = 0; index < particleCount; index += 1) {
+          const progress = reducedMotion ? (index + 1) / (particleCount + 1) : ((time / 1000 / duration) + index / particleCount) % 1;
+          const point = pointOnQuadratic(start, control, end, progress);
+          const tangent = tangentOnQuadratic(start, control, end, progress);
+          drawChevron(point, tangent, color, selected ? 1 : 0.72, selected ? 1.08 : 0.82);
+        }
+      });
+
+      if (!reducedMotion) frame = window.requestAnimationFrame(render);
+    };
+
+    resize();
+    const observer = new ResizeObserver(resize);
+    observer.observe(stage);
+    frame = window.requestAnimationFrame(render);
+    return () => {
+      observer.disconnect();
+      window.cancelAnimationFrame(frame);
+    };
+  }, [flows, selectedCode, stageRef]);
+
+  return <canvas ref={canvasRef} className="flow-canvas" aria-hidden="true" />;
 }
 
 function PlantMarker({ plant, selected, onSelect }) {
@@ -298,6 +446,7 @@ function PlantMarker({ plant, selected, onSelect }) {
 
 function EnergyMap({ data }) {
   const [selection, setSelection] = useState({ type: "flow", key: "SK" });
+  const stageRef = useRef(null);
   const selectedFlow = data.flows.find((flow) => flow.code === selection.key);
   const selectedPlant = data.plants.find((plant) => plant.key === selection.key);
   const selectedLabel = selectedFlow
@@ -320,9 +469,10 @@ function EnergyMap({ data }) {
         </div>
       </div>
 
-      <div className="map-stage">
+      <div className="map-stage" ref={stageRef} data-testid="energy-map-stage">
+        <div className="map-hint">Vidd rá az egeret egy országra vagy erőműre</div>
         <img src={publicAsset("assets/hungary-map-blank.png")} alt="Magyarország térképe a fő vízrajzi elemekkel" className="map-base" />
-        <div className="grid-overlay" aria-hidden="true" />
+        <AnimatedFlowLayer flows={data.flows} selectedCode={selection.type === "flow" ? selection.key : null} stageRef={stageRef} />
         {data.flows.map((flow) => (
           <FlowMarker
             key={flow.code}

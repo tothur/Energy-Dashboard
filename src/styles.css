@@ -29,11 +29,7 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
-  background:
-    linear-gradient(rgba(60, 91, 111, 0.045) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(60, 91, 111, 0.045) 1px, transparent 1px),
-    var(--page);
-  background-size: 28px 28px;
+  background: var(--page);
   -webkit-font-smoothing: antialiased;
 }
 
@@ -161,21 +157,26 @@ h1, h2, h3 { font-weight: 600; }
 .legend-line { width: 18px; height: 2px; display: inline-block; }
 .legend-line.import { background: var(--orange); }
 .legend-line.export { background: var(--cyan); }
-.map-stage { position: relative; min-height: 405px; overflow: hidden; margin-top: 8px; border: 1px solid var(--line-soft); background: #0a1620; }
-.map-base { position: absolute; inset: -18% 12% -18% 12%; width: 76%; height: 136%; object-fit: contain; filter: grayscale(1) invert(0.92) sepia(0.15) hue-rotate(155deg) saturate(1.8) contrast(1.05); opacity: 0.28; mix-blend-mode: screen; }
-.grid-overlay { position: absolute; inset: 0; opacity: 0.23; background-image: linear-gradient(rgba(72, 109, 132, 0.16) 1px, transparent 1px), linear-gradient(90deg, rgba(72, 109, 132, 0.16) 1px, transparent 1px); background-size: 34px 34px; pointer-events: none; }
+.map-stage { position: relative; min-height: 520px; overflow: hidden; margin-top: 8px; border: 1px solid var(--line-soft); background: #08151f; isolation: isolate; }
+.map-stage::before { content: ""; position: absolute; inset: 0 24%; z-index: 0; border-inline: 1px solid rgba(79, 112, 132, .13); background: rgba(24, 43, 56, .32); }
+.map-base { position: absolute; inset: 4% 21% 3% 21%; z-index: 1; width: 58%; height: 93%; object-fit: contain; filter: grayscale(1) invert(0.92) sepia(0.2) hue-rotate(148deg) saturate(1.9) contrast(1.08) drop-shadow(0 0 8px rgba(64, 216, 220, .22)); opacity: 0.36; mix-blend-mode: screen; }
+.map-hint { position: absolute; left: 13px; top: 11px; z-index: 6; color: #8196a4; font-family: "IBM Plex Mono", monospace; font-size: 9px; letter-spacing: .12em; text-transform: uppercase; }
+.flow-canvas { position: absolute; inset: 0; z-index: 3; pointer-events: none; }
 
-.flow-marker { position: absolute; z-index: 4; min-width: 110px; display: grid; grid-template-columns: 1fr auto; align-items: center; column-gap: 6px; padding: 7px 9px; border: 1px solid currentColor; border-radius: 2px; background: rgba(8, 18, 27, 0.9); text-align: left; cursor: pointer; }
-.flow-marker span { grid-column: 1 / -1; color: #b7c5cd; font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; }
+.flow-marker { position: absolute; z-index: 4; min-width: 126px; display: grid; grid-template-columns: 1fr auto; align-items: center; column-gap: 8px; padding: 9px 11px; border: 1px solid currentColor; border-radius: 2px; background: rgba(7, 17, 26, 0.94); text-align: left; cursor: pointer; transition: transform 150ms ease, box-shadow 150ms ease, background 150ms ease; }
+.flow-marker:hover, .flow-marker:focus-visible { transform: translateY(-2px); background: #0d1d29; }
+.flow-marker span { grid-column: 1 / -1; color: #bdc8ce; font-size: 10px; text-transform: uppercase; letter-spacing: 0.07em; }
+.flow-marker em { grid-column: 1 / -1; margin-top: 1px; color: #778c9a; font-family: "IBM Plex Mono", monospace; font-size: 8px; font-style: normal; text-transform: uppercase; }
 .flow-marker strong { font-family: "IBM Plex Mono", monospace; font-size: 17px; }
 .flow-marker small { font-size: 8px; }
 .flow-marker.import { color: var(--orange); }
 .flow-marker.export { color: var(--cyan); }
-.flow-marker.selected { box-shadow: 0 0 0 2px rgba(255,255,255,.16), 0 0 16px currentColor; }
+.flow-marker.selected { box-shadow: 0 0 0 1px rgba(255,255,255,.16), 0 0 20px currentColor; }
 .flow-marker svg { grid-row: 2; grid-column: 2; }
 
-.plant-marker { position: absolute; z-index: 5; display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 0 7px; min-width: 95px; padding: 5px 7px 5px 5px; transform: translate(-50%, -50%); border: 1px solid transparent; border-radius: 3px; background: rgba(7, 17, 25, 0.72); text-align: left; cursor: pointer; }
+.plant-marker { position: absolute; z-index: 5; display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 0 7px; min-width: 105px; padding: 6px 8px 6px 6px; transform: translate(-50%, -50%); border: 1px solid transparent; border-radius: 3px; background: rgba(7, 17, 25, 0.86); text-align: left; cursor: pointer; transition: border-color 150ms ease, background 150ms ease, box-shadow 150ms ease; }
 .plant-marker:hover, .plant-marker.selected { border-color: currentColor; background: #0d1e2b; }
+.plant-marker.selected { box-shadow: 0 0 16px currentColor; }
 .plant-marker.nuclear { color: #aa97fb; }
 .plant-marker.fossil { color: #f07781; }
 .plant-icon { grid-row: 1 / 3; display: grid; place-items: center; width: 30px; height: 30px; border: 1px solid currentColor; border-radius: 50%; background: rgba(16, 31, 43, .92); }
@@ -269,8 +270,10 @@ footer button { padding: 4px 0; border: 0; border-bottom: 1px solid #577687; bac
   .balance-metrics > div:nth-child(3) { padding-left: 0; }
   .map-heading { align-items: flex-start; flex-direction: column; }
   .map-legend { flex-wrap: wrap; }
-  .map-stage { min-height: 520px; }
-  .map-base { inset: 14% -30% 15% -30%; width: 160%; height: 71%; }
+  .map-stage { min-height: 540px; }
+  .map-stage::before { inset: 0 10%; }
+  .map-base { inset: 17% -25% 15% -25%; width: 150%; height: 68%; }
+  .map-hint { max-width: 58%; line-height: 1.45; }
   .flow-marker { min-width: 92px; padding: 5px 6px; }
   .flow-marker strong { font-size: 13px; }
   .flow-marker[data-code="AT"] { left: 3% !important; top: 36% !important; }

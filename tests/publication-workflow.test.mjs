@@ -7,6 +7,7 @@ const workflow = await readFile(
   "utf8",
 );
 const updater = await readFile(new URL("../scripts/update-energy-data.mjs", import.meta.url), "utf8");
+const app = await readFile(new URL("../src/App.jsx", import.meta.url), "utf8");
 
 test("Pages publication refreshes and validates data before deployment", () => {
   const refresh = workflow.indexOf("run: npm run data:update");
@@ -24,7 +25,7 @@ test("Pages publication refreshes and validates data before deployment", () => {
 
 test("Pages publication supports main pushes, manual runs, and frequent refreshes", () => {
   assert.match(workflow, /branches:\s*\n\s*- main/);
-  assert.match(workflow, /cron: "\*\/15 \* \* \* \*"/);
+  assert.match(workflow, /cron: "4,14,24,34,44,54 \* \* \* \*"/);
   assert.match(workflow, /workflow_dispatch:/);
   assert.match(workflow, /node-version: "24"/);
   assert.match(workflow, /path: \.\/dist\/client/);
@@ -38,4 +39,10 @@ test("the updater uses direct MAVIR exports and no intermediary", () => {
   assert.match(updater, /fetchChart\(5229\)/);
   assert.match(updater, /fetchChart\(4444\)/);
   assert.doesNotMatch(updater, /holadelej|energy-charts|smard/i);
+});
+
+test("an open dashboard polls for newly published snapshots", () => {
+  assert.match(app, /setInterval\(\(\) => load\(false\), 2 \* 60_000\)/);
+  assert.match(app, /v=\$\{Date\.now\(\)\}/);
+  assert.match(app, /visibilitychange/);
 });

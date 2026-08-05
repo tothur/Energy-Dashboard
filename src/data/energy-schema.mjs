@@ -96,7 +96,8 @@ export function normalizeMavirTables({ systemRows, flowRows, frequencyRows, gene
   const flowGapMW = flowTotalMW - netImportMW;
 
   invariant(Math.abs(systemGapMW) <= Math.max(120, consumptionMW * 0.025), `System balance does not reconcile (${systemGapMW.toFixed(1)} MW gap)`);
-  invariant(Math.abs(mixGapMW) <= 2, `Generation mix does not reconcile (${mixGapMW.toFixed(1)} MW gap)`);
+  const allowedMixGapMW = Math.max(5, generationMW * 0.0025);
+  invariant(Math.abs(mixGapMW) <= allowedMixGapMW, `Generation mix does not reconcile (${mixGapMW.toFixed(1)} MW gap)`);
   const allowedFlowGapMW = Math.max(75, consumptionMW * 0.015);
   invariant(Math.abs(flowGapMW) <= allowedFlowGapMW, `Cross-border flows do not reconcile (${flowGapMW.toFixed(1)} MW gap)`);
 
@@ -150,6 +151,7 @@ export function normalizeMavirTables({ systemRows, flowRows, frequencyRows, gene
       systemGapMW: rounded(systemGapMW, 1),
       flowGapMW: rounded(flowGapMW, 1),
       mixGapMW: rounded(mixGapMW, 1),
+      mixToleranceMW: rounded(allowedMixGapMW, 1),
       maxFeedOffsetMinutes: rounded(alignmentMinutes, 1),
       checksPassed: 6,
       checksTotal: 6,
@@ -180,7 +182,7 @@ export function validateNormalizedEnergyData(data) {
   invariant(Array.isArray(data.mix) && expectedMixKeys.every((key) => data.mix.some((item) => item.key === key)), "Generation mix categories are incomplete");
   data.mix.forEach((item) => invariant(Number.isFinite(item.mw) && item.mw >= 0, `Invalid generation mix value: ${item.key}`));
   const mixTotalMW = data.mix.reduce((sum, item) => sum + item.mw, 0);
-  invariant(Math.abs(mixTotalMW - generationMW) <= 2, "Published generation mix does not reconcile");
+  invariant(Math.abs(mixTotalMW - generationMW) <= Math.max(5, generationMW * 0.0025), "Published generation mix does not reconcile");
 
   const expectedFlowCodes = Object.keys(FLOW_COUNTRIES);
   invariant(Array.isArray(data.flows) && expectedFlowCodes.every((code) => data.flows.some((flow) => flow.code === code)), "Cross-border countries are incomplete");

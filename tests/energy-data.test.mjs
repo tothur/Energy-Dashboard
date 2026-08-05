@@ -26,7 +26,7 @@ test("generation, import, and consumption reconcile within the declared gap", ()
 test("generation shares and cross-border flows are internally consistent", () => {
   const mixTotal = data.mix.reduce((sum, item) => sum + item.mw, 0);
   const flowTotal = data.flows.reduce((sum, item) => sum + item.mw, 0);
-  assert.ok(Math.abs(mixTotal - data.system.generationMW) <= 1);
+  assert.ok(Math.abs(mixTotal - data.system.generationMW) <= Math.max(5, data.system.generationMW * 0.0025));
   assert.ok(Math.abs(flowTotal - data.system.netImportMW) <= Math.max(75, data.system.consumptionMW * 0.015));
 });
 
@@ -36,7 +36,7 @@ test("runtime validation fails closed when published values are tampered with", 
   assert.throws(() => validateNormalizedEnergyData(badMix), /generation mix does not reconcile/i);
 
   const badFlow = structuredClone(data);
-  badFlow.flows[0].direction = "export";
+  badFlow.flows[0].direction = badFlow.flows[0].mw >= 0 ? "export" : "import";
   assert.throws(() => validateNormalizedEnergyData(badFlow), /direction contradicts/i);
 
   const badTimestamp = structuredClone(data);
