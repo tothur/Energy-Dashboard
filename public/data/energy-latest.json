@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-08-05T19:24:09.676Z",
-  "measuredAt": "2026-08-05T19:24:09.000Z",
+  "generatedAt": "2026-08-05T19:34:30.599Z",
+  "measuredAt": "2026-08-05T19:34:30.000Z",
   "status": "verified_snapshot",
   "source": {
     "primary": "MAVIR RTDW",
@@ -15,20 +15,20 @@
     "price": "ENTSO-E Transparency Platform",
     "priceStatus": "unavailable_missing_entsoe_token",
     "measurements": {
-      "systemAt": "2026-08-05T19:24:09.000Z",
-      "flowsAt": "2026-08-05T19:24:09.000Z",
-      "frequencyAt": "2026-08-05T19:24:09.000Z"
+      "systemAt": "2026-08-05T19:34:30.000Z",
+      "flowsAt": "2026-08-05T19:34:30.000Z",
+      "frequencyAt": "2026-08-05T19:34:30.000Z"
     },
     "caveat": "Minden közzétett rendszeradat közvetlenül a MAVIR nyilvános RTDW-exportjából származik.",
     "annualEmissions": "EEA GHG Inventory"
   },
   "system": {
-    "frequencyHz": 49.989,
-    "consumptionMW": 6339,
-    "generationMW": 2749,
-    "netImportMW": 3574,
-    "domesticCoveragePct": 43.4,
-    "lowCarbonSharePct": 18.4,
+    "frequencyHz": 50.001,
+    "consumptionMW": 6249,
+    "generationMW": 2722,
+    "netImportMW": 3559,
+    "domesticCoveragePct": 43.6,
+    "lowCarbonSharePct": 18.5,
     "dayAheadPriceEurMWh": null,
     "carbonIntensityGco2Kwh": null,
     "carbonIntensityStatus": "insufficient_source_detail"
@@ -36,103 +36,103 @@
   "mix": [
     {
       "key": "Atom",
-      "mw": 224.5,
+      "mw": 224.6,
       "share": 8.2
     },
     {
       "key": "Nap",
-      "mw": 52.7,
+      "mw": 50.4,
       "share": 1.9
     },
     {
       "key": "Fosszilis",
-      "mw": 2093.3,
-      "share": 76.2
+      "mw": 2084.3,
+      "share": 76.6
     },
     {
       "key": "Egyéb megújuló",
-      "mw": 229.7,
+      "mw": 229.6,
       "share": 8.4
     },
     {
       "key": "Egyéb",
-      "mw": 148.2,
-      "share": 5.4
+      "mw": 133.1,
+      "share": 4.9
     }
   ],
   "flows": [
     {
       "code": "AT",
       "country": "Ausztria",
-      "mw": 1085,
+      "mw": 1070,
       "direction": "import",
-      "scheduledMW": 1435,
+      "scheduledMW": 1417,
       "scheduledDirection": "import",
-      "deviationMW": -350
+      "deviationMW": -347
     },
     {
       "code": "SK",
       "country": "Szlovákia",
-      "mw": 1560,
+      "mw": 1537,
       "direction": "import",
-      "scheduledMW": 1208,
+      "scheduledMW": 1088,
       "scheduledDirection": "import",
-      "deviationMW": 352
+      "deviationMW": 449
     },
     {
       "code": "UA",
       "country": "Ukrajna",
-      "mw": 200,
+      "mw": 191,
       "direction": "import",
       "scheduledMW": -20,
       "scheduledDirection": "export",
-      "deviationMW": 220
+      "deviationMW": 211
     },
     {
       "code": "RO",
       "country": "Románia",
-      "mw": -10,
+      "mw": -24,
       "direction": "export",
-      "scheduledMW": 206,
+      "scheduledMW": 237,
       "scheduledDirection": "import",
-      "deviationMW": -216
+      "deviationMW": -261
     },
     {
       "code": "RS",
       "country": "Szerbia",
-      "mw": 228,
+      "mw": 248,
       "direction": "import",
       "scheduledMW": 10,
       "scheduledDirection": "import",
-      "deviationMW": 218
+      "deviationMW": 238
     },
     {
       "code": "HR",
       "country": "Horvátország",
-      "mw": 198,
+      "mw": 225,
       "direction": "import",
-      "scheduledMW": 282,
+      "scheduledMW": 270,
       "scheduledDirection": "import",
-      "deviationMW": -84
+      "deviationMW": -45
     },
     {
       "code": "SI",
       "country": "Szlovénia",
-      "mw": 309,
+      "mw": 311,
       "direction": "import",
-      "scheduledMW": 527,
+      "scheduledMW": 509,
       "scheduledDirection": "import",
-      "deviationMW": -218
+      "deviationMW": -198
     }
   ],
   "movement15m": {
-    "comparisonAt": "2026-08-05T19:09:09.000Z",
+    "comparisonAt": "2026-08-05T19:19:30.000Z",
     "elapsedMinutes": 15,
-    "consumptionMW": -65,
-    "generationMW": -81,
-    "netImportMW": -93,
-    "domesticCoveragePct": -0.8,
-    "lowCarbonSharePct": 0.2
+    "consumptionMW": -63,
+    "generationMW": -31,
+    "netImportMW": -15,
+    "domesticCoveragePct": 0,
+    "lowCarbonSharePct": 0.1
   },
   "plants": [
     {
@@ -147,7 +147,7 @@
       "key": "matra",
       "name": "Mátra",
       "type": "fossil",
-      "mw": 441,
+      "mw": 440,
       "x": 63,
       "y": 37
     },
@@ -170,15 +170,7 @@
   ],
   "history24h": [
     {
-      "time": "2026-08-04T19:24:09.000Z",
-      "loadMW": 6275,
-      "generationMW": 2862,
-      "importMW": 3460,
-      "domesticCoveragePct": 45.6,
-      "lowCarbonSharePct": 16.5
-    },
-    {
-      "time": "2026-08-04T19:39:09.000Z",
+      "time": "2026-08-04T19:34:30.000Z",
       "loadMW": 6139,
       "generationMW": 2696,
       "importMW": 3414,
@@ -186,7 +178,7 @@
       "lowCarbonSharePct": 17.5
     },
     {
-      "time": "2026-08-04T19:54:09.000Z",
+      "time": "2026-08-04T19:49:30.000Z",
       "loadMW": 6057,
       "generationMW": 2678,
       "importMW": 3442,
@@ -194,7 +186,7 @@
       "lowCarbonSharePct": 17.5
     },
     {
-      "time": "2026-08-04T20:09:09.000Z",
+      "time": "2026-08-04T20:04:30.000Z",
       "loadMW": 6138,
       "generationMW": 2654,
       "importMW": 3380,
@@ -202,7 +194,7 @@
       "lowCarbonSharePct": 17.5
     },
     {
-      "time": "2026-08-04T20:24:09.000Z",
+      "time": "2026-08-04T20:19:30.000Z",
       "loadMW": 6151,
       "generationMW": 2644,
       "importMW": 3484,
@@ -210,7 +202,7 @@
       "lowCarbonSharePct": 17.9
     },
     {
-      "time": "2026-08-04T20:39:09.000Z",
+      "time": "2026-08-04T20:34:30.000Z",
       "loadMW": 6032,
       "generationMW": 2609,
       "importMW": 3506,
@@ -218,7 +210,7 @@
       "lowCarbonSharePct": 18.8
     },
     {
-      "time": "2026-08-04T20:54:09.000Z",
+      "time": "2026-08-04T20:49:30.000Z",
       "loadMW": 5975,
       "generationMW": 2637,
       "importMW": 3423,
@@ -226,7 +218,7 @@
       "lowCarbonSharePct": 19
     },
     {
-      "time": "2026-08-04T21:09:09.000Z",
+      "time": "2026-08-04T21:04:30.000Z",
       "loadMW": 5885,
       "generationMW": 2552,
       "importMW": 3338,
@@ -234,7 +226,7 @@
       "lowCarbonSharePct": 19.3
     },
     {
-      "time": "2026-08-04T21:24:09.000Z",
+      "time": "2026-08-04T21:19:30.000Z",
       "loadMW": 5781,
       "generationMW": 2529,
       "importMW": 3334,
@@ -242,7 +234,7 @@
       "lowCarbonSharePct": 19.7
     },
     {
-      "time": "2026-08-04T21:39:09.000Z",
+      "time": "2026-08-04T21:34:30.000Z",
       "loadMW": 5645,
       "generationMW": 2445,
       "importMW": 3253,
@@ -250,7 +242,7 @@
       "lowCarbonSharePct": 20.7
     },
     {
-      "time": "2026-08-04T21:54:09.000Z",
+      "time": "2026-08-04T21:49:30.000Z",
       "loadMW": 5505,
       "generationMW": 2348,
       "importMW": 3200,
@@ -258,7 +250,7 @@
       "lowCarbonSharePct": 21.7
     },
     {
-      "time": "2026-08-04T22:09:09.000Z",
+      "time": "2026-08-04T22:04:30.000Z",
       "loadMW": 5376,
       "generationMW": 2312,
       "importMW": 3157,
@@ -266,7 +258,7 @@
       "lowCarbonSharePct": 21.7
     },
     {
-      "time": "2026-08-04T22:24:09.000Z",
+      "time": "2026-08-04T22:19:30.000Z",
       "loadMW": 5281,
       "generationMW": 2236,
       "importMW": 3064,
@@ -274,7 +266,7 @@
       "lowCarbonSharePct": 22.1
     },
     {
-      "time": "2026-08-04T22:39:09.000Z",
+      "time": "2026-08-04T22:34:30.000Z",
       "loadMW": 5188,
       "generationMW": 2193,
       "importMW": 3045,
@@ -282,7 +274,7 @@
       "lowCarbonSharePct": 22.3
     },
     {
-      "time": "2026-08-04T22:54:09.000Z",
+      "time": "2026-08-04T22:49:30.000Z",
       "loadMW": 5083,
       "generationMW": 2162,
       "importMW": 2995,
@@ -290,7 +282,7 @@
       "lowCarbonSharePct": 22.9
     },
     {
-      "time": "2026-08-04T23:09:09.000Z",
+      "time": "2026-08-04T23:04:30.000Z",
       "loadMW": 4974,
       "generationMW": 2145,
       "importMW": 2921,
@@ -298,7 +290,7 @@
       "lowCarbonSharePct": 22.9
     },
     {
-      "time": "2026-08-04T23:24:09.000Z",
+      "time": "2026-08-04T23:19:30.000Z",
       "loadMW": 4883,
       "generationMW": 2089,
       "importMW": 2829,
@@ -306,7 +298,7 @@
       "lowCarbonSharePct": 23.1
     },
     {
-      "time": "2026-08-04T23:39:09.000Z",
+      "time": "2026-08-04T23:34:30.000Z",
       "loadMW": 4789,
       "generationMW": 1994,
       "importMW": 2794,
@@ -314,7 +306,7 @@
       "lowCarbonSharePct": 24
     },
     {
-      "time": "2026-08-04T23:54:09.000Z",
+      "time": "2026-08-04T23:49:30.000Z",
       "loadMW": 4710,
       "generationMW": 1878,
       "importMW": 2796,
@@ -322,7 +314,7 @@
       "lowCarbonSharePct": 25.6
     },
     {
-      "time": "2026-08-05T00:09:09.000Z",
+      "time": "2026-08-05T00:04:30.000Z",
       "loadMW": 4684,
       "generationMW": 1915,
       "importMW": 2832,
@@ -330,7 +322,7 @@
       "lowCarbonSharePct": 25.1
     },
     {
-      "time": "2026-08-05T00:24:09.000Z",
+      "time": "2026-08-05T00:19:30.000Z",
       "loadMW": 4639,
       "generationMW": 1877,
       "importMW": 2769,
@@ -338,7 +330,7 @@
       "lowCarbonSharePct": 25.8
     },
     {
-      "time": "2026-08-05T00:39:09.000Z",
+      "time": "2026-08-05T00:34:30.000Z",
       "loadMW": 4607,
       "generationMW": 1800,
       "importMW": 2762,
@@ -346,7 +338,7 @@
       "lowCarbonSharePct": 27.1
     },
     {
-      "time": "2026-08-05T00:54:09.000Z",
+      "time": "2026-08-05T00:49:30.000Z",
       "loadMW": 4577,
       "generationMW": 1789,
       "importMW": 2807,
@@ -354,7 +346,7 @@
       "lowCarbonSharePct": 27.3
     },
     {
-      "time": "2026-08-05T01:09:09.000Z",
+      "time": "2026-08-05T01:04:30.000Z",
       "loadMW": 4548,
       "generationMW": 1797,
       "importMW": 2788,
@@ -362,7 +354,7 @@
       "lowCarbonSharePct": 27.5
     },
     {
-      "time": "2026-08-05T01:24:09.000Z",
+      "time": "2026-08-05T01:19:30.000Z",
       "loadMW": 4539,
       "generationMW": 1821,
       "importMW": 2751,
@@ -370,7 +362,7 @@
       "lowCarbonSharePct": 27.5
     },
     {
-      "time": "2026-08-05T01:39:09.000Z",
+      "time": "2026-08-05T01:34:30.000Z",
       "loadMW": 4519,
       "generationMW": 1817,
       "importMW": 2718,
@@ -378,7 +370,7 @@
       "lowCarbonSharePct": 27.5
     },
     {
-      "time": "2026-08-05T01:54:09.000Z",
+      "time": "2026-08-05T01:49:30.000Z",
       "loadMW": 4532,
       "generationMW": 1813,
       "importMW": 2702,
@@ -386,7 +378,7 @@
       "lowCarbonSharePct": 27.4
     },
     {
-      "time": "2026-08-05T02:09:09.000Z",
+      "time": "2026-08-05T02:04:30.000Z",
       "loadMW": 4560,
       "generationMW": 1809,
       "importMW": 2719,
@@ -394,7 +386,7 @@
       "lowCarbonSharePct": 27.7
     },
     {
-      "time": "2026-08-05T02:24:09.000Z",
+      "time": "2026-08-05T02:19:30.000Z",
       "loadMW": 4565,
       "generationMW": 1814,
       "importMW": 2751,
@@ -402,7 +394,7 @@
       "lowCarbonSharePct": 27.6
     },
     {
-      "time": "2026-08-05T02:39:09.000Z",
+      "time": "2026-08-05T02:34:30.000Z",
       "loadMW": 4595,
       "generationMW": 1820,
       "importMW": 2751,
@@ -410,7 +402,7 @@
       "lowCarbonSharePct": 27.8
     },
     {
-      "time": "2026-08-05T02:54:09.000Z",
+      "time": "2026-08-05T02:49:30.000Z",
       "loadMW": 4628,
       "generationMW": 1840,
       "importMW": 2776,
@@ -418,7 +410,7 @@
       "lowCarbonSharePct": 28.2
     },
     {
-      "time": "2026-08-05T03:09:09.000Z",
+      "time": "2026-08-05T03:04:30.000Z",
       "loadMW": 4681,
       "generationMW": 1848,
       "importMW": 2787,
@@ -426,7 +418,7 @@
       "lowCarbonSharePct": 28.9
     },
     {
-      "time": "2026-08-05T03:24:09.000Z",
+      "time": "2026-08-05T03:19:30.000Z",
       "loadMW": 4693,
       "generationMW": 1868,
       "importMW": 2833,
@@ -434,7 +426,7 @@
       "lowCarbonSharePct": 29.4
     },
     {
-      "time": "2026-08-05T03:39:09.000Z",
+      "time": "2026-08-05T03:34:30.000Z",
       "loadMW": 4722,
       "generationMW": 1892,
       "importMW": 2824,
@@ -442,7 +434,7 @@
       "lowCarbonSharePct": 30.4
     },
     {
-      "time": "2026-08-05T03:54:09.000Z",
+      "time": "2026-08-05T03:49:30.000Z",
       "loadMW": 4788,
       "generationMW": 1961,
       "importMW": 2830,
@@ -450,7 +442,7 @@
       "lowCarbonSharePct": 32.7
     },
     {
-      "time": "2026-08-05T04:09:09.000Z",
+      "time": "2026-08-05T04:04:30.000Z",
       "loadMW": 4973,
       "generationMW": 2092,
       "importMW": 2827,
@@ -458,7 +450,7 @@
       "lowCarbonSharePct": 36.3
     },
     {
-      "time": "2026-08-05T04:24:09.000Z",
+      "time": "2026-08-05T04:19:30.000Z",
       "loadMW": 5158,
       "generationMW": 2278,
       "importMW": 2881,
@@ -466,7 +458,7 @@
       "lowCarbonSharePct": 41
     },
     {
-      "time": "2026-08-05T04:39:09.000Z",
+      "time": "2026-08-05T04:34:30.000Z",
       "loadMW": 5274,
       "generationMW": 2511,
       "importMW": 2880,
@@ -474,7 +466,7 @@
       "lowCarbonSharePct": 46.5
     },
     {
-      "time": "2026-08-05T04:54:09.000Z",
+      "time": "2026-08-05T04:49:30.000Z",
       "loadMW": 5405,
       "generationMW": 2830,
       "importMW": 2762,
@@ -482,7 +474,7 @@
       "lowCarbonSharePct": 51.9
     },
     {
-      "time": "2026-08-05T05:09:09.000Z",
+      "time": "2026-08-05T05:04:30.000Z",
       "loadMW": 5564,
       "generationMW": 3182,
       "importMW": 2575,
@@ -490,7 +482,7 @@
       "lowCarbonSharePct": 57.3
     },
     {
-      "time": "2026-08-05T05:24:09.000Z",
+      "time": "2026-08-05T05:19:30.000Z",
       "loadMW": 5704,
       "generationMW": 3573,
       "importMW": 2383,
@@ -498,7 +490,7 @@
       "lowCarbonSharePct": 62.3
     },
     {
-      "time": "2026-08-05T05:39:09.000Z",
+      "time": "2026-08-05T05:34:30.000Z",
       "loadMW": 5825,
       "generationMW": 3946,
       "importMW": 2131,
@@ -506,7 +498,7 @@
       "lowCarbonSharePct": 67
     },
     {
-      "time": "2026-08-05T05:54:09.000Z",
+      "time": "2026-08-05T05:49:30.000Z",
       "loadMW": 5961,
       "generationMW": 4372,
       "importMW": 1879,
@@ -514,7 +506,7 @@
       "lowCarbonSharePct": 70.3
     },
     {
-      "time": "2026-08-05T06:09:09.000Z",
+      "time": "2026-08-05T06:04:30.000Z",
       "loadMW": 6082,
       "generationMW": 4816,
       "importMW": 1589,
@@ -522,7 +514,7 @@
       "lowCarbonSharePct": 72.8
     },
     {
-      "time": "2026-08-05T06:24:09.000Z",
+      "time": "2026-08-05T06:19:30.000Z",
       "loadMW": 6265,
       "generationMW": 5212,
       "importMW": 1266,
@@ -530,7 +522,7 @@
       "lowCarbonSharePct": 75.3
     },
     {
-      "time": "2026-08-05T06:39:09.000Z",
+      "time": "2026-08-05T06:34:30.000Z",
       "loadMW": 6428,
       "generationMW": 5362,
       "importMW": 1053,
@@ -538,7 +530,7 @@
       "lowCarbonSharePct": 80.3
     },
     {
-      "time": "2026-08-05T06:54:09.000Z",
+      "time": "2026-08-05T06:49:30.000Z",
       "loadMW": 6551,
       "generationMW": 5575,
       "importMW": 1066,
@@ -546,7 +538,7 @@
       "lowCarbonSharePct": 83.5
     },
     {
-      "time": "2026-08-05T07:09:09.000Z",
+      "time": "2026-08-05T07:04:30.000Z",
       "loadMW": 6674,
       "generationMW": 5948,
       "importMW": 976,
@@ -554,7 +546,7 @@
       "lowCarbonSharePct": 83.7
     },
     {
-      "time": "2026-08-05T07:24:09.000Z",
+      "time": "2026-08-05T07:19:30.000Z",
       "loadMW": 6810,
       "generationMW": 6286,
       "importMW": 726,
@@ -562,7 +554,7 @@
       "lowCarbonSharePct": 84.1
     },
     {
-      "time": "2026-08-05T07:39:09.000Z",
+      "time": "2026-08-05T07:34:30.000Z",
       "loadMW": 6939,
       "generationMW": 6526,
       "importMW": 523,
@@ -570,7 +562,7 @@
       "lowCarbonSharePct": 85.3
     },
     {
-      "time": "2026-08-05T07:54:09.000Z",
+      "time": "2026-08-05T07:49:30.000Z",
       "loadMW": 7085,
       "generationMW": 6560,
       "importMW": 413,
@@ -578,7 +570,7 @@
       "lowCarbonSharePct": 88.5
     },
     {
-      "time": "2026-08-05T08:09:09.000Z",
+      "time": "2026-08-05T08:04:30.000Z",
       "loadMW": 7204,
       "generationMW": 6785,
       "importMW": 525,
@@ -586,7 +578,7 @@
       "lowCarbonSharePct": 89.1
     },
     {
-      "time": "2026-08-05T08:24:09.000Z",
+      "time": "2026-08-05T08:19:30.000Z",
       "loadMW": 7390,
       "generationMW": 6958,
       "importMW": 418,
@@ -594,7 +586,7 @@
       "lowCarbonSharePct": 89.6
     },
     {
-      "time": "2026-08-05T08:39:09.000Z",
+      "time": "2026-08-05T08:34:30.000Z",
       "loadMW": 7502,
       "generationMW": 7130,
       "importMW": 431,
@@ -602,7 +594,7 @@
       "lowCarbonSharePct": 90
     },
     {
-      "time": "2026-08-05T08:54:09.000Z",
+      "time": "2026-08-05T08:49:30.000Z",
       "loadMW": 7667,
       "generationMW": 7274,
       "importMW": 373,
@@ -610,7 +602,7 @@
       "lowCarbonSharePct": 90.5
     },
     {
-      "time": "2026-08-05T09:09:09.000Z",
+      "time": "2026-08-05T09:04:30.000Z",
       "loadMW": 7656,
       "generationMW": 7375,
       "importMW": 393,
@@ -618,7 +610,7 @@
       "lowCarbonSharePct": 90.9
     },
     {
-      "time": "2026-08-05T09:24:09.000Z",
+      "time": "2026-08-05T09:19:30.000Z",
       "loadMW": 7744,
       "generationMW": 7474,
       "importMW": 281,
@@ -626,7 +618,7 @@
       "lowCarbonSharePct": 90.9
     },
     {
-      "time": "2026-08-05T09:39:09.000Z",
+      "time": "2026-08-05T09:34:30.000Z",
       "loadMW": 7843,
       "generationMW": 7555,
       "importMW": 270,
@@ -634,7 +626,7 @@
       "lowCarbonSharePct": 91
     },
     {
-      "time": "2026-08-05T09:54:09.000Z",
+      "time": "2026-08-05T09:49:30.000Z",
       "loadMW": 7876,
       "generationMW": 7588,
       "importMW": 289,
@@ -642,7 +634,7 @@
       "lowCarbonSharePct": 91.3
     },
     {
-      "time": "2026-08-05T10:09:09.000Z",
+      "time": "2026-08-05T10:04:30.000Z",
       "loadMW": 8019,
       "generationMW": 7595,
       "importMW": 288,
@@ -650,7 +642,7 @@
       "lowCarbonSharePct": 91.6
     },
     {
-      "time": "2026-08-05T10:24:09.000Z",
+      "time": "2026-08-05T10:19:30.000Z",
       "loadMW": 8051,
       "generationMW": 7588,
       "importMW": 425,
@@ -658,7 +650,7 @@
       "lowCarbonSharePct": 91.9
     },
     {
-      "time": "2026-08-05T10:39:09.000Z",
+      "time": "2026-08-05T10:34:30.000Z",
       "loadMW": 8095,
       "generationMW": 7598,
       "importMW": 463,
@@ -666,7 +658,7 @@
       "lowCarbonSharePct": 91.9
     },
     {
-      "time": "2026-08-05T10:54:09.000Z",
+      "time": "2026-08-05T10:49:30.000Z",
       "loadMW": 8119,
       "generationMW": 7569,
       "importMW": 497,
@@ -674,7 +666,7 @@
       "lowCarbonSharePct": 91.9
     },
     {
-      "time": "2026-08-05T11:09:09.000Z",
+      "time": "2026-08-05T11:04:30.000Z",
       "loadMW": 8004,
       "generationMW": 7543,
       "importMW": 550,
@@ -682,7 +674,7 @@
       "lowCarbonSharePct": 91.8
     },
     {
-      "time": "2026-08-05T11:24:09.000Z",
+      "time": "2026-08-05T11:19:30.000Z",
       "loadMW": 8006,
       "generationMW": 7526,
       "importMW": 460,
@@ -690,7 +682,7 @@
       "lowCarbonSharePct": 91.9
     },
     {
-      "time": "2026-08-05T11:39:09.000Z",
+      "time": "2026-08-05T11:34:30.000Z",
       "loadMW": 7976,
       "generationMW": 7463,
       "importMW": 480,
@@ -698,7 +690,7 @@
       "lowCarbonSharePct": 92
     },
     {
-      "time": "2026-08-05T11:54:09.000Z",
+      "time": "2026-08-05T11:49:30.000Z",
       "loadMW": 7887,
       "generationMW": 7402,
       "importMW": 513,
@@ -706,7 +698,7 @@
       "lowCarbonSharePct": 91.3
     },
     {
-      "time": "2026-08-05T12:09:09.000Z",
+      "time": "2026-08-05T12:04:30.000Z",
       "loadMW": 7852,
       "generationMW": 7325,
       "importMW": 486,
@@ -714,7 +706,7 @@
       "lowCarbonSharePct": 91.3
     },
     {
-      "time": "2026-08-05T12:24:09.000Z",
+      "time": "2026-08-05T12:19:30.000Z",
       "loadMW": 7854,
       "generationMW": 7216,
       "importMW": 526,
@@ -722,7 +714,7 @@
       "lowCarbonSharePct": 91.4
     },
     {
-      "time": "2026-08-05T12:39:09.000Z",
+      "time": "2026-08-05T12:34:30.000Z",
       "loadMW": 7852,
       "generationMW": 7136,
       "importMW": 639,
@@ -730,7 +722,7 @@
       "lowCarbonSharePct": 90.8
     },
     {
-      "time": "2026-08-05T12:54:09.000Z",
+      "time": "2026-08-05T12:49:30.000Z",
       "loadMW": 7823,
       "generationMW": 6977,
       "importMW": 715,
@@ -738,7 +730,7 @@
       "lowCarbonSharePct": 90.4
     },
     {
-      "time": "2026-08-05T13:09:09.000Z",
+      "time": "2026-08-05T13:04:30.000Z",
       "loadMW": 7824,
       "generationMW": 6865,
       "importMW": 846,
@@ -746,7 +738,7 @@
       "lowCarbonSharePct": 89.8
     },
     {
-      "time": "2026-08-05T13:24:09.000Z",
+      "time": "2026-08-05T13:19:30.000Z",
       "loadMW": 7748,
       "generationMW": 6663,
       "importMW": 959,
@@ -754,7 +746,7 @@
       "lowCarbonSharePct": 89.1
     },
     {
-      "time": "2026-08-05T13:39:09.000Z",
+      "time": "2026-08-05T13:34:30.000Z",
       "loadMW": 7773,
       "generationMW": 6517,
       "importMW": 1084,
@@ -762,7 +754,7 @@
       "lowCarbonSharePct": 88.4
     },
     {
-      "time": "2026-08-05T13:54:09.000Z",
+      "time": "2026-08-05T13:49:30.000Z",
       "loadMW": 7704,
       "generationMW": 6485,
       "importMW": 1256,
@@ -770,7 +762,7 @@
       "lowCarbonSharePct": 84.7
     },
     {
-      "time": "2026-08-05T14:09:09.000Z",
+      "time": "2026-08-05T14:04:30.000Z",
       "loadMW": 7622,
       "generationMW": 6062,
       "importMW": 1219,
@@ -778,7 +770,7 @@
       "lowCarbonSharePct": 86.1
     },
     {
-      "time": "2026-08-05T14:24:09.000Z",
+      "time": "2026-08-05T14:19:30.000Z",
       "loadMW": 7521,
       "generationMW": 5930,
       "importMW": 1560,
@@ -786,7 +778,7 @@
       "lowCarbonSharePct": 83.6
     },
     {
-      "time": "2026-08-05T14:39:09.000Z",
+      "time": "2026-08-05T14:34:30.000Z",
       "loadMW": 7531,
       "generationMW": 5834,
       "importMW": 1590,
@@ -794,7 +786,7 @@
       "lowCarbonSharePct": 80.3
     },
     {
-      "time": "2026-08-05T14:54:09.000Z",
+      "time": "2026-08-05T14:49:30.000Z",
       "loadMW": 7476,
       "generationMW": 5736,
       "importMW": 1698,
@@ -802,7 +794,7 @@
       "lowCarbonSharePct": 76.5
     },
     {
-      "time": "2026-08-05T15:09:09.000Z",
+      "time": "2026-08-05T15:04:30.000Z",
       "loadMW": 7365,
       "generationMW": 5419,
       "importMW": 1740,
@@ -810,7 +802,7 @@
       "lowCarbonSharePct": 73.7
     },
     {
-      "time": "2026-08-05T15:24:09.000Z",
+      "time": "2026-08-05T15:19:30.000Z",
       "loadMW": 7242,
       "generationMW": 5238,
       "importMW": 1945,
@@ -818,7 +810,7 @@
       "lowCarbonSharePct": 69.1
     },
     {
-      "time": "2026-08-05T15:39:09.000Z",
+      "time": "2026-08-05T15:34:30.000Z",
       "loadMW": 7208,
       "generationMW": 5035,
       "importMW": 2004,
@@ -826,7 +818,7 @@
       "lowCarbonSharePct": 64.5
     },
     {
-      "time": "2026-08-05T15:54:09.000Z",
+      "time": "2026-08-05T15:49:30.000Z",
       "loadMW": 7163,
       "generationMW": 4581,
       "importMW": 2175,
@@ -834,7 +826,7 @@
       "lowCarbonSharePct": 62
     },
     {
-      "time": "2026-08-05T16:09:09.000Z",
+      "time": "2026-08-05T16:04:30.000Z",
       "loadMW": 7065,
       "generationMW": 4285,
       "importMW": 2582,
@@ -842,7 +834,7 @@
       "lowCarbonSharePct": 56.8
     },
     {
-      "time": "2026-08-05T16:24:09.000Z",
+      "time": "2026-08-05T16:19:30.000Z",
       "loadMW": 6997,
       "generationMW": 3913,
       "importMW": 2780,
@@ -850,7 +842,7 @@
       "lowCarbonSharePct": 51.4
     },
     {
-      "time": "2026-08-05T16:39:09.000Z",
+      "time": "2026-08-05T16:34:30.000Z",
       "loadMW": 6964,
       "generationMW": 3768,
       "importMW": 3083,
@@ -858,7 +850,7 @@
       "lowCarbonSharePct": 43.7
     },
     {
-      "time": "2026-08-05T16:54:09.000Z",
+      "time": "2026-08-05T16:49:30.000Z",
       "loadMW": 6919,
       "generationMW": 3549,
       "importMW": 3197,
@@ -866,7 +858,7 @@
       "lowCarbonSharePct": 37.7
     },
     {
-      "time": "2026-08-05T17:09:09.000Z",
+      "time": "2026-08-05T17:04:30.000Z",
       "loadMW": 6872,
       "generationMW": 3152,
       "importMW": 3370,
@@ -874,7 +866,7 @@
       "lowCarbonSharePct": 34.4
     },
     {
-      "time": "2026-08-05T17:24:09.000Z",
+      "time": "2026-08-05T17:19:30.000Z",
       "loadMW": 6795,
       "generationMW": 3036,
       "importMW": 3720,
@@ -882,7 +874,7 @@
       "lowCarbonSharePct": 29.4
     },
     {
-      "time": "2026-08-05T17:39:09.000Z",
+      "time": "2026-08-05T17:34:30.000Z",
       "loadMW": 6707,
       "generationMW": 2971,
       "importMW": 3759,
@@ -890,7 +882,7 @@
       "lowCarbonSharePct": 25.7
     },
     {
-      "time": "2026-08-05T17:54:09.000Z",
+      "time": "2026-08-05T17:49:30.000Z",
       "loadMW": 6672,
       "generationMW": 2870,
       "importMW": 3735,
@@ -898,7 +890,7 @@
       "lowCarbonSharePct": 23.6
     },
     {
-      "time": "2026-08-05T18:09:09.000Z",
+      "time": "2026-08-05T18:04:30.000Z",
       "loadMW": 6598,
       "generationMW": 2877,
       "importMW": 3801,
@@ -906,7 +898,7 @@
       "lowCarbonSharePct": 22.1
     },
     {
-      "time": "2026-08-05T18:24:09.000Z",
+      "time": "2026-08-05T18:19:30.000Z",
       "loadMW": 6560,
       "generationMW": 2959,
       "importMW": 3721,
@@ -914,7 +906,7 @@
       "lowCarbonSharePct": 20.9
     },
     {
-      "time": "2026-08-05T18:39:09.000Z",
+      "time": "2026-08-05T18:34:30.000Z",
       "loadMW": 6517,
       "generationMW": 2872,
       "importMW": 3601,
@@ -922,7 +914,7 @@
       "lowCarbonSharePct": 19.5
     },
     {
-      "time": "2026-08-05T18:54:09.000Z",
+      "time": "2026-08-05T18:49:30.000Z",
       "loadMW": 6471,
       "generationMW": 2804,
       "importMW": 3645,
@@ -930,7 +922,7 @@
       "lowCarbonSharePct": 19.1
     },
     {
-      "time": "2026-08-05T19:09:09.000Z",
+      "time": "2026-08-05T19:04:30.000Z",
       "loadMW": 6404,
       "generationMW": 2830,
       "importMW": 3667,
@@ -938,12 +930,20 @@
       "lowCarbonSharePct": 18.2
     },
     {
-      "time": "2026-08-05T19:24:09.000Z",
-      "loadMW": 6339,
-      "generationMW": 2749,
+      "time": "2026-08-05T19:19:30.000Z",
+      "loadMW": 6312,
+      "generationMW": 2753,
       "importMW": 3574,
-      "domesticCoveragePct": 43.4,
+      "domesticCoveragePct": 43.6,
       "lowCarbonSharePct": 18.4
+    },
+    {
+      "time": "2026-08-05T19:34:30.000Z",
+      "loadMW": 6249,
+      "generationMW": 2722,
+      "importMW": 3559,
+      "domesticCoveragePct": 43.6,
+      "lowCarbonSharePct": 18.5
     }
   ],
   "quality": {
@@ -952,10 +952,10 @@
       "MAVIR 5229",
       "MAVIR 4444"
     ],
-    "systemGapMW": 16,
-    "flowGapMW": -4.2,
-    "mixGapMW": -0.2,
-    "mixToleranceMW": 6.9,
+    "systemGapMW": -31.6,
+    "flowGapMW": -0.9,
+    "mixGapMW": 0.1,
+    "mixToleranceMW": 6.8,
     "maxFeedOffsetMinutes": 0,
     "provisionalRowsSkipped": 0,
     "checksPassed": 8,
@@ -989,6 +989,6 @@
     },
     "changePct": -4.8,
     "submissionVersion": "20260315",
-    "fetchedAt": "2026-08-05T19:24:09.676Z"
+    "fetchedAt": "2026-08-05T19:34:30.599Z"
   }
 }

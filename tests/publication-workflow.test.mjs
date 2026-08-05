@@ -43,6 +43,8 @@ test("the updater uses direct MAVIR exports and no intermediary", () => {
   assert.match(updater, /fetchEntsoePrices/);
   assert.match(updater, /discodata\.eea\.europa\.eu|energy-enrichment/);
   assert.doesNotMatch(updater, /holadelej|energy-charts|smard/i);
+  assert.doesNotMatch(updater, /Promise\.all\(\[\s*fetchChart/);
+  assert.match(updater, /response\.status === 429/);
 });
 
 test("an open dashboard polls for newly published snapshots", () => {

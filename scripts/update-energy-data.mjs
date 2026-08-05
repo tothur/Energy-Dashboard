@@ -32,37 +32,46 @@ async function fetchChart(chartId) {
   });
 
   let lastError;
-  for (let attempt = 1; attempt <= 3; attempt += 1) {
+  for (let attempt = 1; attempt <= 4; attempt += 1) {
     try {
       const response = await fetch(url, {
         headers: { accept: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" },
         signal: AbortSignal.timeout(30_000),
       });
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      if (!response.ok) {
+        const error = new Error(`HTTP ${response.status}`);
+        if (response.status === 429) {
+          const retryAfterSeconds = Number(response.headers.get("retry-after"));
+          error.retryAfterMs = Number.isFinite(retryAfterSeconds) && retryAfterSeconds > 0
+            ? retryAfterSeconds * 1_000
+            : attempt * 15_000;
+        }
+        throw error;
+      }
       const buffer = Buffer.from(await response.arrayBuffer());
       if (buffer.subarray(0, 2).toString("ascii") !== "PK") throw new Error("response is not an XLSX file");
       return parseFirstWorksheet(buffer);
     } catch (error) {
       lastError = error;
-      if (attempt < 3) await delay(attempt * 2_000);
+      if (attempt < 4) await delay(error.retryAfterMs ?? attempt * 2_000);
     }
   }
-  throw new Error(`MAVIR chart ${chartId} failed after 3 attempts: ${lastError.message}`);
+  throw new Error(`MAVIR chart ${chartId} failed after 4 attempts: ${lastError.message}`);
 }
 
 const previousSnapshot = await readPreviousSnapshot();
-const [systemRows, flowRows, frequencyRows, annualEmissions] = await Promise.all([
-  fetchChart(20001),
-  fetchChart(5229),
-  fetchChart(4444),
-  fetchEeaAnnualEmissions(generatedAt).catch((error) => {
-    if (previousSnapshot?.annualEmissions?.status === "available") {
-      console.warn(`EEA refresh failed; retaining the last validated annual inventory: ${error.message}`);
-      return previousSnapshot.annualEmissions;
-    }
-    throw error;
-  }),
-]);
+const systemRows = await fetchChart(20001);
+await delay(2_000);
+const flowRows = await fetchChart(5229);
+await delay(2_000);
+const frequencyRows = await fetchChart(4444);
+const annualEmissions = await fetchEeaAnnualEmissions(generatedAt).catch((error) => {
+  if (previousSnapshot?.annualEmissions?.status === "available") {
+    console.warn(`EEA refresh failed; retaining the last validated annual inventory: ${error.message}`);
+    return previousSnapshot.annualEmissions;
+  }
+  throw error;
+});
 
 const market = await fetchEntsoePrices(process.env.ENTSOE_SECURITY_TOKEN, generatedAt).catch(() => ({
   status: "unavailable_fetch_failed",

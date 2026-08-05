@@ -41,6 +41,8 @@ npm run build
 
 The scheduled job does not create automated data commits. If the live MAVIR fetch or validation fails, publication stops and the previous successful Pages deployment remains online. The annual EEA inventory may retain the last validated annual value when that source is temporarily unavailable; no replacement value is fabricated.
 
+MAVIR exports are requested sequentially, with explicit spacing and `429 Too Many Requests` backoff. This keeps the five-minute publication trigger from sending a burst of parallel requests to the official RTDW service.
+
 ## Key files
 
 - `src/data/energy-schema.mjs` — normalization and fail-closed validation
