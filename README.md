@@ -43,6 +43,10 @@ The scheduled job does not create automated data commits. If the live MAVIR fetc
 
 MAVIR exports are requested sequentially, with explicit spacing and `429 Too Many Requests` backoff. This keeps the five-minute publication trigger from sending a burst of parallel requests to the official RTDW service.
 
+## OpenAI Sites publication
+
+The Sites build exposes `/api/energy`, backed by a D1 snapshot and direct request-driven MAVIR refreshes. A snapshot older than two minutes is refreshed in the background with a database lock so concurrent visitors do not create a burst of source requests. The first request initializes from the bundled validated snapshot and attempts an immediate direct refresh. `/api/health` exposes freshness and validation status without returning the full dataset. GitHub Pages remains a static fallback and continues to use its bundled JSON when the Sites API is unavailable.
+
 ## Key files
 
 - `src/data/energy-schema.mjs` — normalization and fail-closed validation

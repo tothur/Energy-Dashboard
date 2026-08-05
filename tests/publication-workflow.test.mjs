@@ -49,6 +49,7 @@ test("the updater uses direct MAVIR exports and no intermediary", () => {
 
 test("an open dashboard polls for newly published snapshots", () => {
   assert.match(app, /setInterval\(\(\) => load\(false\), 60_000\)/);
+  assert.match(app, /\/api\/energy\?v=\$\{Date\.now\(\)\}/);
   assert.match(app, /v=\$\{Date\.now\(\)\}/);
   assert.match(app, /visibilitychange/);
 });

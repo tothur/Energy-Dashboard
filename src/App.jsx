@@ -115,8 +115,12 @@ function useEnergyData() {
       if (inFlight) return;
       inFlight = true;
       try {
-        const separator = publicAsset("data/energy-latest.json").includes("?") ? "&" : "?";
-        const response = await fetch(`${publicAsset("data/energy-latest.json")}${separator}v=${Date.now()}`, { cache: "no-store" });
+        const apiResponse = await fetch(`/api/energy?v=${Date.now()}`, { cache: "no-store" });
+        const fallbackUrl = publicAsset("data/energy-latest.json");
+        const separator = fallbackUrl.includes("?") ? "&" : "?";
+        const response = apiResponse.ok
+          ? apiResponse
+          : await fetch(`${fallbackUrl}${separator}v=${Date.now()}`, { cache: "no-store" });
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const data = validateNormalizedEnergyData(await response.json());
         if (active) setState({ status: "ready", data, error: null });
