@@ -13,8 +13,11 @@ import {
   Info,
   Lightning,
   MapPin,
+  Minus,
   ShieldCheck,
   Sun,
+  TrendDown,
+  TrendUp,
   Wind,
   X,
 } from "@phosphor-icons/react";
@@ -22,6 +25,9 @@ import {
   Area,
   AreaChart,
   CartesianGrid,
+  Line,
+  LineChart,
+  ReferenceLine,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -79,6 +85,13 @@ function formatMW(value) {
   return Number.isFinite(value) ? numberFormatter.format(value) : "—";
 }
 
+function formatSigned(value, digits = 0) {
+  if (!Number.isFinite(value)) return "—";
+  const formatted = digits === 0 ? numberFormatter.format(Math.abs(value)) : decimalFormatter.format(Math.abs(value));
+  if (value === 0) return formatted;
+  return `${value > 0 ? "+" : "−"}${formatted}`;
+}
+
 function formatLocalTime(value, withDate = false) {
   return new Intl.DateTimeFormat("hu-HU", {
     timeZone: "Europe/Budapest",
@@ -115,7 +128,7 @@ function useEnergyData() {
     };
 
     load(true);
-    const timer = window.setInterval(() => load(false), 2 * 60_000);
+    const timer = window.setInterval(() => load(false), 60_000);
     const onVisibilityChange = () => document.visibilityState === "visible" && load(false);
     document.addEventListener("visibilitychange", onVisibilityChange);
     return () => {
@@ -153,6 +166,19 @@ function RangeControl({ range, onChange }) {
       <button className={range === "now" ? "active" : ""} onClick={() => onChange("now")}>MOST</button>
       <button className={range === "24h" ? "active" : ""} onClick={() => onChange("24h")}>24 ÓRA</button>
       <button disabled title="A hét napos, közvetlen forrás még nincs bekötve">7 NAP</button>
+    </div>
+  );
+}
+
+function MetricDelta({ value, unit = "MW", elapsedMinutes, positiveTone = "good", negativeTone = "warning" }) {
+  const direction = value > 0 ? "up" : value < 0 ? "down" : "flat";
+  const tone = direction === "up" ? positiveTone : direction === "down" ? negativeTone : "neutral";
+  const Icon = direction === "up" ? TrendUp : direction === "down" ? TrendDown : Minus;
+  return (
+    <div className={`metric-delta ${tone}`} title={`Változás ${elapsedMinutes} perc alatt`}>
+      <Icon size={12} weight="bold" />
+      <b>{formatSigned(value, unit === "%pont" ? 1 : 0)} {unit}</b>
+      <small>{decimalFormatter.format(elapsedMinutes)} perc alatt</small>
     </div>
   );
 }
@@ -211,6 +237,7 @@ function GenerationMix({ data, selected, onSelect }) {
           <span>Összesen</span>
           <strong>{formatMW(data.system.generationMW)}</strong>
           <small>MW</small>
+          <MetricDelta value={data.movement15m.generationMW} elapsedMinutes={data.movement15m.elapsedMinutes} />
         </div>
 
         <div className="mix-visual">
@@ -273,10 +300,10 @@ function BalancePanel({ data }) {
       </div>
 
       <div className="balance-metrics">
-        <div><span>Fogyasztás</span><strong>{formatMW(data.system.consumptionMW)}</strong><small>MW</small></div>
-        <div className="cyan"><span>Nettó import</span><strong>{formatMW(data.system.netImportMW)}</strong><small>MW</small></div>
-        <div className="green"><span>Hazai fedezet</span><strong>{decimalFormatter.format(coverage)}</strong><small>%</small></div>
-        <div className="green"><span>Alacsony karbon</span><strong>{decimalFormatter.format(data.system.lowCarbonSharePct)}</strong><small>% a hazai mixből</small></div>
+        <div><span>Fogyasztás</span><strong>{formatMW(data.system.consumptionMW)}</strong><small>MW</small><MetricDelta value={data.movement15m.consumptionMW} elapsedMinutes={data.movement15m.elapsedMinutes} positiveTone="neutral" negativeTone="neutral" /></div>
+        <div className="cyan"><span>Nettó import</span><strong>{formatMW(data.system.netImportMW)}</strong><small>MW</small><MetricDelta value={data.movement15m.netImportMW} elapsedMinutes={data.movement15m.elapsedMinutes} positiveTone="warning" negativeTone="good" /></div>
+        <div className="green"><span>Hazai fedezet</span><strong>{decimalFormatter.format(coverage)}</strong><small>%</small><MetricDelta value={data.movement15m.domesticCoveragePct} unit="%pont" elapsedMinutes={data.movement15m.elapsedMinutes} /></div>
+        <div className="green"><span>Alacsony karbon</span><strong>{decimalFormatter.format(data.system.lowCarbonSharePct)}</strong><small>% a hazai mixből</small><MetricDelta value={data.movement15m.lowCarbonSharePct} unit="%pont" elapsedMinutes={data.movement15m.elapsedMinutes} /></div>
       </div>
 
       <div className="balance-track" aria-label={`Hazai fedezet ${coverage} százalék`}>
@@ -287,11 +314,11 @@ function BalancePanel({ data }) {
   );
 }
 
-function FlowMarker({ flow, selected, onSelect }) {
+function FlowMarker({ flow, selected, dimmed, onSelect }) {
   const imported = flow.direction === "import";
   return (
     <button
-      className={`flow-marker ${imported ? "import" : "export"} ${selected ? "selected" : ""}`}
+      className={`flow-marker ${imported ? "import" : "export"} ${selected ? "selected" : ""} ${dimmed ? "dimmed" : ""}`}
       data-code={flow.code}
       style={FLOW_POSITIONS[flow.code]}
       onClick={() => onSelect(flow.code)}
@@ -451,11 +478,9 @@ function EnergyMap({ data }) {
   const stageRef = useRef(null);
   const selectedFlow = data.flows.find((flow) => flow.code === selection.key);
   const selectedPlant = data.plants.find((plant) => plant.key === selection.key);
-  const selectedLabel = selectedFlow
-    ? `${selectedFlow.country}: ${selectedFlow.direction === "import" ? "behozatal" : "kivitel"} ${formatMW(Math.abs(selectedFlow.mw))} MW`
-    : selectedPlant
-      ? `${selectedPlant.name}: ${Number.isFinite(selectedPlant.mw) ? `${formatMW(selectedPlant.mw)} MW` : "nincs külön élő teljesítményadat"}`
-      : "Válassz egy áramlást vagy erőművet";
+  const selectedLabel = selectedPlant
+    ? `${selectedPlant.name}: ${Number.isFinite(selectedPlant.mw) ? `${formatMW(selectedPlant.mw)} MW` : "nincs külön élő teljesítményadat"}`
+    : "Válassz egy áramlást vagy erőművet";
 
   return (
     <section className="panel map-panel" aria-labelledby="map-title">
@@ -480,6 +505,7 @@ function EnergyMap({ data }) {
             key={flow.code}
             flow={flow}
             selected={selection.type === "flow" && selection.key === flow.code}
+            dimmed={selection.type === "flow" && selection.key !== flow.code}
             onSelect={(key) => setSelection({ type: "flow", key })}
           />
         ))}
@@ -495,10 +521,19 @@ function EnergyMap({ data }) {
         <div className="solar-cluster cluster-center" title="Napenergia-régió"><Sun size={18} weight="fill" /></div>
         <div className="solar-cluster cluster-east" title="Napenergia-régió"><Sun size={18} weight="fill" /></div>
 
-        <div className="map-inspector" aria-live="polite">
-          <MapPin size={17} weight="fill" />
-          <span>{selectedLabel}</span>
-        </div>
+        {selectedFlow ? (
+          <div className={`map-inspector flow-inspector ${selectedFlow.direction}`} aria-live="polite">
+            <div className="inspector-heading"><MapPin size={17} weight="fill" /><strong>{selectedFlow.country}</strong><span>{selectedFlow.direction === "import" ? "hozzánk érkezik" : "tőlünk távozik"}</span></div>
+            <div className="inspector-grid">
+              <div><span>Most áramlik</span><b>{formatSigned(selectedFlow.mw)} MW</b></div>
+              <div><span>Menetrend szerint</span><b>{formatSigned(selectedFlow.scheduledMW)} MW</b></div>
+              <div><span>Eltérés · tény − terv</span><b className={Math.abs(selectedFlow.deviationMW) >= 250 ? "attention" : ""}>{formatSigned(selectedFlow.deviationMW)} MW</b></div>
+            </div>
+            <small>A pozitív előjel Magyarország felé irányuló áramlást jelent.</small>
+          </div>
+        ) : (
+          <div className="map-inspector plant-inspector" aria-live="polite"><MapPin size={17} weight="fill" /><span>{selectedLabel}</span></div>
+        )}
       </div>
     </section>
   );
@@ -510,6 +545,17 @@ function HistoryTooltip({ active, payload, label }) {
     <div className="chart-tooltip">
       <strong>{formatLocalTime(label)}</strong>
       {payload.map((item) => <span key={item.dataKey} style={{ color: item.color }}>{item.name}: {formatMW(item.value)} MW</span>)}
+    </div>
+  );
+}
+
+function PriceTooltip({ active, payload, label }) {
+  const point = payload?.find((item) => Number.isFinite(item.value));
+  if (!active || !point) return null;
+  return (
+    <div className="chart-tooltip price-tooltip">
+      <strong>{formatLocalTime(label)}</strong>
+      <span>{decimalFormatter.format(point.value)} EUR/MWh</span>
     </div>
   );
 }
@@ -549,11 +595,41 @@ function PriceCard({ data }) {
   const unavailableLabel = data.market.status === "unavailable_missing_entsoe_token"
     ? "ENTSO-E API-KULCS SZÜKSÉGES"
     : "A HIVATALOS FEED ÁTMENETILEG NEM ELÉRHETŐ";
+  const priceSeries = useMemo(() => {
+    const points = data.market.today?.points ?? [];
+    const now = Date.parse(data.generatedAt);
+    return points.map((point) => {
+      const start = Date.parse(point.start);
+      const end = Date.parse(point.end);
+      const currentOrPast = start <= now;
+      const currentOrFuture = end > now;
+      return {
+        time: point.start,
+        elapsed: currentOrPast ? point.eurMWh : null,
+        upcoming: currentOrFuture ? point.eurMWh : null,
+      };
+    });
+  }, [data.generatedAt, data.market.today]);
   return (
     <section className="analytics-card price-card">
       <div className="card-heading"><div><span className="eyebrow">TŐZSDEI ÁR</span><h3>Magyar másnapi piaci ár</h3></div><span className="unit">EUR/MWh</span></div>
       <strong className={`price-value ${available ? "" : "unavailable"}`}>{headline === null ? "—" : decimalFormatter.format(headline)}</strong>
       <span className={`availability ${available ? "available" : ""}`}>{available ? headlineLabel : unavailableLabel}</span>
+      {priceSeries.length > 0 ? (
+        <div className="price-chart" aria-label="A mai másnapi piaci ár: folytonos vonal az eltelt, szaggatott vonal a hátralévő időszak">
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={priceSeries} margin={{ top: 8, right: 3, left: 3, bottom: 0 }}>
+              <XAxis dataKey="time" tickFormatter={(value) => formatLocalTime(value)} minTickGap={38} tick={{ fill: "#6f8493", fontSize: 8 }} axisLine={{ stroke: "#2e414f" }} tickLine={false} />
+              <YAxis hide domain={["dataMin - 5", "dataMax + 5"]} />
+              <Tooltip content={<PriceTooltip />} />
+              {data.market.current && <ReferenceLine x={data.market.current.start} stroke="#f0d36d" strokeOpacity={0.45} strokeDasharray="2 3" />}
+              <Line type="monotone" dataKey="elapsed" name="Eltelt időszak" stroke="#f0d36d" strokeWidth={2} dot={false} connectNulls={false} />
+              <Line type="monotone" dataKey="upcoming" name="Hátralévő időszak" stroke="#f39b45" strokeWidth={1.8} strokeDasharray="4 4" dot={false} connectNulls={false} />
+            </LineChart>
+          </ResponsiveContainer>
+          <div className="price-chart-legend"><span className="elapsed">eltelt</span><span className="upcoming">hátralévő</span></div>
+        </div>
+      ) : <div className="price-chart-empty">A napi árpálya az ENTSO-E kapcsolat aktiválása után jelenik meg.</div>}
       {data.market.nextDay && <div className="data-line"><span>Holnapi átlag</span><b>{decimalFormatter.format(data.market.nextDay.averageEurMWh)} EUR/MWh</b></div>}
       {data.market.nextDay && <div className="data-line compact"><span>Holnapi sáv</span><b>{decimalFormatter.format(data.market.nextDay.minEurMWh)}–{decimalFormatter.format(data.market.nextDay.maxEurMWh)}</b></div>}
       <div className="data-line"><span>Forrás</span><b>{data.source.price}</b></div>
@@ -601,7 +677,7 @@ function SourcesDrawer({ data, onClose }) {
 
         <div className="source-list">
           <div><Database size={20} /><span><b>Terhelés és termelési mix</b><small>{data.source.primary} · 20001-es diagram</small></span></div>
-          <div><ArrowsLeftRight size={20} /><span><b>Határkeresztező áramlások</b><small>{data.source.primary} · 5229-es diagram</small></span></div>
+          <div><ArrowsLeftRight size={20} /><span><b>Határkeresztező tény és menetrend</b><small>{data.source.primary} · 5229-es diagram · azonos időpont</small></span></div>
           <div><Lightning size={20} /><span><b>Hálózati frekvencia</b><small>{data.source.primary} · 4444-es diagram</small></span></div>
           <div><Lightning size={20} /><span><b>Piaci ár</b><small>{data.source.price} · A44 · {data.market.status === "available" ? "elérhető" : "jelenleg nincs közölve"}</small></span></div>
           <div><ShieldCheck size={20} /><span><b>Éves kibocsátási leltár</b><small>{data.source.annualEmissions} · IPCC 1.A.1.a · {data.annualEmissions.latest.year}</small></span></div>

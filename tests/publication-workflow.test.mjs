@@ -25,7 +25,7 @@ test("Pages publication refreshes and validates data before deployment", () => {
 
 test("Pages publication supports main pushes, manual runs, and frequent refreshes", () => {
   assert.match(workflow, /branches:\s*\n\s*- main/);
-  assert.match(workflow, /cron: "4,14,24,34,44,54 \* \* \* \*"/);
+  assert.match(workflow, /cron: "2-59\/5 \* \* \* \*"/);
   assert.match(workflow, /workflow_dispatch:/);
   assert.match(workflow, /node-version: "24"/);
   assert.match(workflow, /path: \.\/dist\/client/);
@@ -46,7 +46,7 @@ test("the updater uses direct MAVIR exports and no intermediary", () => {
 });
 
 test("an open dashboard polls for newly published snapshots", () => {
-  assert.match(app, /setInterval\(\(\) => load\(false\), 2 \* 60_000\)/);
+  assert.match(app, /setInterval\(\(\) => load\(false\), 60_000\)/);
   assert.match(app, /v=\$\{Date\.now\(\)\}/);
   assert.match(app, /visibilitychange/);
 });
