@@ -15,7 +15,7 @@ The frontend only renders `public/data/energy-latest.json` after `validateNormal
 
 Missing metrics remain unavailable. The dashboard does not estimate real-time carbon intensity from an insufficiently detailed generation mix. It publishes the directly calculable low-carbon generation share and the latest reported EEA national inventory for public electricity and heat production as two explicitly different metrics.
 
-The scheduled updater downloads three 15-minute XLSX feeds directly from MAVIR's public RTDW service: chart 20001 for load and production mix, chart 5229 for physical cross-border flows, and chart 4444 for grid frequency. The snapshot is published only when source freshness, timestamp alignment, system balance, production mix, cross-border reconciliation, and history completeness all pass validation. The measured cross-border sum gap remains visible in the methodology drawer instead of being silently adjusted.
+The scheduled updater downloads three 15-minute XLSX feeds directly from MAVIR's public RTDW service: chart 20001 for load and production mix, chart 5229 for physical and scheduled cross-border flows, and chart 4444 for grid frequency. The snapshot is published only when source freshness, timestamp alignment, system balance, production mix, cross-border reconciliation, schedule deviation, 15-minute movement, and history completeness all pass validation. The measured cross-border sum gap remains visible in the methodology drawer instead of being silently adjusted.
 
 Hungarian day-ahead prices come only from the official ENTSO-E Transparency Platform A44 feed. Set an `ENTSOE_SECURITY_TOKEN` GitHub Actions secret to enable the price card; when the token is missing or the official feed fails, the value stays unavailable instead of falling back to an intermediary.
 
@@ -37,7 +37,7 @@ npm run build
 
 ## GitHub Pages publication
 
-`.github/workflows/deploy-pages.yml` refreshes and validates the energy snapshot, builds the static app, runs the complete test suite, and deploys `dist/client` to GitHub Pages. It runs on every push to `main`, on manual dispatch, and every 10 minutes.
+`.github/workflows/deploy-pages.yml` refreshes and validates the energy snapshot, builds the static app, runs the complete test suite, and deploys `dist/client` to GitHub Pages. It runs on every push to `main`, on manual dispatch, and every 5 minutes. An open dashboard checks for a newly published snapshot every minute; the effective freshness is still bounded by the source interval and GitHub Actions scheduling latency.
 
 The scheduled job does not create automated data commits. If the live MAVIR fetch or validation fails, publication stops and the previous successful Pages deployment remains online. The annual EEA inventory may retain the last validated annual value when that source is temporarily unavailable; no replacement value is fabricated.
 

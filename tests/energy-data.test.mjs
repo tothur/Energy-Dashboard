@@ -34,6 +34,21 @@ test("generation shares and cross-border flows are internally consistent", () =>
   assert.ok(Math.abs(flowTotal - data.system.netImportMW) <= Math.max(75, data.system.consumptionMW * 0.015));
   const lowCarbonMW = data.mix.filter((item) => ["Atom", "Nap", "Egyéb megújuló"].includes(item.key)).reduce((sum, item) => sum + item.mw, 0);
   assert.ok(Math.abs(data.system.lowCarbonSharePct - (lowCarbonMW / data.system.generationMW) * 100) <= 0.2);
+  data.flows.forEach((flow) => {
+    assert.ok(Number.isFinite(flow.scheduledMW));
+    assert.ok(Math.abs(flow.deviationMW - (flow.mw - flow.scheduledMW)) <= 1);
+  });
+});
+
+test("15-minute movement reconciles to the retained MAVIR history", () => {
+  const comparison = data.history24h.find((point) => point.time === data.movement15m.comparisonAt);
+  assert.ok(comparison);
+  assert.ok(data.movement15m.elapsedMinutes >= 10 && data.movement15m.elapsedMinutes <= 20);
+  assert.ok(Math.abs(data.movement15m.consumptionMW - (data.system.consumptionMW - comparison.loadMW)) <= 0.2);
+  assert.ok(Math.abs(data.movement15m.generationMW - (data.system.generationMW - comparison.generationMW)) <= 0.2);
+  assert.ok(Math.abs(data.movement15m.netImportMW - (data.system.netImportMW - comparison.importMW)) <= 0.2);
+  assert.ok(Math.abs(data.movement15m.domesticCoveragePct - (data.system.domesticCoveragePct - comparison.domesticCoveragePct)) <= 0.2);
+  assert.ok(Math.abs(data.movement15m.lowCarbonSharePct - (data.system.lowCarbonSharePct - comparison.lowCarbonSharePct)) <= 0.2);
 });
 
 test("runtime validation fails closed when published values are tampered with", () => {

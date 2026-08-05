@@ -18,6 +18,16 @@ const FLOW_COLUMNS = [
   ["SI", "D"],
 ];
 
+const FLOW_SCHEDULE_COLUMNS = {
+  AT: "I",
+  HR: "J",
+  SI: "K",
+  SK: "L",
+  RS: "M",
+  UA: "N",
+  RO: "O",
+};
+
 function invariant(condition, message) {
   if (!condition) throw new Error(message);
 }
@@ -82,7 +92,7 @@ function mixFromRow(row) {
 
 export function normalizeMavirTables({ systemRows, flowRows, frequencyRows, generatedAt = new Date().toISOString() }) {
   const systemColumns = ["B", "D", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W"];
-  const flowColumns = FLOW_COLUMNS.map(([, column]) => column);
+  const flowColumns = [...FLOW_COLUMNS.map(([, column]) => column), ...Object.values(FLOW_SCHEDULE_COLUMNS)];
   const completeSystemRows = systemRows.slice(1).filter((row) => hasFiniteColumns(row, systemColumns) && typeof row.A === "string");
   const systemRow = completeSystemRows.findLast((candidate) => {
     if (!systemRowIsSettled(candidate)) return false;
@@ -109,9 +119,20 @@ export function normalizeMavirTables({ systemRows, flowRows, frequencyRows, gene
   const netImportMW = finite(systemRow.W, "net import");
   const mix = mixFromRow(systemRow);
   const mixTotalMW = mix.reduce((sum, item) => sum + item.mw, 0);
+  const lowCarbonMW = mix.filter((item) => ["Atom", "Nap", "Egyéb megújuló"].includes(item.key)).reduce((sum, item) => sum + item.mw, 0);
+  const lowCarbonSharePct = rounded((lowCarbonMW / generationMW) * 100, 1);
   const flows = FLOW_COLUMNS.map(([code, column]) => {
     const mw = rounded(finite(flowRow[column], `flow ${code}`));
-    return { code, country: FLOW_COUNTRIES[code], mw, direction: mw >= 0 ? "import" : "export" };
+    const scheduledMW = rounded(finite(flowRow[FLOW_SCHEDULE_COLUMNS[code]], `scheduled flow ${code}`));
+    return {
+      code,
+      country: FLOW_COUNTRIES[code],
+      mw,
+      direction: mw >= 0 ? "import" : "export",
+      scheduledMW,
+      scheduledDirection: scheduledMW >= 0 ? "import" : "export",
+      deviationMW: rounded(mw - scheduledMW),
+    };
   });
   const flowTotalMW = flows.reduce((sum, flow) => sum + flow.mw, 0);
   const systemGapMW = consumptionMW - generationMW - netImportMW;
@@ -125,18 +146,39 @@ export function normalizeMavirTables({ systemRows, flowRows, frequencyRows, gene
   invariant(Math.abs(flowGapMW) <= allowedFlowGapMW, `Cross-border flows do not reconcile (${flowGapMW.toFixed(1)} MW gap)`);
 
   const history24h = systemRows.slice(1)
-    .filter((row) => hasFiniteColumns(row, ["B", "D", "W"]) && typeof row.A === "string")
-    .map((row) => ({
-      time: parseMavirTimestamp(row.A),
-      loadMW: rounded(row.B),
-      generationMW: rounded(row.D),
-      importMW: rounded(row.W),
-    }))
+    .filter((row) => hasFiniteColumns(row, systemColumns) && typeof row.A === "string")
+    .map((row) => {
+      const rowMix = mixFromRow(row);
+      const rowLowCarbonMW = rowMix.filter((item) => ["Atom", "Nap", "Egyéb megújuló"].includes(item.key)).reduce((sum, item) => sum + item.mw, 0);
+      return {
+        time: parseMavirTimestamp(row.A),
+        loadMW: rounded(row.B),
+        generationMW: rounded(row.D),
+        importMW: rounded(row.W),
+        domesticCoveragePct: rounded((row.D / row.B) * 100, 1),
+        lowCarbonSharePct: rounded((rowLowCarbonMW / row.D) * 100, 1),
+      };
+    })
     .filter((point) => Date.parse(point.time) >= Date.parse(measuredAt) - 24 * 60 * 60_000 && Date.parse(point.time) <= Date.parse(measuredAt));
   invariant(history24h.length >= 90, `24-hour MAVIR history is incomplete (${history24h.length} points)`);
+  const comparisonTargetMs = Date.parse(measuredAt) - 15 * 60_000;
+  const comparisonPoint = history24h.reduce((nearest, point) => (
+    Math.abs(Date.parse(point.time) - comparisonTargetMs) < Math.abs(Date.parse(nearest.time) - comparisonTargetMs) ? point : nearest
+  ));
+  const movementElapsedMinutes = rounded((Date.parse(measuredAt) - Date.parse(comparisonPoint.time)) / 60_000, 1);
+  invariant(movementElapsedMinutes >= 10 && movementElapsedMinutes <= 20, `No comparable 15-minute MAVIR point found (${movementElapsedMinutes} minutes)`);
+  const movement15m = {
+    comparisonAt: comparisonPoint.time,
+    elapsedMinutes: movementElapsedMinutes,
+    consumptionMW: rounded(consumptionMW - comparisonPoint.loadMW),
+    generationMW: rounded(generationMW - comparisonPoint.generationMW),
+    netImportMW: rounded(netImportMW - comparisonPoint.importMW),
+    domesticCoveragePct: rounded((generationMW / consumptionMW) * 100 - comparisonPoint.domesticCoveragePct, 1),
+    lowCarbonSharePct: rounded(lowCarbonSharePct - comparisonPoint.lowCarbonSharePct, 1),
+  };
 
   return {
-    schemaVersion: 1,
+    schemaVersion: 2,
     generatedAt: new Date(generatedAt).toISOString(),
     measuredAt,
     status: "verified_snapshot",
@@ -156,12 +198,14 @@ export function normalizeMavirTables({ systemRows, flowRows, frequencyRows, gene
       generationMW: rounded(generationMW),
       netImportMW: rounded(netImportMW),
       domesticCoveragePct: rounded((generationMW / consumptionMW) * 100, 1),
+      lowCarbonSharePct,
       dayAheadPriceEurMWh: null,
       carbonIntensityGco2Kwh: null,
       carbonIntensityStatus: "insufficient_source_detail",
     },
     mix,
     flows,
+    movement15m,
     plants: [
       { key: "paks", name: "Paks", type: "nuclear", mw: rounded(systemRow.H), x: 46, y: 69 },
       { key: "matra", name: "Mátra", type: "fossil", mw: rounded(systemRow.I), x: 63, y: 37 },
@@ -177,14 +221,14 @@ export function normalizeMavirTables({ systemRows, flowRows, frequencyRows, gene
       mixToleranceMW: rounded(allowedMixGapMW, 1),
       maxFeedOffsetMinutes: rounded(alignmentMinutes, 1),
       provisionalRowsSkipped,
-      checksPassed: 6,
-      checksTotal: 6,
+      checksPassed: 8,
+      checksTotal: 8,
     },
   };
 }
 
 export function validateNormalizedEnergyData(data) {
-  invariant(data?.schemaVersion === 1, "Unsupported energy data schema");
+  invariant(data?.schemaVersion === 2, "Unsupported energy data schema");
   invariant(!Number.isNaN(Date.parse(data.measuredAt)), "Invalid measurement timestamp");
   invariant(!Number.isNaN(Date.parse(data.generatedAt)), "Invalid snapshot generation timestamp");
   const measuredYear = new Date(data.measuredAt).getUTCFullYear();
@@ -192,6 +236,7 @@ export function validateNormalizedEnergyData(data) {
   invariant(Date.parse(data.measuredAt) <= Date.parse(data.generatedAt) + 10 * 60_000, "Measurement timestamp is implausibly later than snapshot generation");
   invariant(Date.parse(data.generatedAt) - Date.parse(data.measuredAt) <= 65 * 60_000, "Published MAVIR snapshot is too old");
   invariant(data.source?.primary === "MAVIR RTDW", "Direct MAVIR attribution is missing");
+  invariant(data.source?.charts?.crossBorderFlows === 5229, "Direct MAVIR cross-border chart attribution is missing");
   invariant(["available", "unavailable_missing_entsoe_token", "unavailable_fetch_failed"].includes(data.source?.priceStatus), "Price provenance status is missing");
 
   const { frequencyHz, consumptionMW, generationMW, netImportMW, domesticCoveragePct } = data.system ?? {};
@@ -221,6 +266,24 @@ export function validateNormalizedEnergyData(data) {
     } else {
       invariant(data.system.dayAheadPriceEurMWh === null, "A missing current interval must not have a headline price");
     }
+    if (data.market.today) {
+      invariant(data.market.today.deliveryDate === new Intl.DateTimeFormat("en-CA", {
+        timeZone: "Europe/Budapest",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+      }).format(new Date(data.generatedAt)), "Current-day price series has the wrong delivery date");
+      invariant(Array.isArray(data.market.today.points) && data.market.today.points.length >= 23 && data.market.today.points.length <= 100, "Current-day price series is incomplete");
+      data.market.today.points.forEach((point, index) => {
+        invariant(!Number.isNaN(Date.parse(point.start)) && !Number.isNaN(Date.parse(point.end)), `market.today.points[${index}] has an invalid timestamp`);
+        finite(point.eurMWh, `market.today.points[${index}].eurMWh`);
+        if (index > 0) invariant(Date.parse(point.start) > Date.parse(data.market.today.points[index - 1].start), "Current-day price series is not chronological");
+      });
+      if (data.market.current) {
+        const matchingPoint = data.market.today.points.find((point) => point.start === data.market.current.start);
+        invariant(matchingPoint?.eurMWh === data.market.current.eurMWh, "Headline market price does not match the daily series");
+      }
+    }
     if (data.market.nextDay) {
       [data.market.nextDay.averageEurMWh, data.market.nextDay.minEurMWh, data.market.nextDay.maxEurMWh].forEach((value, index) => finite(value, `next-day market metric ${index}`));
       invariant(data.market.nextDay.minEurMWh <= data.market.nextDay.averageEurMWh && data.market.nextDay.averageEurMWh <= data.market.nextDay.maxEurMWh, "Next-day market summary is inconsistent");
@@ -243,6 +306,10 @@ export function validateNormalizedEnergyData(data) {
   data.flows.forEach((flow) => {
     finite(flow.mw, `flow.${flow.code}.mw`);
     invariant(flow.direction === (flow.mw >= 0 ? "import" : "export"), `flow.${flow.code} direction contradicts its sign`);
+    finite(flow.scheduledMW, `flow.${flow.code}.scheduledMW`);
+    finite(flow.deviationMW, `flow.${flow.code}.deviationMW`);
+    invariant(flow.scheduledDirection === (flow.scheduledMW >= 0 ? "import" : "export"), `flow.${flow.code} scheduled direction contradicts its sign`);
+    invariant(Math.abs(flow.deviationMW - (flow.mw - flow.scheduledMW)) <= 1, `flow.${flow.code} deviation does not reconcile`);
   });
   const flowTotalMW = data.flows.reduce((sum, flow) => sum + flow.mw, 0);
   invariant(Math.abs(flowTotalMW - netImportMW) <= Math.max(75, consumptionMW * 0.015), "Published cross-border flows do not reconcile");
@@ -253,7 +320,25 @@ export function validateNormalizedEnergyData(data) {
     finite(point.loadMW, `history[${index}].loadMW`);
     finite(point.generationMW, `history[${index}].generationMW`);
     finite(point.importMW, `history[${index}].importMW`);
+    finite(point.domesticCoveragePct, `history[${index}].domesticCoveragePct`);
+    finite(point.lowCarbonSharePct, `history[${index}].lowCarbonSharePct`);
     if (index > 0) invariant(Date.parse(point.time) > Date.parse(data.history24h[index - 1].time), "24-hour history is not chronological");
+  });
+
+  invariant(!Number.isNaN(Date.parse(data.movement15m?.comparisonAt)), "15-minute comparison timestamp is invalid");
+  invariant(data.movement15m.elapsedMinutes >= 10 && data.movement15m.elapsedMinutes <= 20, "15-minute comparison window is invalid");
+  const comparisonPoint = data.history24h.find((point) => point.time === data.movement15m.comparisonAt);
+  invariant(comparisonPoint, "15-minute comparison point is missing from history");
+  const expectedMovement = {
+    consumptionMW: consumptionMW - comparisonPoint.loadMW,
+    generationMW: generationMW - comparisonPoint.generationMW,
+    netImportMW: netImportMW - comparisonPoint.importMW,
+    domesticCoveragePct: domesticCoveragePct - comparisonPoint.domesticCoveragePct,
+    lowCarbonSharePct: data.system.lowCarbonSharePct - comparisonPoint.lowCarbonSharePct,
+  };
+  Object.entries(expectedMovement).forEach(([key, value]) => {
+    finite(data.movement15m[key], `movement15m.${key}`);
+    invariant(Math.abs(data.movement15m[key] - value) <= 0.2, `movement15m.${key} does not reconcile`);
   });
 
   invariant(data.quality?.checksPassed === data.quality?.checksTotal && data.quality.checksTotal >= 6, "Not all data quality checks passed");

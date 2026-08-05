@@ -56,12 +56,19 @@ export function parseEntsoePriceDocument(xml, generatedAt = new Date().toISOStri
     }
   }
   invariant(points.length >= 24, `ENTSO-E price series is incomplete (${points.length} points)`);
-  points.sort((a, b) => Date.parse(a.start) - Date.parse(b.start));
+  const uniquePoints = [...new Map(points.map((point) => [point.start, point])).values()]
+    .sort((a, b) => Date.parse(a.start) - Date.parse(b.start));
 
   const nowMs = Date.parse(generatedAt);
-  const current = points.find((point) => Date.parse(point.start) <= nowMs && nowMs < Date.parse(point.end)) ?? null;
+  const current = uniquePoints.find((point) => Date.parse(point.start) <= nowMs && nowMs < Date.parse(point.end)) ?? null;
+  const todayDate = localDate(generatedAt);
+  const todayPoints = uniquePoints.filter((point) => localDate(point.start) === todayDate);
+  const today = todayPoints.length >= 23 ? {
+    deliveryDate: todayDate,
+    points: todayPoints,
+  } : null;
   const tomorrowDate = localDate(new Date(nowMs + 24 * 60 * 60_000).toISOString());
-  const tomorrowPoints = points.filter((point) => localDate(point.start) === tomorrowDate);
+  const tomorrowPoints = uniquePoints.filter((point) => localDate(point.start) === tomorrowDate);
   const nextDay = tomorrowPoints.length >= 23 ? {
     deliveryDate: tomorrowDate,
     averageEurMWh: rounded(tomorrowPoints.reduce((sum, point) => sum + point.eurMWh, 0) / tomorrowPoints.length, 2),
@@ -80,6 +87,7 @@ export function parseEntsoePriceDocument(xml, generatedAt = new Date().toISOStri
     unit: "MWh",
     fetchedAt: new Date(generatedAt).toISOString(),
     current,
+    today,
     nextDay,
   };
 }

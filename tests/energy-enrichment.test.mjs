@@ -22,6 +22,13 @@ test("ENTSO-E A44 prices preserve the current interval and next-day summary", ()
   assert.equal(market.documentType, "A44");
   assert.equal(market.current.start, "2026-08-05T10:00:00.000Z");
   assert.equal(market.current.eurMWh, 58);
+  assert.equal(market.today.deliveryDate, "2026-08-05");
+  assert.equal(market.today.points.length, 96);
+  assert.deepEqual(market.today.points[0], {
+    start: "2026-08-04T22:00:00.000Z",
+    end: "2026-08-04T22:15:00.000Z",
+    eurMWh: 50,
+  });
   assert.equal(market.nextDay.deliveryDate, "2026-08-06");
   assert.equal(market.nextDay.periods, 96);
   assert.ok(market.nextDay.minEurMWh <= market.nextDay.averageEurMWh);
