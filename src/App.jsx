@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
+  ArrowSquareOut,
   ArrowsLeftRight,
   Atom,
   CheckCircle,
@@ -8,6 +9,7 @@ import {
   Factory,
   Flame,
   Gauge,
+  GlobeHemisphereWest,
   Info,
   Lightning,
   MapPin,
@@ -653,8 +655,24 @@ export function App() {
       </main>
 
       <footer>
-        <span><Info size={16} /> Tájékoztató rendszerpillanatkép · nem helyettesíti a MAVIR hivatalos publikációját.</span>
-        <button onClick={() => setSourcesOpen(true)}>Adatforrások és módszertan</button>
+        <span className="footer-note"><Info size={16} /> Tájékoztató rendszerpillanatkép · nem helyettesíti a MAVIR hivatalos publikációját.</span>
+        <div className="footer-actions">
+          <a
+            className="sibling-dashboard-link"
+            href="https://tothur.github.io/Climate-Dashboard/"
+            target="_blank"
+            rel="noreferrer"
+            aria-label="Climate Dashboard megnyitása új lapon"
+          >
+            <GlobeHemisphereWest size={18} />
+            <span className="sibling-dashboard-copy">
+              <small>KAPCSOLÓDÓ MŰSZERFAL</small>
+              <b>Climate Dashboard</b>
+            </span>
+            <ArrowSquareOut size={16} />
+          </a>
+          <button onClick={() => setSourcesOpen(true)}>Adatforrások és módszertan</button>
+        </div>
       </footer>
 
       {sourcesOpen && <SourcesDrawer data={data} onClose={() => setSourcesOpen(false)} />}
