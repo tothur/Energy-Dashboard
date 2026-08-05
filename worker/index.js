@@ -89,10 +89,9 @@ async function refreshStored(env, previousSnapshot) {
   return activeRefresh;
 }
 
-async function energyApi(request, env, ctx) {
+async function energyApi(request, env) {
   await ensureSchema(env.DB);
   let stored = await readStored(env.DB);
-  const firstRequest = !stored;
   if (!stored) {
     const seed = await readSeed(request, env);
     await seedStored(env.DB, seed);
@@ -101,24 +100,21 @@ async function energyApi(request, env, ctx) {
 
   const ageMs = Date.now() - Date.parse(stored.data.measuredAt);
   if (ageMs > REFRESH_AFTER_MS) {
-    if (firstRequest) {
-      try {
-        const fresh = await refreshStored(env, stored.data);
-        if (fresh) return jsonResponse(fresh, 200, { "x-energy-delivery": "refreshed" });
-      } catch (error) {
-        return jsonResponse(stored.data, 200, {
-          "x-energy-delivery": "validated-fallback",
-          "x-energy-refresh-error": error.message.slice(0, 180),
-        });
-      }
-    } else {
-      ctx.waitUntil(refreshStored(env, stored.data).catch((error) => console.error("Energy refresh failed", error)));
+    try {
+      const fresh = await refreshStored(env, stored.data);
+      if (fresh) return jsonResponse(fresh, 200, { "x-energy-delivery": "refreshed" });
+      return jsonResponse(stored.data, 200, {
+        "x-energy-delivery": "validated-fallback-refresh-in-progress",
+      });
+    } catch (error) {
+      return jsonResponse(stored.data, 200, {
+        "x-energy-delivery": "validated-fallback",
+        "x-energy-refresh-error": error.message.slice(0, 180),
+      });
     }
   }
 
-  return jsonResponse(stored.data, 200, {
-    "x-energy-delivery": ageMs > REFRESH_AFTER_MS ? "stale-while-refresh" : "stored",
-  });
+  return jsonResponse(stored.data, 200, { "x-energy-delivery": "stored" });
 }
 
 async function healthApi(env) {
@@ -148,11 +144,11 @@ async function withRuntimeMetadata(response, request) {
 }
 
 export default {
-  async fetch(request, env, ctx = { waitUntil: () => {} }) {
+  async fetch(request, env) {
     const url = new URL(request.url);
     if (url.pathname === "/api/energy") {
       if (request.method !== "GET") return jsonResponse({ error: "Method not allowed" }, 405, { allow: "GET" });
-      return energyApi(request, env, ctx);
+      return energyApi(request, env);
     }
     if (url.pathname === "/api/health") {
       if (request.method !== "GET") return jsonResponse({ error: "Method not allowed" }, 405, { allow: "GET" });
