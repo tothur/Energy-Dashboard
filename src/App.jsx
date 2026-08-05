@@ -274,7 +274,7 @@ function BalancePanel({ data }) {
         <div><span>Fogyasztás</span><strong>{formatMW(data.system.consumptionMW)}</strong><small>MW</small></div>
         <div className="cyan"><span>Nettó import</span><strong>{formatMW(data.system.netImportMW)}</strong><small>MW</small></div>
         <div className="green"><span>Hazai fedezet</span><strong>{decimalFormatter.format(coverage)}</strong><small>%</small></div>
-        <div className="muted"><span>Karbonintenzitás</span><strong>—</strong><small>nincs elég adat</small></div>
+        <div className="green"><span>Alacsony karbon</span><strong>{decimalFormatter.format(data.system.lowCarbonSharePct)}</strong><small>% a hazai mixből</small></div>
       </div>
 
       <div className="balance-track" aria-label={`Hazai fedezet ${coverage} százalék`}>
@@ -541,13 +541,21 @@ function TrendCard({ data, range }) {
 }
 
 function PriceCard({ data }) {
+  const available = data.market.status === "available";
+  const headline = data.market.current?.eurMWh ?? data.market.nextDay?.averageEurMWh ?? null;
+  const headlineLabel = data.market.current ? "AKTUÁLIS DAM-IDŐSZAK" : "HOLNAPI DAM-ÁTLAG";
+  const unavailableLabel = data.market.status === "unavailable_missing_entsoe_token"
+    ? "ENTSO-E API-KULCS SZÜKSÉGES"
+    : "A HIVATALOS FEED ÁTMENETILEG NEM ELÉRHETŐ";
   return (
     <section className="analytics-card price-card">
-      <div className="card-heading"><div><span className="eyebrow">TŐZSDEI ÁR</span><h3>Másnapi HUPX-ár</h3></div><span className="unit">EUR/MWh</span></div>
-      <strong className="price-value unavailable">—</strong>
-      <span className="availability">NINCS LICENCELT KÖZVETLEN FEED</span>
+      <div className="card-heading"><div><span className="eyebrow">TŐZSDEI ÁR</span><h3>Magyar másnapi piaci ár</h3></div><span className="unit">EUR/MWh</span></div>
+      <strong className={`price-value ${available ? "" : "unavailable"}`}>{headline === null ? "—" : decimalFormatter.format(headline)}</strong>
+      <span className={`availability ${available ? "available" : ""}`}>{available ? headlineLabel : unavailableLabel}</span>
+      {data.market.nextDay && <div className="data-line"><span>Holnapi átlag</span><b>{decimalFormatter.format(data.market.nextDay.averageEurMWh)} EUR/MWh</b></div>}
+      {data.market.nextDay && <div className="data-line compact"><span>Holnapi sáv</span><b>{decimalFormatter.format(data.market.nextDay.minEurMWh)}–{decimalFormatter.format(data.market.nextDay.maxEurMWh)}</b></div>}
       <div className="data-line"><span>Forrás</span><b>{data.source.price}</b></div>
-      <p>Közvetítőből származó árat nem közlünk. A kártya csak közvetlenül felhasználható HUPX-adatkapcsolattal aktiválódik.</p>
+      {!available && <p>Közvetítőből származó árat nem közlünk; az érték csak a hivatalos ENTSO-E A44 feedből jelenhet meg.</p>}
     </section>
   );
 }
@@ -565,13 +573,17 @@ function ImportCard({ data }) {
   );
 }
 
-function CarbonCard() {
+function CarbonCard({ data }) {
+  const emissions = data.annualEmissions;
+  const changeIsReduction = emissions.changePct < 0;
   return (
     <section className="analytics-card carbon-card">
-      <div className="card-heading"><div><span className="eyebrow">KIBOCSÁTÁS</span><h3>Rendszer-karbonintenzitás</h3></div><ShieldCheck size={19} /></div>
-      <strong className="large-metric unavailable">—</strong>
-      <span className="availability">NEM KÖZÖLHETŐ BIZTONSÁGOSAN</span>
-      <p>A jelenlegi forrásbontás nem elég pontos egy forrásbiztos gCO₂/kWh becsléshez.</p>
+      <div className="card-heading"><div><span className="eyebrow">KIBOCSÁTÁS</span><h3>Alacsony karbonú termelés</h3></div><ShieldCheck size={19} /></div>
+      <strong className="large-metric low-carbon-value">{decimalFormatter.format(data.system.lowCarbonSharePct)}%</strong>
+      <span className="availability available">KÖZVETLEN MAVIR-MIXBŐL</span>
+      <div className="data-line"><span>{emissions.latest.year} leltár</span><b>{decimalFormatter.format(emissions.latest.valueMt)} Mt CO₂e</b></div>
+      <div className="data-line compact"><span>Változás {emissions.previous.year}-hoz</span><b className={changeIsReduction ? "reduction" : "increase"}>{changeIsReduction ? "−" : "+"}{decimalFormatter.format(Math.abs(emissions.changePct))}%</b></div>
+      <p>Az éves adat a közüzemi villamosenergia- és hőtermelés országos leltára; nem pillanatnyi karbonintenzitás.</p>
     </section>
   );
 }
@@ -589,7 +601,8 @@ function SourcesDrawer({ data, onClose }) {
           <div><Database size={20} /><span><b>Terhelés és termelési mix</b><small>{data.source.primary} · 20001-es diagram</small></span></div>
           <div><ArrowsLeftRight size={20} /><span><b>Határkeresztező áramlások</b><small>{data.source.primary} · 5229-es diagram</small></span></div>
           <div><Lightning size={20} /><span><b>Hálózati frekvencia</b><small>{data.source.primary} · 4444-es diagram</small></span></div>
-          <div><Lightning size={20} /><span><b>Piaci ár</b><small>{data.source.price} · közvetlen feed hiányában nincs közölve</small></span></div>
+          <div><Lightning size={20} /><span><b>Piaci ár</b><small>{data.source.price} · A44 · {data.market.status === "available" ? "elérhető" : "jelenleg nincs közölve"}</small></span></div>
+          <div><ShieldCheck size={20} /><span><b>Éves kibocsátási leltár</b><small>{data.source.annualEmissions} · IPCC 1.A.1.a · {data.annualEmissions.latest.year}</small></span></div>
         </div>
 
         <div className="quality-box">
@@ -635,7 +648,7 @@ export function App() {
           <TrendCard data={data} range={range} />
           <PriceCard data={data} />
           <ImportCard data={data} />
-          <CarbonCard />
+          <CarbonCard data={data} />
         </div>
       </main>
 

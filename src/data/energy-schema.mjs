@@ -82,11 +82,17 @@ function mixFromRow(row) {
 
 export function normalizeMavirTables({ systemRows, flowRows, frequencyRows, generatedAt = new Date().toISOString() }) {
   const systemColumns = ["B", "D", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W"];
+  const flowColumns = FLOW_COLUMNS.map(([, column]) => column);
   const completeSystemRows = systemRows.slice(1).filter((row) => hasFiniteColumns(row, systemColumns) && typeof row.A === "string");
-  const systemRow = completeSystemRows.findLast(systemRowIsSettled);
-  invariant(systemRow, "No settled MAVIR system row found");
+  const systemRow = completeSystemRows.findLast((candidate) => {
+    if (!systemRowIsSettled(candidate)) return false;
+    const matchingFlow = nearestComplete(flowRows, flowColumns, candidate.A, "flow");
+    const flowTotal = FLOW_COLUMNS.reduce((sum, [, column]) => sum + matchingFlow[column], 0);
+    return Math.abs(flowTotal - candidate.W) <= Math.max(75, candidate.B * 0.015);
+  });
+  invariant(systemRow, "No fully reconciled MAVIR system interval found");
   const provisionalRowsSkipped = completeSystemRows.length - completeSystemRows.indexOf(systemRow) - 1;
-  const flowRow = nearestComplete(flowRows, FLOW_COLUMNS.map(([, column]) => column), systemRow.A, "flow");
+  const flowRow = nearestComplete(flowRows, flowColumns, systemRow.A, "flow");
   const frequencyRow = nearestComplete(frequencyRows, ["B"], systemRow.A, "frequency");
 
   const measuredAt = parseMavirTimestamp(systemRow.A);
@@ -139,8 +145,8 @@ export function normalizeMavirTables({ systemRows, flowRows, frequencyRows, gene
       systemUrl: "https://www.mavir.hu/web/mavir/rendszerterheles",
       exportBaseUrl: "https://rtdwweb.mavir.hu/rtdwweb/webuser/chart",
       charts: { systemAndMix: 20001, crossBorderFlows: 5229, frequency: 4444 },
-      price: "HUPX",
-      priceStatus: "unavailable_without_licensed_direct_feed",
+      price: "ENTSO-E Transparency Platform",
+      priceStatus: "unavailable_missing_entsoe_token",
       measurements: { systemAt: measuredAt, flowsAt: flowMeasuredAt, frequencyAt: frequencyMeasuredAt },
       caveat: "Minden közzétett rendszeradat közvetlenül a MAVIR nyilvános RTDW-exportjából származik.",
     },
@@ -184,10 +190,9 @@ export function validateNormalizedEnergyData(data) {
   const measuredYear = new Date(data.measuredAt).getUTCFullYear();
   invariant(measuredYear >= 2020 && measuredYear <= 2100, "Implausible measurement timestamp");
   invariant(Date.parse(data.measuredAt) <= Date.parse(data.generatedAt) + 10 * 60_000, "Measurement timestamp is implausibly later than snapshot generation");
-  invariant(Date.parse(data.generatedAt) - Date.parse(data.measuredAt) <= 35 * 60_000, "Published MAVIR snapshot is too old");
+  invariant(Date.parse(data.generatedAt) - Date.parse(data.measuredAt) <= 65 * 60_000, "Published MAVIR snapshot is too old");
   invariant(data.source?.primary === "MAVIR RTDW", "Direct MAVIR attribution is missing");
-  invariant(data.source?.priceStatus === "unavailable_without_licensed_direct_feed", "Price provenance status is missing");
-  invariant(data.system?.dayAheadPriceEurMWh === null, "Unlicensed market price must not be published");
+  invariant(["available", "unavailable_missing_entsoe_token", "unavailable_fetch_failed"].includes(data.source?.priceStatus), "Price provenance status is missing");
 
   const { frequencyHz, consumptionMW, generationMW, netImportMW, domesticCoveragePct } = data.system ?? {};
   [frequencyHz, consumptionMW, generationMW, netImportMW, domesticCoveragePct].forEach((value, index) => finite(value, `system metric ${index}`));
@@ -202,6 +207,36 @@ export function validateNormalizedEnergyData(data) {
   data.mix.forEach((item) => invariant(Number.isFinite(item.mw) && item.mw >= 0, `Invalid generation mix value: ${item.key}`));
   const mixTotalMW = data.mix.reduce((sum, item) => sum + item.mw, 0);
   invariant(Math.abs(mixTotalMW - generationMW) <= Math.max(5, generationMW * 0.0025), "Published generation mix does not reconcile");
+  const lowCarbonMW = data.mix.filter((item) => ["Atom", "Nap", "Egyéb megújuló"].includes(item.key)).reduce((sum, item) => sum + item.mw, 0);
+  finite(data.system.lowCarbonSharePct, "low-carbon generation share");
+  invariant(Math.abs(data.system.lowCarbonSharePct - (lowCarbonMW / generationMW) * 100) <= 0.2, "Low-carbon generation share does not match the published mix");
+
+  invariant(data.market?.status === data.source.priceStatus, "Market-price status is inconsistent");
+  if (data.market.status === "available") {
+    invariant(data.market.source === "ENTSO-E Transparency Platform" && data.market.documentType === "A44", "Direct ENTSO-E market attribution is missing");
+    invariant(data.market.current || data.market.nextDay, "Available market data has no usable price");
+    if (data.market.current) {
+      finite(data.market.current.eurMWh, "current day-ahead price");
+      invariant(data.system.dayAheadPriceEurMWh === data.market.current.eurMWh, "Headline market price does not match the current interval");
+    } else {
+      invariant(data.system.dayAheadPriceEurMWh === null, "A missing current interval must not have a headline price");
+    }
+    if (data.market.nextDay) {
+      [data.market.nextDay.averageEurMWh, data.market.nextDay.minEurMWh, data.market.nextDay.maxEurMWh].forEach((value, index) => finite(value, `next-day market metric ${index}`));
+      invariant(data.market.nextDay.minEurMWh <= data.market.nextDay.averageEurMWh && data.market.nextDay.averageEurMWh <= data.market.nextDay.maxEurMWh, "Next-day market summary is inconsistent");
+      invariant(data.market.nextDay.periods >= 23 && data.market.nextDay.periods <= 100, "Next-day market period count is implausible");
+    }
+  } else {
+    invariant(data.system.dayAheadPriceEurMWh === null, "Unavailable market price must remain null");
+  }
+
+  invariant(data.annualEmissions?.status === "available", "Official annual emissions data is unavailable");
+  invariant(data.annualEmissions.source === "EEA GHG Inventory" && data.annualEmissions.sectorCode === "1.A.1.a", "Annual emissions provenance is missing");
+  invariant(data.annualEmissions.latest.year === data.annualEmissions.previous.year + 1, "Annual emissions years are not consecutive");
+  finite(data.annualEmissions.latest.valueMt, "latest annual emissions");
+  finite(data.annualEmissions.previous.valueMt, "previous annual emissions");
+  finite(data.annualEmissions.changePct, "annual emissions change");
+  invariant(Math.abs(data.annualEmissions.changePct - ((data.annualEmissions.latest.valueMt - data.annualEmissions.previous.valueMt) / data.annualEmissions.previous.valueMt) * 100) <= 0.2, "Annual emissions change does not reconcile");
 
   const expectedFlowCodes = Object.keys(FLOW_COUNTRIES);
   invariant(Array.isArray(data.flows) && expectedFlowCodes.every((code) => data.flows.some((flow) => flow.code === code)), "Cross-border countries are incomplete");
@@ -222,6 +257,9 @@ export function validateNormalizedEnergyData(data) {
   });
 
   invariant(data.quality?.checksPassed === data.quality?.checksTotal && data.quality.checksTotal >= 6, "Not all data quality checks passed");
+  invariant(data.quality.enrichment?.lowCarbonShare === "passed", "Low-carbon enrichment validation is missing");
+  invariant(data.quality.enrichment?.marketPrice === data.market.status, "Market-price enrichment status is inconsistent");
+  invariant(data.quality.enrichment?.annualEmissions === "available", "Annual-emissions enrichment validation is missing");
   const systemGapMW = consumptionMW - generationMW - netImportMW;
   invariant(Math.abs(systemGapMW - data.quality.systemGapMW) <= 1, "Declared system gap does not match the published metrics");
   invariant(Math.abs(systemGapMW) <= Math.max(120, consumptionMW * 0.025), "Published system balance does not reconcile");

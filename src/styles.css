@@ -205,13 +205,18 @@ h1, h2, h3 { font-weight: 600; }
 .price-value.unavailable { color: #617584; }
 .data-line { display: flex; justify-content: space-between; gap: 10px; margin-top: 13px; padding-top: 8px; border-top: 1px solid #253746; color: #8094a2; font-size: 10px; }
 .data-line b { color: #b6c4cc; font-weight: 500; text-align: right; }
+.data-line.compact { margin-top: 6px; padding-top: 6px; }
+.data-line b.reduction { color: #86dda1; }
+.data-line b.increase { color: var(--orange); }
 .analytics-card p { margin-top: 10px; color: #7f93a2; font-size: 10px; line-height: 1.35; }
 .import-card .large-metric { color: var(--cyan); }
 .import-track { height: 22px; margin-top: 20px; background: #1b2c38; border: 1px solid #354653; }
 .import-track span { display: block; height: 100%; background: var(--cyan); }
 .scale { display: flex; justify-content: space-between; margin-top: 6px; color: #657b8a; font-family: "IBM Plex Mono", monospace; font-size: 8px; }
 .large-metric.unavailable { color: #617584; }
+.low-carbon-value { color: #86dda1; }
 .availability { display: inline-block; margin-top: 12px; padding: 4px 6px; color: var(--orange); border: 1px solid rgba(243,155,69,.5); font-family: "IBM Plex Mono", monospace; font-size: 8px; letter-spacing: .05em; }
+.availability.available { color: #86dda1; border-color: rgba(134,221,161,.45); }
 
 footer { min-height: 38px; display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 8px 7px 0; color: #748997; font-size: 11px; }
 footer span { display: flex; align-items: center; gap: 7px; }

@@ -1,8 +1,9 @@
-import { mkdir, writeFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { setTimeout as delay } from "node:timers/promises";
 import { normalizeMavirTables, validateNormalizedEnergyData } from "../src/data/energy-schema.mjs";
+import { applyEnergyEnrichment, fetchEeaAnnualEmissions, fetchEntsoePrices } from "../src/data/energy-enrichment.mjs";
 import { parseFirstWorksheet } from "./lib/xlsx-table.mjs";
 
 const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -10,6 +11,15 @@ const outputPath = path.join(projectRoot, "public", "data", "energy-latest.json"
 const baseUrl = "https://rtdwweb.mavir.hu/rtdwweb/webuser/chart";
 const endTime = Date.now();
 const startTime = endTime - 26 * 60 * 60_000;
+const generatedAt = new Date().toISOString();
+
+async function readPreviousSnapshot() {
+  try {
+    return JSON.parse(await readFile(outputPath, "utf8"));
+  } catch {
+    return null;
+  }
+}
 
 async function fetchChart(chartId) {
   const url = new URL(`${baseUrl}/${chartId}/export`);
@@ -40,13 +50,30 @@ async function fetchChart(chartId) {
   throw new Error(`MAVIR chart ${chartId} failed after 3 attempts: ${lastError.message}`);
 }
 
-const [systemRows, flowRows, frequencyRows] = await Promise.all([
+const previousSnapshot = await readPreviousSnapshot();
+const [systemRows, flowRows, frequencyRows, annualEmissions] = await Promise.all([
   fetchChart(20001),
   fetchChart(5229),
   fetchChart(4444),
+  fetchEeaAnnualEmissions(generatedAt).catch((error) => {
+    if (previousSnapshot?.annualEmissions?.status === "available") {
+      console.warn(`EEA refresh failed; retaining the last validated annual inventory: ${error.message}`);
+      return previousSnapshot.annualEmissions;
+    }
+    throw error;
+  }),
 ]);
 
-const normalized = validateNormalizedEnergyData(normalizeMavirTables({ systemRows, flowRows, frequencyRows }));
+const market = await fetchEntsoePrices(process.env.ENTSOE_SECURITY_TOKEN, generatedAt).catch(() => ({
+  status: "unavailable_fetch_failed",
+  source: "ENTSO-E Transparency Platform",
+  documentType: "A44",
+  biddingZone: "10YHU-MAVIR----U",
+}));
+const normalized = validateNormalizedEnergyData(applyEnergyEnrichment(
+  normalizeMavirTables({ systemRows, flowRows, frequencyRows, generatedAt }),
+  { market, annualEmissions },
+));
 await mkdir(path.dirname(outputPath), { recursive: true });
 await writeFile(outputPath, `${JSON.stringify(normalized, null, 2)}\n`, "utf8");
 
@@ -58,4 +85,7 @@ console.log(JSON.stringify({
   generationMW: normalized.system.generationMW,
   consumptionMW: normalized.system.consumptionMW,
   netImportMW: normalized.system.netImportMW,
+  lowCarbonSharePct: normalized.system.lowCarbonSharePct,
+  marketStatus: normalized.market.status,
+  annualEmissions: normalized.annualEmissions,
 }, null, 2));

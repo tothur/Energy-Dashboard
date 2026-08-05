@@ -12,9 +12,12 @@ test("the published snapshot passes every declared quality check", () => {
   assert.equal(data.quality.checksPassed, data.quality.checksTotal);
   assert.ok(new Date(data.measuredAt).getUTCFullYear() >= 2020);
   assert.ok(new Date(data.measuredAt).getUTCFullYear() <= 2100);
-  assert.ok(Date.parse(data.generatedAt) - Date.parse(data.measuredAt) <= 35 * 60_000);
+  assert.ok(Date.parse(data.generatedAt) - Date.parse(data.measuredAt) <= 65 * 60_000);
   assert.equal(data.source.primary, "MAVIR RTDW");
-  assert.equal(data.system.dayAheadPriceEurMWh, null);
+  assert.equal(data.source.price, "ENTSO-E Transparency Platform");
+  assert.equal(data.source.annualEmissions, "EEA GHG Inventory");
+  assert.equal(data.annualEmissions.status, "available");
+  assert.equal(data.annualEmissions.latest.year, data.annualEmissions.previous.year + 1);
   assert.ok(data.quality.requiredFeeds.every((feed) => feed.startsWith("MAVIR ")));
 });
 
@@ -29,6 +32,8 @@ test("generation shares and cross-border flows are internally consistent", () =>
   const flowTotal = data.flows.reduce((sum, item) => sum + item.mw, 0);
   assert.ok(Math.abs(mixTotal - data.system.generationMW) <= Math.max(5, data.system.generationMW * 0.0025));
   assert.ok(Math.abs(flowTotal - data.system.netImportMW) <= Math.max(75, data.system.consumptionMW * 0.015));
+  const lowCarbonMW = data.mix.filter((item) => ["Atom", "Nap", "Egyéb megújuló"].includes(item.key)).reduce((sum, item) => sum + item.mw, 0);
+  assert.ok(Math.abs(data.system.lowCarbonSharePct - (lowCarbonMW / data.system.generationMW) * 100) <= 0.2);
 });
 
 test("runtime validation fails closed when published values are tampered with", () => {

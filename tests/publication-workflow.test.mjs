@@ -31,6 +31,7 @@ test("Pages publication supports main pushes, manual runs, and frequent refreshe
   assert.match(workflow, /path: \.\/dist\/client/);
   assert.match(workflow, /pages: write/);
   assert.match(workflow, /id-token: write/);
+  assert.match(workflow, /ENTSOE_SECURITY_TOKEN: \$\{\{ secrets\.ENTSOE_SECURITY_TOKEN \}\}/);
 });
 
 test("the updater uses direct MAVIR exports and no intermediary", () => {
@@ -38,6 +39,9 @@ test("the updater uses direct MAVIR exports and no intermediary", () => {
   assert.match(updater, /fetchChart\(20001\)/);
   assert.match(updater, /fetchChart\(5229\)/);
   assert.match(updater, /fetchChart\(4444\)/);
+  assert.match(updater, /fetchEeaAnnualEmissions/);
+  assert.match(updater, /fetchEntsoePrices/);
+  assert.match(updater, /discodata\.eea\.europa\.eu|energy-enrichment/);
   assert.doesNotMatch(updater, /holadelej|energy-charts|smard/i);
 });
 
