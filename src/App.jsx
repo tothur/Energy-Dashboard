@@ -597,6 +597,7 @@ function SourcesDrawer({ data, onClose }) {
           <div><span>Határáramlások</span><b>{data.quality.flowGapMW.toFixed(1)} MW eltérés</b></div>
           <div><span>Rendszermérleg</span><b>{data.quality.systemGapMW.toFixed(1)} MW ismert rés</b></div>
           <div><span>Feedek időeltérése</span><b>legfeljebb {data.quality.maxFeedOffsetMinutes.toFixed(1)} perc</b></div>
+          <div><span>Kihagyott előzetes sorok</span><b>{data.quality.provisionalRowsSkipped} db</b></div>
           <div><span>Kötelező ellenőrzések</span><b>{data.quality.checksPassed}/{data.quality.checksTotal} sikeres</b></div>
         </div>
 

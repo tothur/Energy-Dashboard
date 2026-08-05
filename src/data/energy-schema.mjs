@@ -44,10 +44,24 @@ function hasFiniteColumns(row, columns) {
   return columns.every((column) => Number.isFinite(row[column]));
 }
 
-function lastComplete(rows, columns, label) {
-  const row = rows.slice(1).findLast((candidate) => hasFiniteColumns(candidate, columns) && typeof candidate.A === "string");
-  invariant(row, `No complete MAVIR ${label} row found`);
-  return row;
+function nearestComplete(rows, columns, targetTimestamp, label) {
+  const targetMs = Date.parse(parseMavirTimestamp(targetTimestamp));
+  const candidates = rows.slice(1).filter((row) => hasFiniteColumns(row, columns) && typeof row.A === "string");
+  invariant(candidates.length > 0, `No complete MAVIR ${label} row found`);
+  return candidates.reduce((nearest, row) => {
+    const distance = Math.abs(Date.parse(parseMavirTimestamp(row.A)) - targetMs);
+    const nearestDistance = Math.abs(Date.parse(parseMavirTimestamp(nearest.A)) - targetMs);
+    return distance < nearestDistance ? row : nearest;
+  });
+}
+
+function systemRowIsSettled(row) {
+  const generationMW = row.D;
+  const mixTotalMW = row.H + row.I + row.J + row.K + row.L + row.M + row.N + row.O + row.P + row.Q + row.R + row.S + row.T + row.U + row.V;
+  const systemGapMW = row.B - generationMW - row.W;
+  const mixGapMW = mixTotalMW - generationMW;
+  return Math.abs(systemGapMW) <= Math.max(120, row.B * 0.025)
+    && Math.abs(mixGapMW) <= Math.max(5, generationMW * 0.0025);
 }
 
 function mixFromRow(row) {
@@ -68,9 +82,12 @@ function mixFromRow(row) {
 
 export function normalizeMavirTables({ systemRows, flowRows, frequencyRows, generatedAt = new Date().toISOString() }) {
   const systemColumns = ["B", "D", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W"];
-  const systemRow = lastComplete(systemRows, systemColumns, "system");
-  const flowRow = lastComplete(flowRows, FLOW_COLUMNS.map(([, column]) => column), "flow");
-  const frequencyRow = lastComplete(frequencyRows, ["B"], "frequency");
+  const completeSystemRows = systemRows.slice(1).filter((row) => hasFiniteColumns(row, systemColumns) && typeof row.A === "string");
+  const systemRow = completeSystemRows.findLast(systemRowIsSettled);
+  invariant(systemRow, "No settled MAVIR system row found");
+  const provisionalRowsSkipped = completeSystemRows.length - completeSystemRows.indexOf(systemRow) - 1;
+  const flowRow = nearestComplete(flowRows, FLOW_COLUMNS.map(([, column]) => column), systemRow.A, "flow");
+  const frequencyRow = nearestComplete(frequencyRows, ["B"], systemRow.A, "frequency");
 
   const measuredAt = parseMavirTimestamp(systemRow.A);
   const flowMeasuredAt = parseMavirTimestamp(flowRow.A);
@@ -153,6 +170,7 @@ export function normalizeMavirTables({ systemRows, flowRows, frequencyRows, gene
       mixGapMW: rounded(mixGapMW, 1),
       mixToleranceMW: rounded(allowedMixGapMW, 1),
       maxFeedOffsetMinutes: rounded(alignmentMinutes, 1),
+      provisionalRowsSkipped,
       checksPassed: 6,
       checksTotal: 6,
     },
@@ -166,6 +184,7 @@ export function validateNormalizedEnergyData(data) {
   const measuredYear = new Date(data.measuredAt).getUTCFullYear();
   invariant(measuredYear >= 2020 && measuredYear <= 2100, "Implausible measurement timestamp");
   invariant(Date.parse(data.measuredAt) <= Date.parse(data.generatedAt) + 10 * 60_000, "Measurement timestamp is implausibly later than snapshot generation");
+  invariant(Date.parse(data.generatedAt) - Date.parse(data.measuredAt) <= 35 * 60_000, "Published MAVIR snapshot is too old");
   invariant(data.source?.primary === "MAVIR RTDW", "Direct MAVIR attribution is missing");
   invariant(data.source?.priceStatus === "unavailable_without_licensed_direct_feed", "Price provenance status is missing");
   invariant(data.system?.dayAheadPriceEurMWh === null, "Unlicensed market price must not be published");
@@ -207,5 +226,6 @@ export function validateNormalizedEnergyData(data) {
   invariant(Math.abs(systemGapMW - data.quality.systemGapMW) <= 1, "Declared system gap does not match the published metrics");
   invariant(Math.abs(systemGapMW) <= Math.max(120, consumptionMW * 0.025), "Published system balance does not reconcile");
   invariant(data.quality.maxFeedOffsetMinutes <= 20, "Published feeds are not time-aligned");
+  invariant(Number.isInteger(data.quality.provisionalRowsSkipped) && data.quality.provisionalRowsSkipped >= 0, "Invalid provisional-row count");
   return data;
 }
