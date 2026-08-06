@@ -43,6 +43,14 @@ const MIX_META = {
   Egyéb: { className: "other", icon: Factory, short: "Egyéb" },
 };
 
+const MIX_HISTORY_KEY = {
+  Atom: "nuclearMW",
+  Nap: "solarMW",
+  Fosszilis: "fossilMW",
+  "Egyéb megújuló": "renewableMW",
+  Egyéb: "otherMW",
+};
+
 const FLOW_POSITIONS = {
   AT: { left: "4%", top: "31%" },
   SK: { left: "47%", top: "2%" },
@@ -226,62 +234,97 @@ function Header({ data, range, onRangeChange, onOpenSources }) {
 
 function GenerationMix({ data, selected, onSelect }) {
   const selectedMix = data.mix.find((item) => item.key === selected) ?? data.mix[0];
+  const previousPoint = useMemo(() => {
+    const measuredTime = new Date(data.measuredAt).getTime();
+    return [...data.history24h]
+      .reverse()
+      .find((point) => new Date(point.time).getTime() < measuredTime) ?? null;
+  }, [data.history24h, data.measuredAt]);
+  const rankedMix = useMemo(() => data.mix
+    .map((item) => {
+      const previousMW = previousPoint?.[MIX_HISTORY_KEY[item.key]];
+      const share = data.system.generationMW > 0 ? (item.mw / data.system.generationMW) * 100 : 0;
+      const previousShare = previousPoint?.generationMW > 0 && Number.isFinite(previousMW)
+        ? (previousMW / previousPoint.generationMW) * 100
+        : null;
+      const changeMW = Number.isFinite(previousMW) ? item.mw - previousMW : null;
+      return { ...item, share, previousShare, changeMW };
+    })
+    .sort((a, b) => b.mw - a.mw), [data.mix, data.system.generationMW, previousPoint]);
   const selectionDetail = selectedMix.key === "Nap"
     ? `Ipari PV ${formatMW(data.system.industrialSolarMW)} MW + SCTE ${formatMW(data.system.scteSolarMW)} MW + HMKE ${formatMW(data.system.householdSolarMW)} MW.`
     : `${formatMW(selectedMix.mw)} MW az utolsó érvényes mérési időpontban.`;
 
   return (
     <section className="panel generation-panel" aria-labelledby="generation-title">
-      <div className="panel-heading">
+      <div className="generation-race-heading">
         <div>
           <span className="eyebrow">BR. HAZAI TERMELÉS · HMKE+SCTE-VEL</span>
-          <h1 id="generation-title">Mi termel most?</h1>
+          <div className="generation-title-row">
+            <h1 id="generation-title">Mi termel most?</h1>
+            <span>FRISSÍTVE: {formatLocalTime(data.measuredAt, true)}</span>
+          </div>
         </div>
-        <div className="source-chip"><Database size={15} /> MAVIR</div>
-      </div>
-
-      <div className="generation-content">
-        <div className="total-generation">
-          <span>Összesen</span>
-          <strong>{formatMW(data.system.generationMW)}</strong>
-          <small>MW</small>
+        <div className="generation-total">
+          <div className="source-chip"><Database size={15} /> MAVIR</div>
+          <div className="generation-total-value">
+            <span>Összesen</span>
+            <strong>{formatMW(data.system.generationMW)}</strong>
+            <small>MW</small>
+          </div>
           <MetricDelta value={data.movement15m.generationMW} elapsedMinutes={data.movement15m.elapsedMinutes} />
         </div>
+      </div>
 
-        <div className="mix-visual">
-          <div className="stacked-bar" aria-label="Hazai villamosenergia-termelés forrásonként">
-            {data.mix.map((item) => {
-              const meta = MIX_META[item.key];
-              const width = data.system.generationMW > 0 ? Math.max((item.mw / data.system.generationMW) * 100, item.mw > 0 ? 1.2 : 0) : 0;
-              return (
-                <button
-                  key={item.key}
-                  className={`mix-segment ${meta.className} ${selected === item.key ? "selected" : ""}`}
-                  style={{ width: `${width}%` }}
-                  onClick={() => onSelect(item.key)}
-                  title={`${item.key}: ${formatMW(item.mw)} MW`}
-                  aria-label={`${item.key}: ${formatMW(item.mw)} megawatt`}
-                />
-              );
-            })}
+      <div className="generation-race" aria-label="A hazai termelési források élő rangsora">
+        <div className="race-scale" aria-hidden="true">
+          <div className="race-scale-track">
+            {[0, 25, 50, 75, 100].map((tick) => <span key={tick} style={{ left: `${tick}%` }}>{tick}%</span>)}
           </div>
+        </div>
 
-          <div className="mix-legend">
-            {data.mix.map((item) => {
-              const meta = MIX_META[item.key];
-              const Icon = meta.icon;
-              const share = data.system.generationMW ? (item.mw / data.system.generationMW) * 100 : 0;
-              return (
-                <button
-                  key={item.key}
-                  className={`mix-item ${meta.className} ${selected === item.key ? "selected" : ""}`}
-                  onClick={() => onSelect(item.key)}
-                >
-                  <Icon size={22} weight="duotone" />
-                  <span><b>{meta.short}</b><strong>{formatMW(item.mw)} <small>MW</small></strong><em>{decimalFormatter.format(share)}%</em></span>
-                </button>
-              );
-            })}
+        <div className="race-rows">
+          {rankedMix.map((item, rank) => {
+            const meta = MIX_META[item.key];
+            const Icon = meta.icon;
+            const direction = item.changeMW > 0.5 ? "up" : item.changeMW < -0.5 ? "down" : "steady";
+            const DirectionIcon = direction === "up" ? TrendUp : direction === "down" ? TrendDown : Minus;
+            return (
+              <button
+                key={item.key}
+                className={`race-row ${meta.className} ${selected === item.key ? "selected" : ""}`}
+                style={{ "--race-rank": rank }}
+                onClick={() => onSelect(item.key)}
+                aria-label={`${rank + 1}. hely, ${meta.short}: ${formatMW(item.mw)} megawatt, ${decimalFormatter.format(item.share)} százalék${Number.isFinite(item.changeMW) ? `, változás ${formatSigned(item.changeMW)} megawatt` : ""}`}
+                aria-pressed={selected === item.key}
+              >
+                <span className={`race-movement ${direction}`} title={Number.isFinite(item.changeMW) ? `${formatSigned(item.changeMW)} MW az előző méréshez képest` : "Nincs előző mérés"}>
+                  <DirectionIcon size={18} weight="bold" />
+                </span>
+                <span className="race-rank">{rank + 1}</span>
+                <span className="race-source"><Icon size={25} weight="duotone" /><b>{meta.short}</b></span>
+                <span className="race-track">
+                  <span className="race-bar-fill" style={{ width: `${Math.max(0, Math.min(100, item.share))}%` }} />
+                  {Number.isFinite(item.previousShare) ? <i className="race-previous" style={{ left: `${Math.max(0, Math.min(100, item.previousShare))}%` }} /> : null}
+                </span>
+                <span className="race-readout">
+                  <em>{decimalFormatter.format(item.share)}%</em>
+                  <strong>{formatMW(item.mw)} <small>MW</small></strong>
+                </span>
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="race-footer">
+          <div className="race-selection" aria-live="polite">
+            <span className={`legend-dot ${MIX_META[selectedMix.key].className}`} />
+            <strong>{MIX_META[selectedMix.key].short}</strong>
+            <span>{selectionDetail}</span>
+          </div>
+          <div className="race-legend">
+            <span><i /> előző mérés</span>
+            <b>Skála: 0–100% · azonos minden forrásra</b>
           </div>
         </div>
       </div>
@@ -296,11 +339,6 @@ function GenerationMix({ data, selected, onSelect }) {
         <div><span>Teljes hazai termelés</span><b>{formatMW(data.system.generationMW)} MW</b></div>
       </div>
 
-      <div className="selection-note" aria-live="polite">
-        <span className={`legend-dot ${MIX_META[selectedMix.key].className}`} />
-        <strong>{selectedMix.key}</strong>
-        <span>{selectionDetail}</span>
-      </div>
     </section>
   );
 }
