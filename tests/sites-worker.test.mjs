@@ -133,6 +133,38 @@ test("serves a fresh validated snapshot from the Sites data store", async () => 
   assert.equal((await response.json()).schemaVersion, 2);
 });
 
+test("replaces an incompatible stored history before serving it", async () => {
+  const bundled = JSON.parse(await readFile(new URL("../public/data/energy-latest.json", import.meta.url), "utf8"));
+  const now = new Date().toISOString();
+  const seed = {
+    ...bundled,
+    generatedAt: now,
+    measuredAt: now,
+    history24h: bundled.history24h.map((point, index) => ({
+      ...point,
+      time: new Date(Date.parse(now) - (bundled.history24h.length - 1 - index) * 15 * 60_000).toISOString(),
+    })),
+  };
+  const incompatible = structuredClone(seed);
+  incompatible.history24h.forEach((point) => {
+    delete point.nuclearMW;
+    delete point.solarMW;
+    delete point.fossilMW;
+    delete point.renewableMW;
+    delete point.otherMW;
+  });
+
+  const response = await worker.fetch(new Request("https://example.test/api/energy?v=2"), {
+    DB: createMockDb(incompatible),
+    ASSETS: { fetch: async () => new Response(JSON.stringify(seed), { headers: { "content-type": "application/json" } }) },
+  });
+  const data = await response.json();
+
+  assert.equal(response.status, 200);
+  assert.equal(response.headers.get("x-energy-delivery"), "stored");
+  assert.ok(data.history24h.every((point) => Number.isFinite(point.nuclearMW)));
+});
+
 test("reports stored snapshot health without exposing the full dataset", async () => {
   const bundled = JSON.parse(await readFile(new URL("../public/data/energy-latest.json", import.meta.url), "utf8"));
   const now = new Date().toISOString();

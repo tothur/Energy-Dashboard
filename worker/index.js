@@ -105,8 +105,24 @@ async function energyApi(request, env) {
     stored = await readStored(env.DB);
   }
 
+  // A deployment can retain a fresh D1 payload written by the previous worker
+  // schema. Replace it with the validated bundled snapshot before attempting a
+  // network refresh so the client never receives a structurally incomplete
+  // history while MAVIR is slow or another request holds the refresh lock.
+  if (!hasHistoricalMix(stored.data)) {
+    const seed = await readSeed(request, env);
+    if (!hasHistoricalMix(seed)) throw new Error("Bundled snapshot is missing historical generation mix");
+    await persistSnapshot(env.DB, seed);
+    stored = {
+      data: seed,
+      measuredAt: seed.measuredAt,
+      updatedAt: new Date().toISOString(),
+      refreshStartedAt: null,
+    };
+  }
+
   const ageMs = Date.now() - Date.parse(stored.data.measuredAt);
-  if (ageMs > REFRESH_AFTER_MS || !hasHistoricalMix(stored.data)) {
+  if (ageMs > REFRESH_AFTER_MS) {
     try {
       const fresh = await refreshStored(env, stored.data);
       if (fresh) return jsonResponse(fresh, 200, { "x-energy-delivery": "refreshed" });
