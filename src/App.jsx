@@ -287,9 +287,11 @@ function GenerationMix({ data, selected, onSelect }) {
       </div>
 
       <div className="generation-definition" aria-label="A MAVIR két termelési definíciójának egyeztetése">
-        <div><span>MAVIR erőművi szumma</span><b>{formatMW(data.system.plantGenerationMW)} MW</b></div>
+        <div><span>MAVIR erőművi szumma</span><b>{decimalFormatter.format(data.system.plantGenerationMW)} MW</b></div>
         <i>+</i>
-        <div><span>Becsült HMKE + SCTE napelem</span><b>{formatMW(data.system.estimatedDistributedSolarMW)} MW</b></div>
+        <div><span>Becsült HMKE + SCTE napelem</span><b>{decimalFormatter.format(data.system.estimatedDistributedSolarMW)} MW</b></div>
+        <i>+</i>
+        <div><span>MAVIR definíciós korrekció</span><b>{formatSigned(data.system.generationDefinitionCorrectionMW, 1)} MW</b></div>
         <i>=</i>
         <div><span>Teljes hazai termelés</span><b>{formatMW(data.system.generationMW)} MW</b></div>
       </div>
@@ -474,17 +476,18 @@ function PlantMarker({ plant, selected, onSelect }) {
   const left = 17 + plant.x * 0.66;
   const top = 3 + plant.y * 0.86;
   const Icon = plant.type === "nuclear" ? Atom : Factory;
+  const liveSourceShort = plant.liveCoverage === "block_level" ? "OAH" : "kategória";
   return (
     <button
       className={`plant-marker ${plant.type} ${selected ? "selected" : ""}`}
       data-plant={plant.key}
       style={{ left: `${left}%`, top: `${top}%` }}
       onClick={() => onSelect(plant.key)}
-      aria-label={`${plant.name}${Number.isFinite(plant.mw) ? `: ${plant.mw} megawatt a MAVIR kategóriaadatában` : ": nincs külön élő adat"}`}
+      aria-label={`${plant.name}${Number.isFinite(plant.mw) ? `: ${plant.mw} megawatt ${plant.liveCoverage === "block_level" ? "az OAH blokkszintű adataiban" : "a MAVIR kategóriaadatában"}` : ": nincs külön élő adat"}`}
     >
       <span className="plant-icon"><Icon size={18} weight="fill" /></span>
       <b>{plant.name}</b>
-      <small>{Number.isFinite(plant.mw) ? `${formatMW(plant.mw)} MW · kategória` : "nincs külön élő adat"}</small>
+      <small>{Number.isFinite(plant.mw) ? `${formatMW(plant.mw)} MW · ${liveSourceShort}` : "nincs külön élő adat"}</small>
     </button>
   );
 }
@@ -499,13 +502,19 @@ function PlantInspector({ plant }) {
         <span className={`plant-status ${plant.statusTone}`}>{plant.status}</span>
       </div>
       <div className="inspector-grid plant-inspector-grid">
-        <div><span>Aktuális MAVIR-érték</span><b>{Number.isFinite(plant.mw) ? `${formatMW(plant.mw)} MW` : "nem elérhető"}</b></div>
+        <div><span>Aktuális teljesítmény</span><b>{Number.isFinite(plant.mw) ? `${formatMW(plant.mw)} MW` : "nem elérhető"}</b></div>
         <div><span>Névleges kapacitás</span><b>{Number.isFinite(plant.capacityMW) ? `${decimalFormatter.format(plant.capacityMW)} MW` : "nincs közölve"}</b></div>
         <div><span>Terhelési arány</span><b>{Number.isFinite(plant.utilizationPct) ? `${decimalFormatter.format(plant.utilizationPct)}%` : "nem számítható"}</b></div>
       </div>
       <div className="plant-facts"><span>{plant.technology}</span><span>{plant.operator}</span></div>
+      {plant.blocks?.length ? (
+        <div className="plant-blocks" aria-label="Paksi blokkok aktuális teljesítménye">
+          {plant.blocks.map((block) => <span className={block.mw > 5 ? "producing" : "idle"} key={block.block}><b>{block.block}. blokk</b><em>{formatMW(block.mw)} MW</em></span>)}
+        </div>
+      ) : null}
+      {plant.operationalMeasuredAt ? <div className="plant-source-line"><span>OAH mérés: {formatLocalTime(plant.operationalMeasuredAt, true)}</span><span>MAVIR nukleáris kategória: {formatMW(plant.mavirCategoryMW)} MW</span></div> : null}
       <p>{plant.statusNote}</p>
-      <a href={plant.sourceUrl} target="_blank" rel="noreferrer">Létesítményi forrás <ArrowSquareOut size={13} /></a>
+      <a href={plant.sourceUrl} target="_blank" rel="noreferrer">{plant.sourceName ?? "Létesítményi forrás"} <ArrowSquareOut size={13} /></a>
     </div>
   );
 }
@@ -760,6 +769,7 @@ function SourcesDrawer({ data, onClose }) {
 
         <div className="source-list">
           <div><Database size={20} /><span><b>Terhelés és termelési mix</b><small>{data.source.primary} · 20001-es diagram</small></span></div>
+          <div><Atom size={20} /><span><b>Paksi blokkok aktuális teljesítménye</b><small>{data.source.paksOperational} · {data.source.paksOperationalStatus === "available" ? "blokkszintű adat" : "jelenleg nem elérhető"}</small></span></div>
           <div><Sun size={20} /><span><b>Napelemes definíció</b><small>Ipari PV {formatMW(data.system.industrialSolarMW)} MW + SCTE {formatMW(data.system.scteSolarMW)} MW + HMKE {formatMW(data.system.householdSolarMW)} MW</small></span></div>
           <div><ArrowsLeftRight size={20} /><span><b>Határkeresztező tény és menetrend</b><small>{data.source.primary} · 5229-es diagram · azonos időpont</small></span></div>
           <div><Lightning size={20} /><span><b>Hálózati frekvencia</b><small>{data.source.primary} · 4444-es diagram</small></span></div>
@@ -770,6 +780,7 @@ function SourcesDrawer({ data, onClose }) {
         <div className="quality-box">
           <div><span>Forrásmix összege</span><b>{data.quality.mixGapMW.toFixed(1)} MW eltérés</b></div>
           <div><span>Erőművi + becsült PV egyezés</span><b>{data.quality.generationDefinitionGapMW.toFixed(1)} MW eltérés</b></div>
+          {Number.isFinite(data.quality.paksVsMavirGapMW) ? <div><span>Paks OAH − MAVIR</span><b>{formatSigned(data.quality.paksVsMavirGapMW, 1)} MW eltérés</b></div> : null}
           <div><span>Határáramlások</span><b>{data.quality.flowGapMW.toFixed(1)} MW eltérés</b></div>
           <div><span>Rendszermérleg</span><b>{data.quality.systemGapMW.toFixed(1)} MW ismert rés</b></div>
           <div><span>Feedek időeltérése</span><b>legfeljebb {data.quality.maxFeedOffsetMinutes.toFixed(1)} perc</b></div>
@@ -782,7 +793,7 @@ function SourcesDrawer({ data, onClose }) {
           <span><b>Mért adat:</b> {formatLocalTime(data.measuredAt, true)}<br /><b>Pillanatkép készült:</b> {formatLocalTime(data.generatedAt, true)}</span>
         </div>
 
-        <p className="caveat">{data.source.caveat} A „teljes hazai termelés” a MAVIR erőművi szummájához hozzáadja a becsült HMKE- és SCTE-napelemes termelést. A térképi Paks- és Mátra-érték országos technológiai kategóriaadat, nem egyedi blokkfeed.</p>
+        <p className="caveat">{data.source.caveat} A „teljes hazai termelés” a MAVIR erőművi szummájához hozzáadja a becsült HMKE- és SCTE-napelemes termelést. Paks részletes adata az OAH blokkszintű oldaláról, a Mátra-érték továbbra is országos MAVIR-technológiakategóriából származik.</p>
         <a href={data.source.systemUrl} target="_blank" rel="noreferrer">MAVIR hivatalos rendszeradatok</a>
       </aside>
     </div>

@@ -3,7 +3,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { setTimeout as delay } from "node:timers/promises";
 import { normalizeMavirTables, validateNormalizedEnergyData } from "../src/data/energy-schema.mjs";
-import { applyEnergyEnrichment, fetchEeaAnnualEmissions, fetchEntsoePrices } from "../src/data/energy-enrichment.mjs";
+import { applyEnergyEnrichment, fetchEeaAnnualEmissions, fetchEntsoePrices, fetchHaeaPaksOperational } from "../src/data/energy-enrichment.mjs";
 import { parseFirstWorksheet } from "./lib/xlsx-table.mjs";
 
 const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -79,9 +79,14 @@ const market = await fetchEntsoePrices(process.env.ENTSOE_SECURITY_TOKEN, genera
   documentType: "A44",
   biddingZone: "10YHU-MAVIR----U",
 }));
+const paksOperational = await fetchHaeaPaksOperational(generatedAt).catch(() => ({
+  status: "unavailable_fetch_failed",
+  source: "Országos Atomenergia Hivatal",
+  sourceUrl: "https://www.haea.hu/web/v3/OAHPortal.nsf/web?OpenAgent&article=paksnpp",
+}));
 const normalized = validateNormalizedEnergyData(applyEnergyEnrichment(
   normalizeMavirTables({ systemRows, flowRows, frequencyRows, generatedAt }),
-  { market, annualEmissions },
+  { market, annualEmissions, paksOperational },
 ));
 await mkdir(path.dirname(outputPath), { recursive: true });
 await writeFile(outputPath, `${JSON.stringify(normalized, null, 2)}\n`, "utf8");
@@ -96,5 +101,6 @@ console.log(JSON.stringify({
   netImportMW: normalized.system.netImportMW,
   lowCarbonSharePct: normalized.system.lowCarbonSharePct,
   marketStatus: normalized.market.status,
+  paksOperational: normalized.plants.find((plant) => plant.key === "paks"),
   annualEmissions: normalized.annualEmissions,
 }, null, 2));

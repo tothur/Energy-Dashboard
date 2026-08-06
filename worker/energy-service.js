@@ -1,4 +1,4 @@
-import { applyEnergyEnrichment, fetchEntsoePrices } from "../src/data/energy-enrichment.mjs";
+import { applyEnergyEnrichment, fetchEntsoePrices, fetchHaeaPaksOperational } from "../src/data/energy-enrichment.mjs";
 import { normalizeMavirTables, validateNormalizedEnergyData } from "../src/data/energy-schema.mjs";
 import { parseFirstWorksheet } from "./xlsx-table.js";
 
@@ -66,10 +66,15 @@ export async function refreshEnergySnapshot(env, previousSnapshot) {
     documentType: "A44",
     biddingZone: "10YHU-MAVIR----U",
   }));
+  const paksOperational = await fetchHaeaPaksOperational(generatedAt).catch(() => ({
+    status: "unavailable_fetch_failed",
+    source: "Országos Atomenergia Hivatal",
+    sourceUrl: "https://www.haea.hu/web/v3/OAHPortal.nsf/web?OpenAgent&article=paksnpp",
+  }));
 
   const normalized = validateNormalizedEnergyData(applyEnergyEnrichment(
     normalizeMavirTables({ systemRows, flowRows, frequencyRows, generatedAt }),
-    { market, annualEmissions: previousSnapshot.annualEmissions },
+    { market, annualEmissions: previousSnapshot.annualEmissions, paksOperational },
   ));
   normalized.source.delivery = "OpenAI Sites request-driven API";
   return normalized;

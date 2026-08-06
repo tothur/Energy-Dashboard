@@ -18,7 +18,7 @@ function jsonResponse(value, status = 200, headers = {}) {
 }
 
 function hasHistoricalMix(data) {
-  return data?.schemaVersion === 3
+  return data?.schemaVersion === 4
     && Number.isFinite(data?.system?.plantGenerationMW)
     && Number.isFinite(data?.system?.estimatedDistributedSolarMW)
     && Array.isArray(data?.history24h)

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { fetchEntsoePrices, normalizeEeaAnnualEmissions, parseEntsoePriceDocument } from "../src/data/energy-enrichment.mjs";
+import { fetchEntsoePrices, normalizeEeaAnnualEmissions, parseEntsoePriceDocument, parseHaeaPaksOperationalPage } from "../src/data/energy-enrichment.mjs";
 
 function entsoeFixture() {
   const points = Array.from({ length: 192 }, (_, index) => `
@@ -48,4 +48,23 @@ test("EEA annual inventory change reconciles to consecutive reported years", () 
   assert.deepEqual(emissions.latest, { year: 2024, valueMt: 7.112 });
   assert.deepEqual(emissions.previous, { year: 2023, valueMt: 7.469 });
   assert.equal(emissions.changePct, -4.8);
+});
+
+test("OAH Paks page preserves the measurement time and all four block outputs", () => {
+  const paks = parseHaeaPaksOperationalPage(`
+    <h1>A Paksi Atomerőmű aktuális üzemi adatai</h1>
+    <tr><td colspan="4">Mérés dátuma: 2026. 08. 06 21:04</td></tr>
+    <tr><td>1. blokk</td><td>2. blokk</td><td>3. blokk</td><td>4. blokk</td></tr>
+    <tr><td style="color: blue">0 MW</td><td style="color: blue">225 MW</td><td style="color: blue">0 MW</td><td style="color: blue">0 MW</td></tr>
+  `, "2026-08-06T19:15:00.000Z");
+
+  assert.equal(paks.measuredAt, "2026-08-06T19:04:00.000Z");
+  assert.deepEqual(paks.blocks, [
+    { block: 1, mw: 0 },
+    { block: 2, mw: 225 },
+    { block: 3, mw: 0 },
+    { block: 4, mw: 0 },
+  ]);
+  assert.equal(paks.totalMW, 225);
+  assert.equal(paks.source, "Országos Atomenergia Hivatal");
 });

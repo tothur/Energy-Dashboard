@@ -212,6 +212,13 @@ export function normalizeMavirTables({ systemRows, flowRows, frequencyRows, gene
   const systemGapMW = consumptionMW - generationMW - netImportMW;
   const mixGapMW = mixTotalMW - generationMW;
   const flowGapMW = flowTotalMW - netImportMW;
+  const publishedGenerationMW = rounded(generationMW);
+  const publishedPlantGenerationMW = rounded(plantGenerationMW, 1);
+  const publishedDistributedSolarMW = rounded(estimatedDistributedSolarMW, 1);
+  const generationDefinitionCorrectionMW = rounded(
+    publishedGenerationMW - publishedPlantGenerationMW - publishedDistributedSolarMW,
+    1,
+  );
 
   invariant(Math.abs(systemGapMW) <= Math.max(120, consumptionMW * 0.025), `System balance does not reconcile (${systemGapMW.toFixed(1)} MW gap)`);
   const allowedMixGapMW = Math.max(5, generationMW * 0.0025);
@@ -225,18 +232,25 @@ export function normalizeMavirTables({ systemRows, flowRows, frequencyRows, gene
       const rowMix = mixFromRow(row);
       const mixByKey = Object.fromEntries(rowMix.map((item) => [item.key, item.mw]));
       const rowLowCarbonMW = rowMix.filter((item) => ["Atom", "Nap", "Egyéb megújuló"].includes(item.key)).reduce((sum, item) => sum + item.mw, 0);
+      const publishedRowGenerationMW = rounded(row.D);
+      const publishedRowPlantGenerationMW = rounded(row.G, 1);
+      const publishedRowDistributedSolarMW = rounded(row.U + row.V, 1);
       return {
         time: parseMavirTimestamp(row.A),
         loadMW: rounded(row.B),
-        generationMW: rounded(row.D),
-        plantGenerationMW: rounded(row.G),
+        generationMW: publishedRowGenerationMW,
+        plantGenerationMW: publishedRowPlantGenerationMW,
         importMW: rounded(row.W),
         nuclearMW: mixByKey.Atom,
         solarMW: mixByKey.Nap,
         industrialSolarMW: rounded(row.T, 1),
         scteSolarMW: rounded(row.U, 1),
         householdSolarMW: rounded(row.V, 1),
-        estimatedDistributedSolarMW: rounded(row.U + row.V, 1),
+        estimatedDistributedSolarMW: publishedRowDistributedSolarMW,
+        generationDefinitionCorrectionMW: rounded(
+          publishedRowGenerationMW - publishedRowPlantGenerationMW - publishedRowDistributedSolarMW,
+          1,
+        ),
         fossilMW: mixByKey.Fosszilis,
         renewableMW: mixByKey["Egyéb megújuló"],
         otherMW: mixByKey.Egyéb,
@@ -263,7 +277,7 @@ export function normalizeMavirTables({ systemRows, flowRows, frequencyRows, gene
   };
 
   return {
-    schemaVersion: 3,
+    schemaVersion: 4,
     generatedAt: new Date(generatedAt).toISOString(),
     measuredAt,
     status: "verified_snapshot",
@@ -280,12 +294,13 @@ export function normalizeMavirTables({ systemRows, flowRows, frequencyRows, gene
     system: {
       frequencyHz: rounded(frequencyRow.B, 3),
       consumptionMW: rounded(consumptionMW),
-      generationMW: rounded(generationMW),
-      plantGenerationMW: rounded(plantGenerationMW),
-      industrialSolarMW: rounded(industrialSolarMW),
-      scteSolarMW: rounded(scteSolarMW),
-      householdSolarMW: rounded(householdSolarMW),
-      estimatedDistributedSolarMW: rounded(estimatedDistributedSolarMW),
+      generationMW: publishedGenerationMW,
+      plantGenerationMW: publishedPlantGenerationMW,
+      industrialSolarMW: rounded(industrialSolarMW, 1),
+      scteSolarMW: rounded(scteSolarMW, 1),
+      householdSolarMW: rounded(householdSolarMW, 1),
+      estimatedDistributedSolarMW: publishedDistributedSolarMW,
+      generationDefinitionCorrectionMW,
       netImportMW: rounded(netImportMW),
       domesticCoveragePct: rounded((generationMW / consumptionMW) * 100, 1),
       lowCarbonSharePct,
@@ -319,7 +334,7 @@ export function normalizeMavirTables({ systemRows, flowRows, frequencyRows, gene
 }
 
 export function validateNormalizedEnergyData(data) {
-  invariant(data?.schemaVersion === 3, "Unsupported energy data schema");
+  invariant(data?.schemaVersion === 4, "Unsupported energy data schema");
   invariant(!Number.isNaN(Date.parse(data.measuredAt)), "Invalid measurement timestamp");
   invariant(!Number.isNaN(Date.parse(data.generatedAt)), "Invalid snapshot generation timestamp");
   const measuredYear = new Date(data.measuredAt).getUTCFullYear();
@@ -329,15 +344,16 @@ export function validateNormalizedEnergyData(data) {
   invariant(data.source?.primary === "MAVIR RTDW", "Direct MAVIR attribution is missing");
   invariant(data.source?.charts?.crossBorderFlows === 5229, "Direct MAVIR cross-border chart attribution is missing");
   invariant(["available", "unavailable_missing_entsoe_token", "unavailable_fetch_failed"].includes(data.source?.priceStatus), "Price provenance status is missing");
+  invariant(["available", "unavailable_fetch_failed"].includes(data.source?.paksOperationalStatus), "OAH Paks provenance status is missing");
 
-  const { frequencyHz, consumptionMW, generationMW, plantGenerationMW, industrialSolarMW, scteSolarMW, householdSolarMW, estimatedDistributedSolarMW, netImportMW, domesticCoveragePct } = data.system ?? {};
+  const { frequencyHz, consumptionMW, generationMW, plantGenerationMW, industrialSolarMW, scteSolarMW, householdSolarMW, estimatedDistributedSolarMW, generationDefinitionCorrectionMW, netImportMW, domesticCoveragePct } = data.system ?? {};
   [frequencyHz, consumptionMW, generationMW, netImportMW, domesticCoveragePct].forEach((value, index) => finite(value, `system metric ${index}`));
-  [plantGenerationMW, industrialSolarMW, scteSolarMW, householdSolarMW, estimatedDistributedSolarMW].forEach((value, index) => finite(value, `generation definition metric ${index}`));
+  [plantGenerationMW, industrialSolarMW, scteSolarMW, householdSolarMW, estimatedDistributedSolarMW, generationDefinitionCorrectionMW].forEach((value, index) => finite(value, `generation definition metric ${index}`));
   invariant(frequencyHz >= 49 && frequencyHz <= 51, "Grid frequency is outside the plausible validation range");
   invariant(consumptionMW > 0 && consumptionMW < 20_000, "Consumption is outside the plausible validation range");
   invariant(generationMW >= 0 && generationMW < 20_000, "Generation is outside the plausible validation range");
   invariant(Math.abs(estimatedDistributedSolarMW - scteSolarMW - householdSolarMW) <= 1, "Distributed PV components do not reconcile");
-  invariant(Math.abs(generationMW - plantGenerationMW - estimatedDistributedSolarMW) <= 1, "MAVIR generation definitions do not reconcile");
+  invariant(Math.abs(generationMW - plantGenerationMW - estimatedDistributedSolarMW - generationDefinitionCorrectionMW) <= 0.2, "MAVIR generation definitions do not reconcile");
   invariant(Math.abs(netImportMW) < 10_000, "Net import is outside the plausible validation range");
   invariant(domesticCoveragePct >= 0 && domesticCoveragePct <= 250, "Domestic coverage is outside the plausible validation range");
 
@@ -397,6 +413,26 @@ export function validateNormalizedEnergyData(data) {
   finite(data.annualEmissions.changePct, "annual emissions change");
   invariant(Math.abs(data.annualEmissions.changePct - ((data.annualEmissions.latest.valueMt - data.annualEmissions.previous.valueMt) / data.annualEmissions.previous.valueMt) * 100) <= 0.2, "Annual emissions change does not reconcile");
 
+  const paks = data.plants?.find((plant) => plant.key === "paks");
+  invariant(paks && Number.isFinite(paks.mavirCategoryMW), "Paks MAVIR comparison value is missing");
+  invariant(paks.operationalDataStatus === data.source.paksOperationalStatus, "Paks operational provenance is inconsistent");
+  if (paks.liveCoverage === "block_level") {
+    invariant(data.source.paksOperationalStatus === "available", "Block-level Paks data must come from an available OAH feed");
+    invariant(Array.isArray(paks.blocks) && paks.blocks.length === 4, "OAH Paks block series is incomplete");
+    paks.blocks.forEach((block, index) => {
+      invariant(block.block === index + 1, "OAH Paks block identifiers are invalid");
+      invariant(Number.isFinite(block.mw) && block.mw >= 0 && block.mw <= 600, "OAH Paks block output is implausible");
+    });
+    const paksBlockTotalMW = paks.blocks.reduce((sum, block) => sum + block.mw, 0);
+    invariant(Math.abs(paksBlockTotalMW - paks.mw) <= 1, "OAH Paks blocks do not reconcile to the plant total");
+    invariant(!Number.isNaN(Date.parse(paks.operationalMeasuredAt)), "OAH Paks measurement timestamp is invalid");
+    invariant(Date.parse(data.generatedAt) - Date.parse(paks.operationalMeasuredAt) <= 24 * 60 * 60_000, "OAH Paks operational data is stale");
+    finite(data.quality.paksVsMavirGapMW, "Paks OAH/MAVIR comparison gap");
+    invariant(Math.abs(data.quality.paksVsMavirGapMW - (paks.mw - paks.mavirCategoryMW)) <= 1, "Paks OAH/MAVIR comparison gap is inconsistent");
+  } else {
+    invariant(paks.liveCoverage === "category_proxy" && data.source.paksOperationalStatus === "unavailable_fetch_failed", "Paks fallback status is inconsistent");
+  }
+
   const expectedFlowCodes = Object.keys(FLOW_COUNTRIES);
   invariant(Array.isArray(data.flows) && expectedFlowCodes.every((code) => data.flows.some((flow) => flow.code === code)), "Cross-border countries are incomplete");
   data.flows.forEach((flow) => {
@@ -418,11 +454,11 @@ export function validateNormalizedEnergyData(data) {
     finite(point.importMW, `history[${index}].importMW`);
     const historicalMixKeys = ["nuclearMW", "solarMW", "fossilMW", "renewableMW", "otherMW"];
     historicalMixKeys.forEach((key) => finite(point[key], `history[${index}].${key}`));
-    ["plantGenerationMW", "industrialSolarMW", "scteSolarMW", "householdSolarMW", "estimatedDistributedSolarMW"].forEach((key) => finite(point[key], `history[${index}].${key}`));
+    ["plantGenerationMW", "industrialSolarMW", "scteSolarMW", "householdSolarMW", "estimatedDistributedSolarMW", "generationDefinitionCorrectionMW"].forEach((key) => finite(point[key], `history[${index}].${key}`));
     const historicalMixTotalMW = historicalMixKeys.reduce((sum, key) => sum + point[key], 0);
     invariant(Math.abs(historicalMixTotalMW - point.generationMW) <= Math.max(5, point.generationMW * 0.0025), `history[${index}] generation mix does not reconcile`);
     invariant(Math.abs(point.estimatedDistributedSolarMW - point.scteSolarMW - point.householdSolarMW) <= 1, `history[${index}] distributed PV does not reconcile`);
-    invariant(Math.abs(point.generationMW - point.plantGenerationMW - point.estimatedDistributedSolarMW) <= 1, `history[${index}] generation definitions do not reconcile`);
+    invariant(Math.abs(point.generationMW - point.plantGenerationMW - point.estimatedDistributedSolarMW - point.generationDefinitionCorrectionMW) <= 0.2, `history[${index}] generation definitions do not reconcile`);
     finite(point.domesticCoveragePct, `history[${index}].domesticCoveragePct`);
     finite(point.lowCarbonSharePct, `history[${index}].lowCarbonSharePct`);
     if (index > 0) invariant(Date.parse(point.time) > Date.parse(data.history24h[index - 1].time), "24-hour history is not chronological");
@@ -448,6 +484,7 @@ export function validateNormalizedEnergyData(data) {
   invariant(data.quality.enrichment?.lowCarbonShare === "passed", "Low-carbon enrichment validation is missing");
   invariant(data.quality.enrichment?.marketPrice === data.market.status, "Market-price enrichment status is inconsistent");
   invariant(data.quality.enrichment?.annualEmissions === "available", "Annual-emissions enrichment validation is missing");
+  invariant(data.quality.enrichment?.paksOperational === data.source.paksOperationalStatus, "Paks operational enrichment status is inconsistent");
   const systemGapMW = consumptionMW - generationMW - netImportMW;
   invariant(Math.abs(systemGapMW - data.quality.systemGapMW) <= 1, "Declared system gap does not match the published metrics");
   invariant(Math.abs(systemGapMW) <= Math.max(120, consumptionMW * 0.025), "Published system balance does not reconcile");

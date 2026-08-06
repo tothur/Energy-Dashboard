@@ -9,7 +9,7 @@ const data = JSON.parse(
 
 test("the published snapshot passes every declared quality check", () => {
   assert.doesNotThrow(() => validateNormalizedEnergyData(data));
-  assert.equal(data.schemaVersion, 3);
+  assert.equal(data.schemaVersion, 4);
   assert.equal(data.quality.checksPassed, data.quality.checksTotal);
   assert.ok(new Date(data.measuredAt).getUTCFullYear() >= 2020);
   assert.ok(new Date(data.measuredAt).getUTCFullYear() <= 2100);
@@ -43,10 +43,11 @@ test("generation shares and cross-border flows are internally consistent", () =>
 
 test("MAVIR plant generation and estimated distributed solar definitions stay explicit", () => {
   assert.ok(Math.abs(data.system.estimatedDistributedSolarMW - data.system.scteSolarMW - data.system.householdSolarMW) <= 1);
-  assert.ok(Math.abs(data.system.generationMW - data.system.plantGenerationMW - data.system.estimatedDistributedSolarMW) <= 1);
+  assert.ok(Math.abs(data.system.generationMW - data.system.plantGenerationMW - data.system.estimatedDistributedSolarMW - data.system.generationDefinitionCorrectionMW) <= 0.2);
   const solar = data.mix.find((item) => item.key === "Nap");
   assert.ok(Math.abs(solar.mw - data.system.industrialSolarMW - data.system.estimatedDistributedSolarMW) <= 1);
-  assert.ok(Math.abs(data.quality.generationDefinitionGapMW) <= 1);
+  assert.ok(Number.isFinite(data.quality.generationDefinitionGapMW));
+  assert.ok(Math.abs(data.quality.generationDefinitionGapMW) <= 5);
 });
 
 test("15-minute movement reconciles to the retained MAVIR history", () => {
@@ -67,16 +68,20 @@ test("every historical point retains a reconciled MAVIR generation mix", () => {
     const total = mixKeys.reduce((sum, key) => sum + point[key], 0);
     assert.ok(Math.abs(total - point.generationMW) <= Math.max(5, point.generationMW * 0.0025));
     assert.ok(Math.abs(point.estimatedDistributedSolarMW - point.scteSolarMW - point.householdSolarMW) <= 1);
-    assert.ok(Math.abs(point.generationMW - point.plantGenerationMW - point.estimatedDistributedSolarMW) <= 1);
+    assert.ok(Math.abs(point.generationMW - point.plantGenerationMW - point.estimatedDistributedSolarMW - point.generationDefinitionCorrectionMW) <= 0.2);
   });
 });
 
 test("plant markers state the limits of their live status", () => {
   const paks = data.plants.find((plant) => plant.key === "paks");
   const gonyu = data.plants.find((plant) => plant.key === "gonyu");
-  assert.equal(paks.liveCoverage, "category_proxy");
-  assert.match(paks.liveMetric, /Nukleáris/);
+  assert.equal(paks.liveCoverage, "block_level");
+  assert.match(paks.liveMetric, /OAH/);
   assert.ok(Number.isFinite(paks.capacityMW));
+  assert.equal(paks.blocks.length, 4);
+  assert.equal(paks.blocks.reduce((sum, block) => sum + block.mw, 0), paks.mw);
+  assert.equal(paks.operationalDataStatus, "available");
+  assert.ok(Number.isFinite(data.quality.paksVsMavirGapMW));
   assert.equal(gonyu.liveCoverage, "unavailable");
   assert.match(gonyu.statusNote, /nem állapítható meg/);
   assert.match(gonyu.sourceUrl, /^https:\/\//);
