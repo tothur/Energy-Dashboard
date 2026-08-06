@@ -18,11 +18,14 @@ function jsonResponse(value, status = 200, headers = {}) {
 }
 
 function hasHistoricalMix(data) {
-  return data?.schemaVersion === 4
+  return data?.schemaVersion === 5
     && Number.isFinite(data?.system?.plantGenerationMW)
     && Number.isFinite(data?.system?.estimatedDistributedSolarMW)
     && Array.isArray(data?.history24h)
     && data.history24h.length > 0
+    && Array.isArray(data?.loadHistory24h)
+    && data.loadHistory24h.length > 0
+    && ["actualMW", "plannedMW", "deviationMW"].every((key) => Number.isFinite(data.loadHistory24h.at(-1)?.[key]))
     && ["nuclearMW", "solarMW", "fossilMW", "renewableMW", "otherMW", "plantGenerationMW", "estimatedDistributedSolarMW"]
       .every((key) => Number.isFinite(data.history24h.at(-1)?.[key]));
 }

@@ -39,6 +39,7 @@ test("the updater uses direct MAVIR exports and no intermediary", () => {
   assert.match(updater, /fetchChart\(20001\)/);
   assert.match(updater, /fetchChart\(5229\)/);
   assert.match(updater, /fetchChart\(4444\)/);
+  assert.match(updater, /fetchChart\(7678\)/);
   assert.match(updater, /fetchEeaAnnualEmissions/);
   assert.match(updater, /fetchEntsoePrices/);
   assert.match(updater, /discodata\.eea\.europa\.eu|energy-enrichment/);

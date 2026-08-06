@@ -130,7 +130,7 @@ test("serves a fresh validated snapshot from the Sites data store", async () => 
 
   assert.equal(response.status, 200);
   assert.equal(response.headers.get("x-energy-delivery"), "stored");
-  assert.equal((await response.json()).schemaVersion, 4);
+  assert.equal((await response.json()).schemaVersion, 5);
 });
 
 test("replaces an incompatible stored history before serving it", async () => {

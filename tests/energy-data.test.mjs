@@ -9,7 +9,7 @@ const data = JSON.parse(
 
 test("the published snapshot passes every declared quality check", () => {
   assert.doesNotThrow(() => validateNormalizedEnergyData(data));
-  assert.equal(data.schemaVersion, 4);
+  assert.equal(data.schemaVersion, 5);
   assert.equal(data.quality.checksPassed, data.quality.checksTotal);
   assert.ok(new Date(data.measuredAt).getUTCFullYear() >= 2020);
   assert.ok(new Date(data.measuredAt).getUTCFullYear() <= 2100);
@@ -72,6 +72,20 @@ test("every historical point retains a reconciled MAVIR generation mix", () => {
   });
 });
 
+test("MAVIR planned and actual gross load remain aligned and reconciled", () => {
+  assert.equal(data.source.charts.loadPlanActual, 7678);
+  assert.ok(data.quality.requiredFeeds.includes("MAVIR 7678"));
+  assert.equal(data.loadHistory24h.length, data.quality.loadPlanCoveragePoints);
+  assert.ok(data.loadHistory24h.length >= 90);
+  data.loadHistory24h.forEach((point, index) => {
+    assert.ok(Number.isFinite(point.actualMW));
+    assert.ok(Number.isFinite(point.plannedMW));
+    assert.ok(Math.abs(point.deviationMW - (point.actualMW - point.plannedMW)) <= 0.2);
+    if (index > 0) assert.ok(Date.parse(point.time) > Date.parse(data.loadHistory24h[index - 1].time));
+  });
+  assert.ok(data.quality.loadPlanLatestOffsetMinutes <= 20);
+});
+
 test("plant markers state the limits of their live status", () => {
   const paks = data.plants.find((plant) => plant.key === "paks");
   const gonyu = data.plants.find((plant) => plant.key === "gonyu");
@@ -103,4 +117,8 @@ test("runtime validation fails closed when published values are tampered with", 
   const badDefinition = structuredClone(data);
   badDefinition.system.householdSolarMW += 100;
   assert.throws(() => validateNormalizedEnergyData(badDefinition), /Distributed PV components do not reconcile/i);
+
+  const badLoadPlan = structuredClone(data);
+  badLoadPlan.loadHistory24h[0].deviationMW += 100;
+  assert.throws(() => validateNormalizedEnergyData(badLoadPlan), /deviation does not reconcile/i);
 });

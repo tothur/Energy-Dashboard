@@ -65,6 +65,8 @@ await delay(2_000);
 const flowRows = await fetchChart(5229);
 await delay(2_000);
 const frequencyRows = await fetchChart(4444);
+await delay(2_000);
+const loadRows = await fetchChart(7678);
 const annualEmissions = await fetchEeaAnnualEmissions(generatedAt).catch((error) => {
   if (previousSnapshot?.annualEmissions?.status === "available") {
     console.warn(`EEA refresh failed; retaining the last validated annual inventory: ${error.message}`);
@@ -85,7 +87,7 @@ const paksOperational = await fetchHaeaPaksOperational(generatedAt).catch(() => 
   sourceUrl: "https://www.haea.hu/web/v3/OAHPortal.nsf/web?OpenAgent&article=paksnpp",
 }));
 const normalized = validateNormalizedEnergyData(applyEnergyEnrichment(
-  normalizeMavirTables({ systemRows, flowRows, frequencyRows, generatedAt }),
+  normalizeMavirTables({ systemRows, flowRows, frequencyRows, loadRows, generatedAt }),
   { market, annualEmissions, paksOperational },
 ));
 await mkdir(path.dirname(outputPath), { recursive: true });

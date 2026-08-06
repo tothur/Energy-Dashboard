@@ -267,6 +267,24 @@ h1, h2, h3 { font-weight: 600; }
 .history-summary-mix i.import { color: #f39b45; }
 .history-summary-mix b { color: #d3dee5; font-weight: 500; }
 .trend-card .history-note { margin-top: 13px; color: #a7b6c0; font-size: 12px; }
+.load-forecast-card { grid-column: 1 / -1; min-height: 390px; padding: 20px 24px 18px; }
+.load-forecast-card .card-heading { align-items: center; }
+.load-forecast-card .eyebrow { font-size: 12px; letter-spacing: .18em; }
+.load-forecast-card .card-heading h3 { margin-top: 5px; color: #dce7ed; font-size: 15px; }
+.load-chart { height: clamp(220px, 22vw, 340px); margin-top: 12px; }
+.load-chart-legend { display: flex; align-items: center; gap: 16px; color: #95a8b5; font-family: "IBM Plex Mono", monospace; font-size: 9px; text-transform: uppercase; }
+.load-chart-legend span:not(.unit)::before { content: ""; display: inline-block; width: 18px; height: 2px; margin-right: 6px; vertical-align: middle; }
+.load-chart-legend .actual::before { background: #eef5f8; }
+.load-chart-legend .planned::before { height: 0; border-top: 2px dashed #46cbd2; }
+.load-summary { display: flex; align-items: center; gap: 22px; min-height: 52px; margin-top: 12px; padding: 10px 14px; border: 1px solid #2a3f4e; border-radius: 4px; background: #12212c; color: #9eb0bc; font-size: 11px; }
+.load-summary > strong { color: #f1f6f9; font-family: "IBM Plex Mono", monospace; font-size: 18px; }
+.load-summary > span { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+.load-summary i { width: 12px; height: 2px; background: #eef5f8; }
+.load-summary i.planned { height: 0; background: transparent; border-top: 2px dashed #46cbd2; }
+.load-summary b { color: #dce7ed; font-family: "IBM Plex Mono", monospace; font-size: 12px; }
+.load-summary .above-plan b { color: var(--orange); }
+.load-summary .below-plan b { color: var(--cyan); }
+.load-forecast-card .history-note { margin-top: 13px; color: #a7b6c0; font-size: 12px; }
 .chart-tooltip { display: grid; gap: 3px; padding: 8px 10px; background: #0a151f; border: 1px solid #425666; font-family: "IBM Plex Mono", monospace; font-size: 9px; }
 .chart-tooltip strong { color: #fff; }
 .price-value, .large-metric { display: block; margin-top: 18px; font-family: "IBM Plex Mono", monospace; font-size: clamp(30px, 2.7vw, 42px); line-height: 1; }
@@ -335,6 +353,7 @@ footer button { padding: 4px 0; border: 0; border-bottom: 1px solid #577687; bac
   .hero-grid { grid-template-columns: 1fr; }
   .analytics-grid { grid-template-columns: 1fr 1fr; }
   .trend-card { grid-column: 1 / -1; }
+  .load-forecast-card { grid-column: 1 / -1; }
   .mix-legend { grid-template-columns: repeat(5, 1fr); }
 }
 
@@ -395,6 +414,12 @@ footer button { padding: 4px 0; border: 0; border-bottom: 1px solid #577687; bac
   .history-summary-mix { gap: 8px 12px; }
   .history-summary-total { flex-wrap: wrap; }
   .trend-card .history-note { font-size: 10px; line-height: 1.45; }
+  .load-forecast-card { grid-column: auto; min-height: 340px; padding: 16px 12px; }
+  .load-forecast-card .card-heading { align-items: flex-start; flex-direction: column; gap: 10px; }
+  .load-chart { height: 230px; }
+  .load-summary { align-items: flex-start; flex-wrap: wrap; gap: 9px 16px; }
+  .load-summary > strong { width: 100%; }
+  .load-forecast-card .history-note { font-size: 10px; line-height: 1.45; }
   footer { align-items: flex-start; flex-direction: column; padding-top: 12px; }
   .footer-actions { width: 100%; align-items: stretch; flex-direction: column; gap: 12px; }
   .sibling-dashboard-link { width: 100%; }

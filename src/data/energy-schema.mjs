@@ -159,7 +159,7 @@ function plantRecord(key, mw = null) {
   };
 }
 
-export function normalizeMavirTables({ systemRows, flowRows, frequencyRows, generatedAt = new Date().toISOString() }) {
+export function normalizeMavirTables({ systemRows, flowRows, frequencyRows, loadRows, generatedAt = new Date().toISOString() }) {
   const systemColumns = ["B", "D", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W"];
   const flowColumns = [...FLOW_COLUMNS.map(([, column]) => column), ...Object.values(FLOW_SCHEDULE_COLUMNS)];
   const completeSystemRows = systemRows.slice(1).filter((row) => hasFiniteColumns(row, systemColumns) && typeof row.A === "string");
@@ -226,6 +226,28 @@ export function normalizeMavirTables({ systemRows, flowRows, frequencyRows, gene
   const allowedFlowGapMW = Math.max(75, consumptionMW * 0.015);
   invariant(Math.abs(flowGapMW) <= allowedFlowGapMW, `Cross-border flows do not reconcile (${flowGapMW.toFixed(1)} MW gap)`);
 
+  const loadHistory24h = loadRows.slice(1)
+    .filter((row) => typeof row.A === "string" && hasFiniteColumns(row, ["F", "G"]))
+    .map((row) => {
+      const actualMW = rounded(row.F);
+      const plannedMW = rounded(row.G);
+      return {
+        time: parseMavirTimestamp(row.A),
+        actualMW,
+        plannedMW,
+        deviationMW: actualMW - plannedMW,
+      };
+    })
+    .filter((point) => (
+      Date.parse(point.time) >= Date.parse(measuredAt) - 24 * 60 * 60_000
+      && Date.parse(point.time) <= Date.parse(measuredAt) + 5 * 60_000
+    ));
+  invariant(loadHistory24h.length >= 90, `24-hour MAVIR load plan history is incomplete (${loadHistory24h.length} points)`);
+  const latestLoadPoint = loadHistory24h.at(-1);
+  const loadPlanLatestOffsetMinutes = Math.abs(Date.parse(latestLoadPoint.time) - Date.parse(measuredAt)) / 60_000;
+  invariant(loadPlanLatestOffsetMinutes <= 20, `MAVIR load plan feed is not time-aligned (${loadPlanLatestOffsetMinutes.toFixed(1)} minutes)`);
+  const loadPlanMeanAbsoluteErrorMW = loadHistory24h.reduce((sum, point) => sum + Math.abs(point.deviationMW), 0) / loadHistory24h.length;
+
   const history24h = systemRows.slice(1)
     .filter((row) => hasFiniteColumns(row, systemColumns) && typeof row.A === "string")
     .map((row) => {
@@ -277,7 +299,7 @@ export function normalizeMavirTables({ systemRows, flowRows, frequencyRows, gene
   };
 
   return {
-    schemaVersion: 4,
+    schemaVersion: 5,
     generatedAt: new Date(generatedAt).toISOString(),
     measuredAt,
     status: "verified_snapshot",
@@ -285,10 +307,10 @@ export function normalizeMavirTables({ systemRows, flowRows, frequencyRows, gene
       primary: "MAVIR RTDW",
       systemUrl: "https://www.mavir.hu/web/mavir/rendszerterheles",
       exportBaseUrl: "https://rtdwweb.mavir.hu/rtdwweb/webuser/chart",
-      charts: { systemAndMix: 20001, crossBorderFlows: 5229, frequency: 4444 },
+      charts: { systemAndMix: 20001, crossBorderFlows: 5229, frequency: 4444, loadPlanActual: 7678 },
       price: "ENTSO-E Transparency Platform",
       priceStatus: "unavailable_missing_entsoe_token",
-      measurements: { systemAt: measuredAt, flowsAt: flowMeasuredAt, frequencyAt: frequencyMeasuredAt },
+      measurements: { systemAt: measuredAt, flowsAt: flowMeasuredAt, frequencyAt: frequencyMeasuredAt, loadPlanAt: latestLoadPoint.time },
       caveat: "Minden közzétett rendszeradat közvetlenül a MAVIR nyilvános RTDW-exportjából származik.",
     },
     system: {
@@ -318,8 +340,9 @@ export function normalizeMavirTables({ systemRows, flowRows, frequencyRows, gene
       plantRecord("gonyu"),
     ],
     history24h,
+    loadHistory24h,
     quality: {
-      requiredFeeds: ["MAVIR 20001", "MAVIR 5229", "MAVIR 4444"],
+      requiredFeeds: ["MAVIR 20001", "MAVIR 5229", "MAVIR 4444", "MAVIR 7678"],
       systemGapMW: rounded(systemGapMW, 1),
       flowGapMW: rounded(flowGapMW, 1),
       mixGapMW: rounded(mixGapMW, 1),
@@ -327,14 +350,17 @@ export function normalizeMavirTables({ systemRows, flowRows, frequencyRows, gene
       mixToleranceMW: rounded(allowedMixGapMW, 1),
       maxFeedOffsetMinutes: rounded(alignmentMinutes, 1),
       provisionalRowsSkipped,
-      checksPassed: 10,
-      checksTotal: 10,
+      loadPlanCoveragePoints: loadHistory24h.length,
+      loadPlanLatestOffsetMinutes: rounded(loadPlanLatestOffsetMinutes, 1),
+      loadPlanMeanAbsoluteErrorMW: rounded(loadPlanMeanAbsoluteErrorMW, 1),
+      checksPassed: 13,
+      checksTotal: 13,
     },
   };
 }
 
 export function validateNormalizedEnergyData(data) {
-  invariant(data?.schemaVersion === 4, "Unsupported energy data schema");
+  invariant(data?.schemaVersion === 5, "Unsupported energy data schema");
   invariant(!Number.isNaN(Date.parse(data.measuredAt)), "Invalid measurement timestamp");
   invariant(!Number.isNaN(Date.parse(data.generatedAt)), "Invalid snapshot generation timestamp");
   const measuredYear = new Date(data.measuredAt).getUTCFullYear();
@@ -343,6 +369,7 @@ export function validateNormalizedEnergyData(data) {
   invariant(Date.parse(data.generatedAt) - Date.parse(data.measuredAt) <= 65 * 60_000, "Published MAVIR snapshot is too old");
   invariant(data.source?.primary === "MAVIR RTDW", "Direct MAVIR attribution is missing");
   invariant(data.source?.charts?.crossBorderFlows === 5229, "Direct MAVIR cross-border chart attribution is missing");
+  invariant(data.source?.charts?.loadPlanActual === 7678, "Direct MAVIR load plan chart attribution is missing");
   invariant(["available", "unavailable_missing_entsoe_token", "unavailable_fetch_failed"].includes(data.source?.priceStatus), "Price provenance status is missing");
   invariant(["available", "unavailable_fetch_failed"].includes(data.source?.paksOperationalStatus), "OAH Paks provenance status is missing");
 
@@ -463,6 +490,25 @@ export function validateNormalizedEnergyData(data) {
     finite(point.lowCarbonSharePct, `history[${index}].lowCarbonSharePct`);
     if (index > 0) invariant(Date.parse(point.time) > Date.parse(data.history24h[index - 1].time), "24-hour history is not chronological");
   });
+
+  invariant(Array.isArray(data.loadHistory24h) && data.loadHistory24h.length >= 90, "24-hour load plan history is incomplete");
+  data.loadHistory24h.forEach((point, index) => {
+    invariant(!Number.isNaN(Date.parse(point.time)), `loadHistory[${index}] has an invalid timestamp`);
+    finite(point.actualMW, `loadHistory[${index}].actualMW`);
+    finite(point.plannedMW, `loadHistory[${index}].plannedMW`);
+    finite(point.deviationMW, `loadHistory[${index}].deviationMW`);
+    invariant(point.actualMW > 0 && point.actualMW < 20_000, `loadHistory[${index}] actual load is implausible`);
+    invariant(point.plannedMW > 0 && point.plannedMW < 20_000, `loadHistory[${index}] planned load is implausible`);
+    invariant(Math.abs(point.deviationMW - (point.actualMW - point.plannedMW)) <= 0.2, `loadHistory[${index}] deviation does not reconcile`);
+    if (index > 0) invariant(Date.parse(point.time) > Date.parse(data.loadHistory24h[index - 1].time), "24-hour load plan history is not chronological");
+  });
+  const latestLoadPoint = data.loadHistory24h.at(-1);
+  const loadPlanLatestOffsetMinutes = Math.abs(Date.parse(latestLoadPoint.time) - Date.parse(data.measuredAt)) / 60_000;
+  invariant(loadPlanLatestOffsetMinutes <= 20, "MAVIR load plan history is not aligned with the system snapshot");
+  invariant(data.quality?.loadPlanCoveragePoints === data.loadHistory24h.length, "Load plan coverage count is inconsistent");
+  invariant(Math.abs(data.quality?.loadPlanLatestOffsetMinutes - loadPlanLatestOffsetMinutes) <= 0.2, "Load plan offset metric is inconsistent");
+  const loadPlanMeanAbsoluteErrorMW = data.loadHistory24h.reduce((sum, point) => sum + Math.abs(point.deviationMW), 0) / data.loadHistory24h.length;
+  invariant(Math.abs(data.quality?.loadPlanMeanAbsoluteErrorMW - loadPlanMeanAbsoluteErrorMW) <= 0.2, "Load plan mean absolute error is inconsistent");
 
   invariant(!Number.isNaN(Date.parse(data.movement15m?.comparisonAt)), "15-minute comparison timestamp is invalid");
   invariant(data.movement15m.elapsedMinutes >= 10 && data.movement15m.elapsedMinutes <= 20, "15-minute comparison window is invalid");

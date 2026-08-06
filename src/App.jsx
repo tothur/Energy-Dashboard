@@ -680,6 +680,55 @@ function TrendCard({ data }) {
   );
 }
 
+function LoadForecastCard({ data }) {
+  const chartData = data.loadHistory24h;
+  const chartTicks = useMemo(() => chartData
+    .filter((point) => {
+      const [hour, minute] = formatLocalTime(point.time).split(":").map(Number);
+      return [0, 6, 12, 18].includes(hour) && minute < 15;
+    })
+    .map((point) => point.time), [chartData]);
+  const [activePoint, setActivePoint] = useState(chartData.at(-1));
+
+  useEffect(() => setActivePoint(chartData.at(-1)), [chartData]);
+
+  return (
+    <section className="analytics-card load-forecast-card" aria-labelledby="load-forecast-title">
+      <div className="card-heading">
+        <div><span className="eyebrow">TERVEZETT ÉS TÉNYLEGES HÁLÓZATI TERHELÉS · 24 ÓRA</span><h3 id="load-forecast-title">MAVIR-terv és tényleges terhelés</h3></div>
+        <div className="load-chart-legend" aria-label="Jelmagyarázat"><span className="actual">Tény</span><span className="planned">Terv</span><span className="unit">MW</span></div>
+      </div>
+      <div className="load-chart">
+        <ResponsiveContainer width="100%" height="100%">
+          <LineChart
+            data={chartData}
+            margin={{ top: 16, right: 8, left: -6, bottom: 0 }}
+            onMouseMove={(state) => {
+              const index = Number(state?.activeIndex);
+              if (Number.isInteger(index) && chartData[index]) setActivePoint(chartData[index]);
+            }}
+            onMouseLeave={() => setActivePoint(chartData.at(-1))}
+          >
+            <CartesianGrid stroke="#253745" vertical={false} />
+            <XAxis dataKey="time" ticks={chartTicks} tickFormatter={(value) => formatLocalTime(value).slice(0, 2)} tick={{ fill: "#9bafbc", fontSize: 11 }} axisLine={{ stroke: "#60717e" }} tickLine={false} />
+            <YAxis domain={["dataMin - 300", "dataMax + 300"]} tickFormatter={(value) => `${Math.round(value / 1000)}k`} tick={{ fill: "#9bafbc", fontSize: 11 }} axisLine={false} tickLine={false} width={52} />
+            <Tooltip content={() => null} cursor={{ stroke: "#dfe9ef", strokeOpacity: 0.55, strokeWidth: 1 }} />
+            <Line type="monotone" dataKey="plannedMW" name="Terv" stroke="#46cbd2" strokeWidth={1.8} strokeDasharray="7 5" dot={false} activeDot={{ r: 3, fill: "#46cbd2", stroke: "#0a151f", strokeWidth: 2 }} isAnimationActive={false} />
+            <Line type="monotone" dataKey="actualMW" name="Tény" stroke="#eef5f8" strokeWidth={2.2} dot={false} activeDot={{ r: 4, fill: "#eef5f8", stroke: "#60717e", strokeWidth: 2 }} isAnimationActive={false} />
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
+      <div className="load-summary" aria-live="polite">
+        <strong>{formatLocalTime(activePoint.time)}</strong>
+        <span><i className="actual" />Tény <b>{formatMW(activePoint.actualMW)} MW</b></span>
+        <span><i className="planned" />Terv <b>{formatMW(activePoint.plannedMW)} MW</b></span>
+        <span className={activePoint.deviationMW > 0 ? "above-plan" : "below-plan"}>Eltérés <b>{formatSigned(activePoint.deviationMW)} MW</b></span>
+      </div>
+      <p className="history-note">Az eltérés a tényleges és a tervezett bruttó rendszerterhelés különbsége. Közvetlen MAVIR 7678-as export; a két vonal azonos terhelési definíciót használ.</p>
+    </section>
+  );
+}
+
 function PriceCard({ data }) {
   const available = data.market.status === "available";
   const headline = data.market.current?.eurMWh ?? data.market.nextDay?.averageEurMWh ?? null;
@@ -772,6 +821,7 @@ function SourcesDrawer({ data, onClose }) {
           <div><Atom size={20} /><span><b>Paksi blokkok aktuális teljesítménye</b><small>{data.source.paksOperational} · {data.source.paksOperationalStatus === "available" ? "blokkszintű adat" : "jelenleg nem elérhető"}</small></span></div>
           <div><Sun size={20} /><span><b>Napelemes definíció</b><small>Ipari PV {formatMW(data.system.industrialSolarMW)} MW + SCTE {formatMW(data.system.scteSolarMW)} MW + HMKE {formatMW(data.system.householdSolarMW)} MW</small></span></div>
           <div><ArrowsLeftRight size={20} /><span><b>Határkeresztező tény és menetrend</b><small>{data.source.primary} · 5229-es diagram · azonos időpont</small></span></div>
+          <div><Gauge size={20} /><span><b>Tervezett és tényleges hálózati terhelés</b><small>{data.source.primary} · 7678-as diagram · bruttó terv és tény</small></span></div>
           <div><Lightning size={20} /><span><b>Hálózati frekvencia</b><small>{data.source.primary} · 4444-es diagram</small></span></div>
           <div><Lightning size={20} /><span><b>Piaci ár</b><small>{data.source.price} · A44 · {data.market.status === "available" ? "elérhető" : "jelenleg nincs közölve"}</small></span></div>
           <div><ShieldCheck size={20} /><span><b>Éves kibocsátási leltár</b><small>{data.source.annualEmissions} · IPCC 1.A.1.a · {data.annualEmissions.latest.year}</small></span></div>
@@ -784,6 +834,8 @@ function SourcesDrawer({ data, onClose }) {
           <div><span>Határáramlások</span><b>{data.quality.flowGapMW.toFixed(1)} MW eltérés</b></div>
           <div><span>Rendszermérleg</span><b>{data.quality.systemGapMW.toFixed(1)} MW ismert rés</b></div>
           <div><span>Feedek időeltérése</span><b>legfeljebb {data.quality.maxFeedOffsetMinutes.toFixed(1)} perc</b></div>
+          <div><span>Terv–tény idősor lefedettsége</span><b>{data.quality.loadPlanCoveragePoints} negyedóra</b></div>
+          <div><span>Terv átlagos abszolút hibája</span><b>{decimalFormatter.format(data.quality.loadPlanMeanAbsoluteErrorMW)} MW</b></div>
           <div><span>Kihagyott előzetes sorok</span><b>{data.quality.provisionalRowsSkipped} db</b></div>
           <div><span>Kötelező ellenőrzések</span><b>{data.quality.checksPassed}/{data.quality.checksTotal} sikeres</b></div>
         </div>
@@ -820,6 +872,7 @@ export function App() {
         <EnergyMap data={data} />
         <div className="analytics-grid">
           <TrendCard data={data} />
+          <LoadForecastCard data={data} />
           <PriceCard data={data} />
           <ImportCard data={data} />
           <CarbonCard data={data} />

@@ -60,6 +60,8 @@ export async function refreshEnergySnapshot(env, previousSnapshot) {
   const flowRows = await fetchChart(5229, startTime, endTime);
   await delay(2_000);
   const frequencyRows = await fetchChart(4444, startTime, endTime);
+  await delay(2_000);
+  const loadRows = await fetchChart(7678, startTime, endTime);
   const market = await fetchEntsoePrices(env.ENTSOE_SECURITY_TOKEN, generatedAt).catch(() => ({
     status: "unavailable_fetch_failed",
     source: "ENTSO-E Transparency Platform",
@@ -73,7 +75,7 @@ export async function refreshEnergySnapshot(env, previousSnapshot) {
   }));
 
   const normalized = validateNormalizedEnergyData(applyEnergyEnrichment(
-    normalizeMavirTables({ systemRows, flowRows, frequencyRows, generatedAt }),
+    normalizeMavirTables({ systemRows, flowRows, frequencyRows, loadRows, generatedAt }),
     { market, annualEmissions: previousSnapshot.annualEmissions, paksOperational },
   ));
   normalized.source.delivery = "OpenAI Sites request-driven API";
