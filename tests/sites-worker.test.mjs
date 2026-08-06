@@ -3,7 +3,7 @@ import { access, readFile } from "node:fs/promises";
 import test from "node:test";
 import worker from "../worker/index.js";
 
-function createMockDb(snapshot) {
+function createMockDb(snapshot, refreshLockActive = false) {
   let row = snapshot ? {
     payload: JSON.stringify(snapshot),
     measuredAt: snapshot.measuredAt,
@@ -29,6 +29,7 @@ function createMockDb(snapshot) {
             return { meta: { changes: 1 } };
           }
           if (sql.startsWith("UPDATE energy_snapshot SET refresh_started_at = ?")) {
+            if (refreshLockActive) return { meta: { changes: 0 } };
             row.refreshStartedAt = values[0];
             return { meta: { changes: 1 } };
           }
@@ -131,6 +132,23 @@ test("serves a fresh validated snapshot from the Sites data store", async () => 
   assert.equal(response.status, 200);
   assert.equal(response.headers.get("x-energy-delivery"), "stored");
   assert.equal((await response.json()).schemaVersion, 5);
+});
+
+test("serves stale validated data immediately while refreshing in the background", async () => {
+  const bundled = JSON.parse(await readFile(new URL("../public/data/energy-latest.json", import.meta.url), "utf8"));
+  const staleAt = new Date(Date.now() - 10 * 60_000).toISOString();
+  const snapshot = { ...bundled, generatedAt: staleAt, measuredAt: staleAt };
+  let backgroundRefresh;
+  const response = await worker.fetch(new Request("https://example.test/api/energy?v=background"), {
+    DB: createMockDb(snapshot, true),
+    ASSETS: { fetch: async () => new Response("missing", { status: 404 }) },
+  }, { waitUntil: (promise) => { backgroundRefresh = promise; } });
+
+  assert.equal(response.status, 200);
+  assert.equal(response.headers.get("x-energy-delivery"), "validated-fallback-refresh-in-progress");
+  assert.equal((await response.json()).schemaVersion, 5);
+  assert.ok(backgroundRefresh instanceof Promise);
+  assert.equal(await backgroundRefresh, null);
 });
 
 test("replaces an incompatible stored history before serving it", async () => {

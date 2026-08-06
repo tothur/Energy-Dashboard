@@ -102,7 +102,7 @@ async function refreshStored(env, previousSnapshot) {
   return activeRefresh;
 }
 
-async function energyApi(request, env) {
+async function energyApi(request, env, ctx) {
   await ensureSchema(env.DB);
   let stored = await readStored(env.DB);
   if (!stored) {
@@ -129,6 +129,12 @@ async function energyApi(request, env) {
 
   const ageMs = Date.now() - Date.parse(stored.data.measuredAt);
   if (ageMs > REFRESH_AFTER_MS) {
+    if (ctx?.waitUntil) {
+      ctx.waitUntil(refreshStored(env, stored.data).catch(() => null));
+      return jsonResponse(stored.data, 200, {
+        "x-energy-delivery": "validated-fallback-refresh-in-progress",
+      });
+    }
     try {
       const fresh = await refreshStored(env, stored.data);
       if (fresh) return jsonResponse(fresh, 200, { "x-energy-delivery": "refreshed" });
@@ -173,11 +179,11 @@ async function withRuntimeMetadata(response, request) {
 }
 
 export default {
-  async fetch(request, env) {
+  async fetch(request, env, ctx) {
     const url = new URL(request.url);
     if (url.pathname === "/api/energy") {
       if (request.method !== "GET") return jsonResponse({ error: "Method not allowed" }, 405, { allow: "GET" });
-      return energyApi(request, env);
+      return energyApi(request, env, ctx);
     }
     if (url.pathname === "/api/health") {
       if (request.method !== "GET") return jsonResponse({ error: "Method not allowed" }, 405, { allow: "GET" });
