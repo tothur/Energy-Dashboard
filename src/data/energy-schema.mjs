@@ -149,12 +149,18 @@ export function normalizeMavirTables({ systemRows, flowRows, frequencyRows, gene
     .filter((row) => hasFiniteColumns(row, systemColumns) && typeof row.A === "string")
     .map((row) => {
       const rowMix = mixFromRow(row);
+      const mixByKey = Object.fromEntries(rowMix.map((item) => [item.key, item.mw]));
       const rowLowCarbonMW = rowMix.filter((item) => ["Atom", "Nap", "Egyéb megújuló"].includes(item.key)).reduce((sum, item) => sum + item.mw, 0);
       return {
         time: parseMavirTimestamp(row.A),
         loadMW: rounded(row.B),
         generationMW: rounded(row.D),
         importMW: rounded(row.W),
+        nuclearMW: mixByKey.Atom,
+        solarMW: mixByKey.Nap,
+        fossilMW: mixByKey.Fosszilis,
+        renewableMW: mixByKey["Egyéb megújuló"],
+        otherMW: mixByKey.Egyéb,
         domesticCoveragePct: rounded((row.D / row.B) * 100, 1),
         lowCarbonSharePct: rounded((rowLowCarbonMW / row.D) * 100, 1),
       };
@@ -320,6 +326,10 @@ export function validateNormalizedEnergyData(data) {
     finite(point.loadMW, `history[${index}].loadMW`);
     finite(point.generationMW, `history[${index}].generationMW`);
     finite(point.importMW, `history[${index}].importMW`);
+    const historicalMixKeys = ["nuclearMW", "solarMW", "fossilMW", "renewableMW", "otherMW"];
+    historicalMixKeys.forEach((key) => finite(point[key], `history[${index}].${key}`));
+    const historicalMixTotalMW = historicalMixKeys.reduce((sum, key) => sum + point[key], 0);
+    invariant(Math.abs(historicalMixTotalMW - point.generationMW) <= Math.max(5, point.generationMW * 0.0025), `history[${index}] generation mix does not reconcile`);
     finite(point.domesticCoveragePct, `history[${index}].domesticCoveragePct`);
     finite(point.lowCarbonSharePct, `history[${index}].lowCarbonSharePct`);
     if (index > 0) invariant(Date.parse(point.time) > Date.parse(data.history24h[index - 1].time), "24-hour history is not chronological");

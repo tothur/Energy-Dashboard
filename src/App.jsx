@@ -23,8 +23,8 @@ import {
 } from "@phosphor-icons/react";
 import {
   Area,
-  AreaChart,
   CartesianGrid,
+  ComposedChart,
   Line,
   LineChart,
   ReferenceLine,
@@ -118,7 +118,8 @@ function useEnergyData() {
         const apiResponse = await fetch(`/api/energy?v=${Date.now()}`, { cache: "no-store" });
         const fallbackUrl = publicAsset("data/energy-latest.json");
         const separator = fallbackUrl.includes("?") ? "&" : "?";
-        const response = apiResponse.ok
+        const apiIsJson = apiResponse.ok && apiResponse.headers.get("content-type")?.includes("application/json");
+        const response = apiIsJson
           ? apiResponse
           : await fetch(`${fallbackUrl}${separator}v=${Date.now()}`, { cache: "no-store" });
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
@@ -543,12 +544,28 @@ function EnergyMap({ data }) {
   );
 }
 
-function HistoryTooltip({ active, payload, label }) {
-  if (!active || !payload?.length) return null;
+const HISTORY_MIX_SERIES = [
+  { key: "solarMW", label: "Nap", color: "#ffd04d", className: "solar" },
+  { key: "nuclearMW", label: "Atom", color: "#6ca8ff", className: "nuclear" },
+  { key: "fossilMW", label: "Fosszilis", color: "#c67260", className: "fossil" },
+  { key: "renewableMW", label: "Egyéb megújuló", color: "#62c878", className: "renewable" },
+  { key: "otherMW", label: "Egyéb", color: "#718594", className: "other" },
+  { key: "positiveImportMW", label: "Behozatal", color: "#f39b45", className: "import" },
+];
+
+function HistorySummary({ point }) {
+  if (!point) return null;
   return (
-    <div className="chart-tooltip">
-      <strong>{formatLocalTime(label)}</strong>
-      {payload.map((item) => <span key={item.dataKey} style={{ color: item.color }}>{item.name}: {formatMW(item.value)} MW</span>)}
+    <div className="history-summary" aria-live="polite">
+      <div className="history-summary-total">
+        <strong>{formatLocalTime(point.time)}</strong>
+        <b>{formatMW(point.loadMW)}</b><span>MW fogyasztás</span>
+      </div>
+      <div className="history-summary-mix">
+        {HISTORY_MIX_SERIES.map((series) => (
+          <span key={series.key}><i className={series.className} />{series.label} <b>{formatMW(point[series.key])} MW</b></span>
+        ))}
+      </div>
     </div>
   );
 }
@@ -564,30 +581,65 @@ function PriceTooltip({ active, payload, label }) {
   );
 }
 
-function TrendCard({ data, range }) {
-  const chartData = useMemo(() => data.history24h.map((item) => ({ ...item, timeLabel: item.time })), [data]);
+function TrendCard({ data }) {
+  const chartData = useMemo(() => data.history24h.map((item) => ({
+    ...item,
+    timeLabel: item.time,
+    positiveImportMW: Math.max(0, item.importMW),
+  })), [data]);
+  const chartTicks = useMemo(() => chartData
+    .filter((point) => {
+      const [hour, minute] = formatLocalTime(point.timeLabel).split(":").map(Number);
+      return [0, 6, 12, 18].includes(hour) && minute < 15;
+    })
+    .map((point) => point.timeLabel), [chartData]);
+  const [activePoint, setActivePoint] = useState(chartData.at(-1));
+
+  useEffect(() => setActivePoint(chartData.at(-1)), [chartData]);
+
   return (
     <section className="analytics-card trend-card" aria-labelledby="trend-title">
       <div className="card-heading">
-        <div><span className="eyebrow">TERHELÉS</span><h3 id="trend-title">Rendszeregyensúly · {range === "24h" ? "24 óra" : "legutóbbi nap"}</h3></div>
+        <div><span className="eyebrow">MIBŐL LETT AZ ÁRAM · 24 ÓRA</span><h3 id="trend-title">Forrásmix és behozatal</h3></div>
         <span className="unit">MW</span>
-      </div>
-      <div className="chart-legend">
-        <span className="load">Fogyasztás</span><span className="generation">Hazai termelés</span><span className="imports">Nettó import</span>
       </div>
       <div className="history-chart">
         <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={chartData} margin={{ top: 8, right: 8, left: -20, bottom: 0 }}>
-            <CartesianGrid stroke="#243544" strokeDasharray="2 5" vertical={false} />
-            <XAxis dataKey="timeLabel" tickFormatter={(value) => formatLocalTime(value)} minTickGap={42} tick={{ fill: "#8194a4", fontSize: 10 }} axisLine={{ stroke: "#334453" }} tickLine={false} />
-            <YAxis tick={{ fill: "#8194a4", fontSize: 10 }} axisLine={false} tickLine={false} width={48} />
-            <Tooltip content={<HistoryTooltip />} />
-            <Area type="monotone" dataKey="loadMW" name="Fogyasztás" stroke="#36d7dc" fill="#36d7dc" fillOpacity={0.08} strokeWidth={2} />
-            <Area type="monotone" dataKey="generationMW" name="Hazai termelés" stroke="#e3c354" fill="#e3c354" fillOpacity={0.05} strokeWidth={1.8} />
-            <Area type="monotone" dataKey="importMW" name="Nettó import" stroke="#53a7ff" fill="#53a7ff" fillOpacity={0.04} strokeWidth={1.6} />
-          </AreaChart>
+          <ComposedChart
+            data={chartData}
+            margin={{ top: 16, right: 8, left: -6, bottom: 0 }}
+            onMouseMove={(state) => {
+              const index = Number(state?.activeIndex);
+              if (Number.isInteger(index) && chartData[index]) setActivePoint(chartData[index]);
+            }}
+            onMouseLeave={() => setActivePoint(chartData.at(-1))}
+          >
+            <CartesianGrid stroke="#253745" vertical={false} />
+            <XAxis dataKey="timeLabel" ticks={chartTicks} tickFormatter={(value) => formatLocalTime(value).slice(0, 2)} tick={{ fill: "#9bafbc", fontSize: 11 }} axisLine={{ stroke: "#60717e" }} tickLine={false} />
+            <YAxis ticks={[0, 2000, 4000, 6000, 8000, 10000]} tickFormatter={(value) => value === 0 ? "0" : `${value / 1000}k`} tick={{ fill: "#9bafbc", fontSize: 11 }} axisLine={false} tickLine={false} width={52} />
+            <Tooltip content={() => null} cursor={{ stroke: "#dfe9ef", strokeOpacity: 0.55, strokeWidth: 1 }} />
+            {HISTORY_MIX_SERIES.map((series) => (
+              <Area
+                key={series.key}
+                type="monotone"
+                dataKey={series.key}
+                name={series.label}
+                stackId="supply"
+                stroke={series.color}
+                fill={series.color}
+                fillOpacity={series.key === "positiveImportMW" ? 0.28 : 0.96}
+                strokeWidth={1.2}
+                dot={false}
+                activeDot={false}
+                isAnimationActive={false}
+              />
+            ))}
+            <Line type="monotone" dataKey="loadMW" name="Fogyasztás" stroke="#e8f1f7" strokeOpacity={0.85} strokeWidth={1.4} dot={false} activeDot={{ r: 4, fill: "#f4f8fa", stroke: "#a9bac5", strokeWidth: 2 }} isAnimationActive={false} />
+          </ComposedChart>
         </ResponsiveContainer>
       </div>
+      <HistorySummary point={activePoint} />
+      <p className="history-note">A rétegek a közvetlen MAVIR-forrásmixet és a pozitív nettó behozatalt mutatják; a fehér vonal a fogyasztás. A mérési rés miatt az összegük kis mértékben eltérhet.</p>
     </section>
   );
 }
@@ -727,7 +779,7 @@ export function App() {
         </div>
         <EnergyMap data={data} />
         <div className="analytics-grid">
-          <TrendCard data={data} range={range} />
+          <TrendCard data={data} />
           <PriceCard data={data} />
           <ImportCard data={data} />
           <CarbonCard data={data} />

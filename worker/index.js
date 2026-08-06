@@ -17,6 +17,13 @@ function jsonResponse(value, status = 200, headers = {}) {
   });
 }
 
+function hasHistoricalMix(data) {
+  return Array.isArray(data?.history24h)
+    && data.history24h.length > 0
+    && ["nuclearMW", "solarMW", "fossilMW", "renewableMW", "otherMW"]
+      .every((key) => Number.isFinite(data.history24h.at(-1)?.[key]));
+}
+
 async function ensureSchema(db) {
   await db.prepare(`
     CREATE TABLE IF NOT EXISTS energy_snapshot (
@@ -99,7 +106,7 @@ async function energyApi(request, env) {
   }
 
   const ageMs = Date.now() - Date.parse(stored.data.measuredAt);
-  if (ageMs > REFRESH_AFTER_MS) {
+  if (ageMs > REFRESH_AFTER_MS || !hasHistoricalMix(stored.data)) {
     try {
       const fresh = await refreshStored(env, stored.data);
       if (fresh) return jsonResponse(fresh, 200, { "x-energy-delivery": "refreshed" });

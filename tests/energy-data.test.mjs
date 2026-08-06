@@ -51,6 +51,15 @@ test("15-minute movement reconciles to the retained MAVIR history", () => {
   assert.ok(Math.abs(data.movement15m.lowCarbonSharePct - (data.system.lowCarbonSharePct - comparison.lowCarbonSharePct)) <= 0.2);
 });
 
+test("every historical point retains a reconciled MAVIR generation mix", () => {
+  const mixKeys = ["nuclearMW", "solarMW", "fossilMW", "renewableMW", "otherMW"];
+  data.history24h.forEach((point) => {
+    mixKeys.forEach((key) => assert.ok(Number.isFinite(point[key]), `${key} is missing at ${point.time}`));
+    const total = mixKeys.reduce((sum, key) => sum + point[key], 0);
+    assert.ok(Math.abs(total - point.generationMW) <= Math.max(5, point.generationMW * 0.0025));
+  });
+});
+
 test("runtime validation fails closed when published values are tampered with", () => {
   const badMix = structuredClone(data);
   badMix.mix[0].mw += 100;
