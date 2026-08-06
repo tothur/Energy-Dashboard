@@ -28,6 +28,53 @@ const FLOW_SCHEDULE_COLUMNS = {
   RO: "O",
 };
 
+const PLANT_DIRECTORY = {
+  paks: {
+    name: "Paks",
+    type: "nuclear",
+    technology: "4 × VVER-440/V-213 blokk",
+    operator: "MVM Paksi Atomerőmű Zrt.",
+    capacityMW: 2026.6,
+    liveMetric: "MAVIR · Nukleáris erőművek",
+    sourceUrl: "https://atomeromu.mvm.hu/hu-HU/Tudastar/UzemidoHosszabbitas/2052-2057",
+    x: 46,
+    y: 69,
+  },
+  matra: {
+    name: "Mátra",
+    type: "fossil",
+    technology: "Lignittüzelésű erőmű",
+    operator: "MVM Mátra Energia Zrt.",
+    capacityMW: null,
+    liveMetric: "MAVIR · Barnakőszén–lignit erőművek",
+    sourceUrl: "https://mert.mvm.hu/",
+    x: 63,
+    y: 37,
+  },
+  dunamenti: {
+    name: "Dunamenti",
+    type: "fossil",
+    technology: "Földgáztüzelés és akkumulátoros tárolás",
+    operator: "MET Group",
+    capacityMW: null,
+    liveMetric: null,
+    sourceUrl: "https://met.com/en/media/website-magazine/60-year-old-dunamenti-power-station-transforms-into-energy-transition-cluster/",
+    x: 49,
+    y: 49,
+  },
+  gonyu: {
+    name: "Gönyű",
+    type: "fossil",
+    technology: "Kombinált ciklusú gázturbina (CCGT)",
+    operator: "Veolia Hungary",
+    capacityMW: 428,
+    liveMetric: null,
+    sourceUrl: "https://www.veolia.hu/hu/hirek/megvasarolta-veolia-gonyui-eromuvet",
+    x: 30,
+    y: 37,
+  },
+};
+
 function invariant(condition, message) {
   if (!condition) throw new Error(message);
 }
@@ -90,8 +137,30 @@ function mixFromRow(row) {
   }));
 }
 
+function plantRecord(key, mw = null) {
+  const plant = PLANT_DIRECTORY[key];
+  const hasLiveValue = Number.isFinite(mw);
+  const utilizationPct = hasLiveValue && Number.isFinite(plant.capacityMW)
+    ? rounded((mw / plant.capacityMW) * 100, 1)
+    : null;
+  return {
+    key,
+    ...plant,
+    mw: hasLiveValue ? rounded(mw) : null,
+    liveCoverage: hasLiveValue ? "category_proxy" : "unavailable",
+    status: hasLiveValue
+      ? (utilizationPct !== null && utilizationPct < 25 ? "Alacsony termelési szint" : (mw > 5 ? "Termelés látható" : "Nem látható termelés"))
+      : "Nincs külön élő adat",
+    statusTone: hasLiveValue ? (utilizationPct !== null && utilizationPct < 25 ? "attention" : "active") : "unknown",
+    utilizationPct,
+    statusNote: hasLiveValue
+      ? `Az érték a ${plant.liveMetric} országos kategóriából származik, nem blokk- vagy gépegység-szintű státusz.`
+      : "A MAVIR 20001-es exportja nem közöl külön létesítményi teljesítményt, ezért az aktuális üzemi állapot ebből a feedből nem állapítható meg.",
+  };
+}
+
 export function normalizeMavirTables({ systemRows, flowRows, frequencyRows, generatedAt = new Date().toISOString() }) {
-  const systemColumns = ["B", "D", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W"];
+  const systemColumns = ["B", "D", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W"];
   const flowColumns = [...FLOW_COLUMNS.map(([, column]) => column), ...Object.values(FLOW_SCHEDULE_COLUMNS)];
   const completeSystemRows = systemRows.slice(1).filter((row) => hasFiniteColumns(row, systemColumns) && typeof row.A === "string");
   const systemRow = completeSystemRows.findLast((candidate) => {
@@ -116,6 +185,11 @@ export function normalizeMavirTables({ systemRows, flowRows, frequencyRows, gene
 
   const consumptionMW = finite(systemRow.B, "system load");
   const generationMW = finite(systemRow.D, "domestic generation");
+  const plantGenerationMW = finite(systemRow.G, "power-plant generation");
+  const industrialSolarMW = finite(systemRow.T, "industrial PV generation");
+  const scteSolarMW = finite(systemRow.U, "SCTE PV generation");
+  const householdSolarMW = finite(systemRow.V, "HMKE PV generation");
+  const estimatedDistributedSolarMW = scteSolarMW + householdSolarMW;
   const netImportMW = finite(systemRow.W, "net import");
   const mix = mixFromRow(systemRow);
   const mixTotalMW = mix.reduce((sum, item) => sum + item.mw, 0);
@@ -155,9 +229,14 @@ export function normalizeMavirTables({ systemRows, flowRows, frequencyRows, gene
         time: parseMavirTimestamp(row.A),
         loadMW: rounded(row.B),
         generationMW: rounded(row.D),
+        plantGenerationMW: rounded(row.G),
         importMW: rounded(row.W),
         nuclearMW: mixByKey.Atom,
         solarMW: mixByKey.Nap,
+        industrialSolarMW: rounded(row.T, 1),
+        scteSolarMW: rounded(row.U, 1),
+        householdSolarMW: rounded(row.V, 1),
+        estimatedDistributedSolarMW: rounded(row.U + row.V, 1),
         fossilMW: mixByKey.Fosszilis,
         renewableMW: mixByKey["Egyéb megújuló"],
         otherMW: mixByKey.Egyéb,
@@ -184,7 +263,7 @@ export function normalizeMavirTables({ systemRows, flowRows, frequencyRows, gene
   };
 
   return {
-    schemaVersion: 2,
+    schemaVersion: 3,
     generatedAt: new Date(generatedAt).toISOString(),
     measuredAt,
     status: "verified_snapshot",
@@ -202,6 +281,11 @@ export function normalizeMavirTables({ systemRows, flowRows, frequencyRows, gene
       frequencyHz: rounded(frequencyRow.B, 3),
       consumptionMW: rounded(consumptionMW),
       generationMW: rounded(generationMW),
+      plantGenerationMW: rounded(plantGenerationMW),
+      industrialSolarMW: rounded(industrialSolarMW),
+      scteSolarMW: rounded(scteSolarMW),
+      householdSolarMW: rounded(householdSolarMW),
+      estimatedDistributedSolarMW: rounded(estimatedDistributedSolarMW),
       netImportMW: rounded(netImportMW),
       domesticCoveragePct: rounded((generationMW / consumptionMW) * 100, 1),
       lowCarbonSharePct,
@@ -213,10 +297,10 @@ export function normalizeMavirTables({ systemRows, flowRows, frequencyRows, gene
     flows,
     movement15m,
     plants: [
-      { key: "paks", name: "Paks", type: "nuclear", mw: rounded(systemRow.H), x: 46, y: 69 },
-      { key: "matra", name: "Mátra", type: "fossil", mw: rounded(systemRow.I), x: 63, y: 37 },
-      { key: "dunamenti", name: "Dunamenti", type: "fossil", mw: null, x: 49, y: 49 },
-      { key: "gonyu", name: "Gönyű", type: "fossil", mw: null, x: 30, y: 37 },
+      plantRecord("paks", systemRow.H),
+      plantRecord("matra", systemRow.I),
+      plantRecord("dunamenti"),
+      plantRecord("gonyu"),
     ],
     history24h,
     quality: {
@@ -224,17 +308,18 @@ export function normalizeMavirTables({ systemRows, flowRows, frequencyRows, gene
       systemGapMW: rounded(systemGapMW, 1),
       flowGapMW: rounded(flowGapMW, 1),
       mixGapMW: rounded(mixGapMW, 1),
+      generationDefinitionGapMW: rounded(generationMW - plantGenerationMW - estimatedDistributedSolarMW, 1),
       mixToleranceMW: rounded(allowedMixGapMW, 1),
       maxFeedOffsetMinutes: rounded(alignmentMinutes, 1),
       provisionalRowsSkipped,
-      checksPassed: 8,
-      checksTotal: 8,
+      checksPassed: 10,
+      checksTotal: 10,
     },
   };
 }
 
 export function validateNormalizedEnergyData(data) {
-  invariant(data?.schemaVersion === 2, "Unsupported energy data schema");
+  invariant(data?.schemaVersion === 3, "Unsupported energy data schema");
   invariant(!Number.isNaN(Date.parse(data.measuredAt)), "Invalid measurement timestamp");
   invariant(!Number.isNaN(Date.parse(data.generatedAt)), "Invalid snapshot generation timestamp");
   const measuredYear = new Date(data.measuredAt).getUTCFullYear();
@@ -245,11 +330,14 @@ export function validateNormalizedEnergyData(data) {
   invariant(data.source?.charts?.crossBorderFlows === 5229, "Direct MAVIR cross-border chart attribution is missing");
   invariant(["available", "unavailable_missing_entsoe_token", "unavailable_fetch_failed"].includes(data.source?.priceStatus), "Price provenance status is missing");
 
-  const { frequencyHz, consumptionMW, generationMW, netImportMW, domesticCoveragePct } = data.system ?? {};
+  const { frequencyHz, consumptionMW, generationMW, plantGenerationMW, industrialSolarMW, scteSolarMW, householdSolarMW, estimatedDistributedSolarMW, netImportMW, domesticCoveragePct } = data.system ?? {};
   [frequencyHz, consumptionMW, generationMW, netImportMW, domesticCoveragePct].forEach((value, index) => finite(value, `system metric ${index}`));
+  [plantGenerationMW, industrialSolarMW, scteSolarMW, householdSolarMW, estimatedDistributedSolarMW].forEach((value, index) => finite(value, `generation definition metric ${index}`));
   invariant(frequencyHz >= 49 && frequencyHz <= 51, "Grid frequency is outside the plausible validation range");
   invariant(consumptionMW > 0 && consumptionMW < 20_000, "Consumption is outside the plausible validation range");
   invariant(generationMW >= 0 && generationMW < 20_000, "Generation is outside the plausible validation range");
+  invariant(Math.abs(estimatedDistributedSolarMW - scteSolarMW - householdSolarMW) <= 1, "Distributed PV components do not reconcile");
+  invariant(Math.abs(generationMW - plantGenerationMW - estimatedDistributedSolarMW) <= 1, "MAVIR generation definitions do not reconcile");
   invariant(Math.abs(netImportMW) < 10_000, "Net import is outside the plausible validation range");
   invariant(domesticCoveragePct >= 0 && domesticCoveragePct <= 250, "Domestic coverage is outside the plausible validation range");
 
@@ -258,6 +346,8 @@ export function validateNormalizedEnergyData(data) {
   data.mix.forEach((item) => invariant(Number.isFinite(item.mw) && item.mw >= 0, `Invalid generation mix value: ${item.key}`));
   const mixTotalMW = data.mix.reduce((sum, item) => sum + item.mw, 0);
   invariant(Math.abs(mixTotalMW - generationMW) <= Math.max(5, generationMW * 0.0025), "Published generation mix does not reconcile");
+  const solarMixMW = data.mix.find((item) => item.key === "Nap")?.mw;
+  invariant(Math.abs(solarMixMW - industrialSolarMW - estimatedDistributedSolarMW) <= 1, "Solar generation definitions do not reconcile");
   const lowCarbonMW = data.mix.filter((item) => ["Atom", "Nap", "Egyéb megújuló"].includes(item.key)).reduce((sum, item) => sum + item.mw, 0);
   finite(data.system.lowCarbonSharePct, "low-carbon generation share");
   invariant(Math.abs(data.system.lowCarbonSharePct - (lowCarbonMW / generationMW) * 100) <= 0.2, "Low-carbon generation share does not match the published mix");
@@ -328,8 +418,11 @@ export function validateNormalizedEnergyData(data) {
     finite(point.importMW, `history[${index}].importMW`);
     const historicalMixKeys = ["nuclearMW", "solarMW", "fossilMW", "renewableMW", "otherMW"];
     historicalMixKeys.forEach((key) => finite(point[key], `history[${index}].${key}`));
+    ["plantGenerationMW", "industrialSolarMW", "scteSolarMW", "householdSolarMW", "estimatedDistributedSolarMW"].forEach((key) => finite(point[key], `history[${index}].${key}`));
     const historicalMixTotalMW = historicalMixKeys.reduce((sum, key) => sum + point[key], 0);
     invariant(Math.abs(historicalMixTotalMW - point.generationMW) <= Math.max(5, point.generationMW * 0.0025), `history[${index}] generation mix does not reconcile`);
+    invariant(Math.abs(point.estimatedDistributedSolarMW - point.scteSolarMW - point.householdSolarMW) <= 1, `history[${index}] distributed PV does not reconcile`);
+    invariant(Math.abs(point.generationMW - point.plantGenerationMW - point.estimatedDistributedSolarMW) <= 1, `history[${index}] generation definitions do not reconcile`);
     finite(point.domesticCoveragePct, `history[${index}].domesticCoveragePct`);
     finite(point.lowCarbonSharePct, `history[${index}].lowCarbonSharePct`);
     if (index > 0) invariant(Date.parse(point.time) > Date.parse(data.history24h[index - 1].time), "24-hour history is not chronological");

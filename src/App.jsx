@@ -226,12 +226,15 @@ function Header({ data, range, onRangeChange, onOpenSources }) {
 
 function GenerationMix({ data, selected, onSelect }) {
   const selectedMix = data.mix.find((item) => item.key === selected) ?? data.mix[0];
+  const selectionDetail = selectedMix.key === "Nap"
+    ? `Ipari PV ${formatMW(data.system.industrialSolarMW)} MW + SCTE ${formatMW(data.system.scteSolarMW)} MW + HMKE ${formatMW(data.system.householdSolarMW)} MW.`
+    : `${formatMW(selectedMix.mw)} MW az utolsó érvényes mérési időpontban.`;
 
   return (
     <section className="panel generation-panel" aria-labelledby="generation-title">
       <div className="panel-heading">
         <div>
-          <span className="eyebrow">HAZAI TERMELÉS · FORRÁSMIX</span>
+          <span className="eyebrow">BR. HAZAI TERMELÉS · HMKE+SCTE-VEL</span>
           <h1 id="generation-title">Mi termel most?</h1>
         </div>
         <div className="source-chip"><Database size={15} /> MAVIR</div>
@@ -283,10 +286,18 @@ function GenerationMix({ data, selected, onSelect }) {
         </div>
       </div>
 
+      <div className="generation-definition" aria-label="A MAVIR két termelési definíciójának egyeztetése">
+        <div><span>MAVIR erőművi szumma</span><b>{formatMW(data.system.plantGenerationMW)} MW</b></div>
+        <i>+</i>
+        <div><span>Becsült HMKE + SCTE napelem</span><b>{formatMW(data.system.estimatedDistributedSolarMW)} MW</b></div>
+        <i>=</i>
+        <div><span>Teljes hazai termelés</span><b>{formatMW(data.system.generationMW)} MW</b></div>
+      </div>
+
       <div className="selection-note" aria-live="polite">
         <span className={`legend-dot ${MIX_META[selectedMix.key].className}`} />
         <strong>{selectedMix.key}</strong>
-        <span>{formatMW(selectedMix.mw)} MW az utolsó érvényes mérési időpontban.</span>
+        <span>{selectionDetail}</span>
       </div>
     </section>
   );
@@ -469,12 +480,33 @@ function PlantMarker({ plant, selected, onSelect }) {
       data-plant={plant.key}
       style={{ left: `${left}%`, top: `${top}%` }}
       onClick={() => onSelect(plant.key)}
-      aria-label={`${plant.name}${Number.isFinite(plant.mw) ? `: ${plant.mw} megawatt` : ": nincs külön élő adat"}`}
+      aria-label={`${plant.name}${Number.isFinite(plant.mw) ? `: ${plant.mw} megawatt a MAVIR kategóriaadatában` : ": nincs külön élő adat"}`}
     >
       <span className="plant-icon"><Icon size={18} weight="fill" /></span>
       <b>{plant.name}</b>
-      <small>{Number.isFinite(plant.mw) ? `${formatMW(plant.mw)} MW` : "létesítmény"}</small>
+      <small>{Number.isFinite(plant.mw) ? `${formatMW(plant.mw)} MW · kategória` : "nincs külön élő adat"}</small>
     </button>
+  );
+}
+
+function PlantInspector({ plant }) {
+  const Icon = plant.type === "nuclear" ? Atom : Factory;
+  return (
+    <div className={`map-inspector plant-inspector ${plant.statusTone}`} aria-live="polite">
+      <div className="inspector-heading plant-inspector-heading">
+        <Icon size={18} weight="fill" />
+        <strong>{plant.name}</strong>
+        <span className={`plant-status ${plant.statusTone}`}>{plant.status}</span>
+      </div>
+      <div className="inspector-grid plant-inspector-grid">
+        <div><span>Aktuális MAVIR-érték</span><b>{Number.isFinite(plant.mw) ? `${formatMW(plant.mw)} MW` : "nem elérhető"}</b></div>
+        <div><span>Névleges kapacitás</span><b>{Number.isFinite(plant.capacityMW) ? `${decimalFormatter.format(plant.capacityMW)} MW` : "nincs közölve"}</b></div>
+        <div><span>Terhelési arány</span><b>{Number.isFinite(plant.utilizationPct) ? `${decimalFormatter.format(plant.utilizationPct)}%` : "nem számítható"}</b></div>
+      </div>
+      <div className="plant-facts"><span>{plant.technology}</span><span>{plant.operator}</span></div>
+      <p>{plant.statusNote}</p>
+      <a href={plant.sourceUrl} target="_blank" rel="noreferrer">Létesítményi forrás <ArrowSquareOut size={13} /></a>
+    </div>
   );
 }
 
@@ -483,9 +515,6 @@ function EnergyMap({ data }) {
   const stageRef = useRef(null);
   const selectedFlow = data.flows.find((flow) => flow.code === selection.key);
   const selectedPlant = data.plants.find((plant) => plant.key === selection.key);
-  const selectedLabel = selectedPlant
-    ? `${selectedPlant.name}: ${Number.isFinite(selectedPlant.mw) ? `${formatMW(selectedPlant.mw)} MW` : "nincs külön élő teljesítményadat"}`
-    : "Válassz egy áramlást vagy erőművet";
 
   return (
     <section className="panel map-panel" aria-labelledby="map-title">
@@ -536,9 +565,7 @@ function EnergyMap({ data }) {
             </div>
             <small>A pozitív előjel Magyarország felé irányuló áramlást jelent.</small>
           </div>
-        ) : (
-          <div className="map-inspector plant-inspector" aria-live="polite"><MapPin size={17} weight="fill" /><span>{selectedLabel}</span></div>
-        )}
+        ) : selectedPlant ? <PlantInspector plant={selectedPlant} /> : null}
       </div>
     </section>
   );
@@ -639,7 +666,7 @@ function TrendCard({ data }) {
         </ResponsiveContainer>
       </div>
       <HistorySummary point={activePoint} />
-      <p className="history-note">A rétegek a közvetlen MAVIR-forrásmixet és a pozitív nettó behozatalt mutatják; a fehér vonal a fogyasztás. A mérési rés miatt az összegük kis mértékben eltérhet.</p>
+      <p className="history-note">A rétegek a pozitív nettó behozatalt és a MAVIR teljes hazai mixét mutatják. A napréteg az ipari PV mellett a becsült HMKE- és SCTE-termelést is tartalmazza; a fehér vonal a kiterjesztett teljes terhelés.</p>
     </section>
   );
 }
@@ -733,6 +760,7 @@ function SourcesDrawer({ data, onClose }) {
 
         <div className="source-list">
           <div><Database size={20} /><span><b>Terhelés és termelési mix</b><small>{data.source.primary} · 20001-es diagram</small></span></div>
+          <div><Sun size={20} /><span><b>Napelemes definíció</b><small>Ipari PV {formatMW(data.system.industrialSolarMW)} MW + SCTE {formatMW(data.system.scteSolarMW)} MW + HMKE {formatMW(data.system.householdSolarMW)} MW</small></span></div>
           <div><ArrowsLeftRight size={20} /><span><b>Határkeresztező tény és menetrend</b><small>{data.source.primary} · 5229-es diagram · azonos időpont</small></span></div>
           <div><Lightning size={20} /><span><b>Hálózati frekvencia</b><small>{data.source.primary} · 4444-es diagram</small></span></div>
           <div><Lightning size={20} /><span><b>Piaci ár</b><small>{data.source.price} · A44 · {data.market.status === "available" ? "elérhető" : "jelenleg nincs közölve"}</small></span></div>
@@ -741,6 +769,7 @@ function SourcesDrawer({ data, onClose }) {
 
         <div className="quality-box">
           <div><span>Forrásmix összege</span><b>{data.quality.mixGapMW.toFixed(1)} MW eltérés</b></div>
+          <div><span>Erőművi + becsült PV egyezés</span><b>{data.quality.generationDefinitionGapMW.toFixed(1)} MW eltérés</b></div>
           <div><span>Határáramlások</span><b>{data.quality.flowGapMW.toFixed(1)} MW eltérés</b></div>
           <div><span>Rendszermérleg</span><b>{data.quality.systemGapMW.toFixed(1)} MW ismert rés</b></div>
           <div><span>Feedek időeltérése</span><b>legfeljebb {data.quality.maxFeedOffsetMinutes.toFixed(1)} perc</b></div>
@@ -753,7 +782,7 @@ function SourcesDrawer({ data, onClose }) {
           <span><b>Mért adat:</b> {formatLocalTime(data.measuredAt, true)}<br /><b>Pillanatkép készült:</b> {formatLocalTime(data.generatedAt, true)}</span>
         </div>
 
-        <p className="caveat">{data.source.caveat} A Paks-érték a teljes magyar nukleáris, a Mátra-érték a teljes lignit kategóriából következik.</p>
+        <p className="caveat">{data.source.caveat} A „teljes hazai termelés” a MAVIR erőművi szummájához hozzáadja a becsült HMKE- és SCTE-napelemes termelést. A térképi Paks- és Mátra-érték országos technológiai kategóriaadat, nem egyedi blokkfeed.</p>
         <a href={data.source.systemUrl} target="_blank" rel="noreferrer">MAVIR hivatalos rendszeradatok</a>
       </aside>
     </div>

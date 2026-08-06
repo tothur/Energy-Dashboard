@@ -138,6 +138,11 @@ h1, h2, h3 { font-weight: 600; }
 .mix-item strong { margin-top: 1px; font-family: "IBM Plex Mono", monospace; font-size: 15px; white-space: nowrap; }
 .mix-item strong small { color: #8194a3; font-size: 9px; }
 .mix-item em { color: #7e91a0; font-family: "IBM Plex Mono", monospace; font-size: 10px; font-style: normal; }
+.generation-definition { display: grid; grid-template-columns: 1fr auto 1fr auto 1fr; align-items: center; gap: 10px; margin-top: 12px; padding: 9px 11px; border: 1px solid #2b4050; background: #0b1923; }
+.generation-definition > div { min-width: 0; display: grid; gap: 2px; }
+.generation-definition span { color: #78909e; font-size: 8px; text-transform: uppercase; letter-spacing: .045em; }
+.generation-definition b { color: #d3e0e6; font-family: "IBM Plex Mono", monospace; font-size: 11px; }
+.generation-definition i { color: var(--cyan); font-family: "IBM Plex Mono", monospace; font-size: 13px; font-style: normal; }
 .selection-note { display: flex; align-items: center; gap: 8px; margin-top: 8px; color: #8195a4; font-size: 11px; }
 .selection-note strong { color: #d8e2e8; }
 .legend-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; flex: 0 0 auto; }
@@ -185,7 +190,7 @@ h1, h2, h3 { font-weight: 600; }
 .flow-marker.dimmed:hover, .flow-marker.dimmed:focus-visible { opacity: .85; filter: none; }
 .flow-marker svg { grid-row: 2; grid-column: 2; }
 
-.plant-marker { position: absolute; z-index: 5; display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 0 7px; min-width: 105px; padding: 6px 8px 6px 6px; transform: translate(-50%, -50%); border: 1px solid transparent; border-radius: 3px; background: rgba(7, 17, 25, 0.86); text-align: left; cursor: pointer; transition: border-color 150ms ease, background 150ms ease, box-shadow 150ms ease; }
+.plant-marker { position: absolute; z-index: 5; display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 0 7px; min-width: 124px; padding: 6px 8px 6px 6px; transform: translate(-50%, -50%); border: 1px solid transparent; border-radius: 3px; background: rgba(7, 17, 25, 0.86); text-align: left; cursor: pointer; transition: border-color 150ms ease, background 150ms ease, box-shadow 150ms ease; }
 .plant-marker:hover, .plant-marker.selected { border-color: currentColor; background: #0d1e2b; }
 .plant-marker.selected { box-shadow: 0 0 16px currentColor; }
 .plant-marker.nuclear { color: #aa97fb; }
@@ -198,7 +203,21 @@ h1, h2, h3 { font-weight: 600; }
 .cluster-center { left: 57%; top: 35%; }
 .cluster-east { left: 70%; top: 58%; }
 .map-inspector { position: absolute; left: 14px; bottom: 12px; z-index: 6; max-width: calc(100% - 28px); padding: 9px 11px; color: #b9c9d2; background: rgba(7, 17, 25, .94); border: 1px solid #2c4150; border-left: 2px solid var(--cyan); box-shadow: 0 8px 24px rgba(0,0,0,.3); font-family: "IBM Plex Mono", monospace; font-size: 10px; }
-.plant-inspector { display: flex; align-items: center; gap: 7px; }
+.plant-inspector { width: min(590px, calc(100% - 28px)); border-left-color: #aa97fb; }
+.plant-inspector.attention { border-left-color: var(--orange); }
+.plant-inspector.active { border-left-color: var(--green); }
+.plant-inspector-heading > svg { color: #aa97fb; }
+.plant-status { display: inline-flex; align-items: center; min-height: 20px; margin-left: auto; padding: 3px 6px; border: 1px solid currentColor; font-size: 7px; text-transform: uppercase; letter-spacing: .045em; }
+.plant-status.active { color: var(--green); }
+.plant-status.attention { color: var(--orange); }
+.plant-status.unknown { color: #8094a2; }
+.plant-inspector-grid { margin-top: 7px; padding-top: 7px; }
+.plant-inspector-grid b { font-size: 11px; }
+.plant-facts { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-top: 8px; color: #8fa2ad; font-size: 8px; }
+.plant-facts span::before { content: "•"; margin-right: 5px; color: #5c7381; }
+.plant-inspector p { margin-top: 7px; color: #748a98; font-family: "IBM Plex Sans Condensed", sans-serif; font-size: 9px; line-height: 1.35; }
+.plant-inspector a { display: inline-flex; align-items: center; gap: 5px; margin-top: 7px; color: var(--cyan); font-size: 8px; text-decoration: none; }
+.plant-inspector a:hover { color: #b9f5f6; }
 .flow-inspector { width: min(470px, calc(100% - 28px)); }
 .flow-inspector.import { border-left-color: var(--orange); }
 .flow-inspector.export { border-left-color: var(--cyan); }
@@ -326,6 +345,8 @@ footer button { padding: 4px 0; border: 0; border-bottom: 1px solid #577687; bac
   .total-generation .metric-delta { flex-basis: 100%; }
   .mix-legend { grid-template-columns: 1fr 1fr; }
   .mix-item { padding: 8px 5px; }
+  .generation-definition { grid-template-columns: 1fr; gap: 6px; }
+  .generation-definition i { display: none; }
   .selection-note { align-items: flex-start; flex-wrap: wrap; }
   .balance-metrics { grid-template-columns: 1fr 1fr; gap: 14px 0; }
   .balance-metrics > div:nth-child(2) { border-right: 0; }
@@ -352,6 +373,9 @@ footer button { padding: 4px 0; border: 0; border-bottom: 1px solid #577687; bac
   .plant-marker[data-plant="paks"] { left: 45% !important; top: 68% !important; }
   .solar-cluster { display: none; }
   .map-inspector { left: 8px; right: 8px; bottom: 8px; max-width: none; }
+  .plant-inspector-grid { grid-template-columns: 1fr 1fr; row-gap: 8px; }
+  .plant-inspector-grid > div:nth-child(2) { border-right: 0; }
+  .plant-inspector-grid > div:last-child { grid-column: 1 / -1; padding-left: 0; }
   .flow-inspector { width: auto; }
   .inspector-grid b { font-size: 11px; }
   .inspector-heading > span { display: none; }
