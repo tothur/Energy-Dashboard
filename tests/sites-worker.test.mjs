@@ -151,6 +151,24 @@ test("serves stale validated data immediately while refreshing in the background
   assert.equal(await backgroundRefresh, null);
 });
 
+test("promotes a newer validated bundled snapshot over stale retained data", async () => {
+  const bundled = JSON.parse(await readFile(new URL("../public/data/energy-latest.json", import.meta.url), "utf8"));
+  const staleAt = new Date(Date.parse(bundled.measuredAt) - 24 * 60 * 60_000).toISOString();
+  const stale = { ...bundled, generatedAt: staleAt, measuredAt: staleAt };
+  const response = await worker.fetch(new Request("https://example.test/api/energy?v=bundled-newer"), {
+    DB: createMockDb(stale),
+    ASSETS: {
+      fetch: async () => new Response(JSON.stringify(bundled), { headers: { "content-type": "application/json" } }),
+    },
+  }, { waitUntil: () => assert.fail("the newer bundled snapshot must avoid a background refresh") });
+  const data = await response.json();
+
+  assert.equal(response.status, 200);
+  assert.equal(response.headers.get("x-energy-delivery"), "bundled-newer");
+  assert.equal(data.measuredAt, bundled.measuredAt);
+  assert.equal(data.quality.checksPassed, data.quality.checksTotal);
+});
+
 test("replaces an incompatible stored history before serving it", async () => {
   const bundled = JSON.parse(await readFile(new URL("../public/data/energy-latest.json", import.meta.url), "utf8"));
   const now = new Date().toISOString();

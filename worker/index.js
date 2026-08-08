@@ -105,6 +105,7 @@ async function refreshStored(env, previousSnapshot) {
 async function energyApi(request, env, ctx) {
   await ensureSchema(env.DB);
   let stored = await readStored(env.DB);
+  let delivery = "stored";
   if (!stored) {
     const seed = await readSeed(request, env);
     await seedStored(env.DB, seed);
@@ -125,6 +126,28 @@ async function energyApi(request, env, ctx) {
       updatedAt: new Date().toISOString(),
       refreshStartedAt: null,
     };
+  }
+
+  // A deployment may contain a newer validated snapshot than the retained D1
+  // row. Prefer that exact published snapshot before attempting an outbound
+  // refresh, which also recovers cleanly when a Sites background task stalls.
+  if (Date.now() - Date.parse(stored.data.measuredAt) > REFRESH_AFTER_MS) {
+    try {
+      const seed = await readSeed(request, env);
+      if (hasHistoricalMix(seed) && Date.parse(seed.measuredAt) > Date.parse(stored.data.measuredAt)) {
+        const updatedAt = new Date().toISOString();
+        await persistSnapshot(env.DB, seed);
+        stored = {
+          data: seed,
+          measuredAt: seed.measuredAt,
+          updatedAt,
+          refreshStartedAt: null,
+        };
+        delivery = "bundled-newer";
+      }
+    } catch {
+      // A valid stored snapshot remains the safe fallback when the asset read fails.
+    }
   }
 
   const ageMs = Date.now() - Date.parse(stored.data.measuredAt);
@@ -149,7 +172,7 @@ async function energyApi(request, env, ctx) {
     }
   }
 
-  return jsonResponse(stored.data, 200, { "x-energy-delivery": "stored" });
+  return jsonResponse(stored.data, 200, { "x-energy-delivery": delivery });
 }
 
 async function healthApi(env) {
