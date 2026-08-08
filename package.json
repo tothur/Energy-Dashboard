@@ -12,7 +12,7 @@
     "build": "vite build && node scripts/prepare-sites-build.mjs",
     "preview": "vite preview",
     "data:update": "node scripts/update-energy-data.mjs",
-    "test": "node --test tests/energy-data.test.mjs tests/energy-enrichment.test.mjs tests/publication-workflow.test.mjs tests/sites-worker.test.mjs",
+    "test": "node --test tests/energy-data.test.mjs tests/energy-enrichment.test.mjs tests/publication-workflow.test.mjs tests/pwa.test.mjs tests/sites-worker.test.mjs",
     "test:sites": "node --test tests/sites-worker.test.mjs"
   },
   "dependencies": {

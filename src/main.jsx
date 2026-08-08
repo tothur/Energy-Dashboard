@@ -15,3 +15,12 @@ createRoot(document.getElementById("root")).render(
     <App />
   </React.StrictMode>,
 );
+
+if (import.meta.env.PROD && "serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    const serviceWorkerUrl = new URL(`${import.meta.env.BASE_URL}sw.js`, window.location.href);
+    navigator.serviceWorker.register(serviceWorkerUrl, { scope: import.meta.env.BASE_URL }).catch(() => {
+      // The dashboard remains fully usable online when installation is unavailable.
+    });
+  });
+}
