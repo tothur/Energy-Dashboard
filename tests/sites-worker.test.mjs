@@ -151,21 +151,56 @@ test("serves stale validated data immediately while refreshing in the background
   assert.equal(await backgroundRefresh, null);
 });
 
+test("the scheduled refresh endpoint is POST-only and lock-aware", async () => {
+  const rejected = await worker.fetch(new Request("https://example.test/api/refresh"), {});
+  assert.equal(rejected.status, 405);
+  assert.equal(rejected.headers.get("allow"), "POST");
+
+  const bundled = JSON.parse(await readFile(new URL("../public/data/energy-latest.json", import.meta.url), "utf8"));
+  const staleAt = new Date(Date.now() - 30 * 60_000).toISOString();
+  const stale = { ...bundled, generatedAt: staleAt, measuredAt: staleAt };
+  const response = await worker.fetch(new Request("https://example.test/api/refresh", { method: "POST" }), {
+    DB: createMockDb(stale, true),
+    ASSETS: { fetch: async () => new Response(JSON.stringify(stale), { headers: { "content-type": "application/json" } }) },
+  });
+  const data = await response.json();
+
+  assert.equal(response.status, 202);
+  assert.equal(response.headers.get("retry-after"), "15");
+  assert.equal(data.status, "busy");
+  assert.equal(data.checks, `${bundled.quality.checksPassed}/${bundled.quality.checksTotal}`);
+});
+
+test("the scheduled refresh endpoint skips upstream work for a fresh snapshot", async () => {
+  const bundled = JSON.parse(await readFile(new URL("../public/data/energy-latest.json", import.meta.url), "utf8"));
+  const now = new Date().toISOString();
+  const fresh = { ...bundled, generatedAt: now, measuredAt: now };
+  const response = await worker.fetch(new Request("https://example.test/api/refresh", { method: "POST" }), {
+    DB: createMockDb(fresh),
+    ASSETS: { fetch: async () => new Response("missing", { status: 404 }) },
+  });
+  const data = await response.json();
+
+  assert.equal(response.status, 200);
+  assert.equal(data.status, "fresh");
+  assert.equal(data.measuredAt, now);
+});
+
 test("promotes a newer validated bundled snapshot over stale retained data", async () => {
   const bundled = JSON.parse(await readFile(new URL("../public/data/energy-latest.json", import.meta.url), "utf8"));
-  const staleAt = new Date(Date.parse(bundled.measuredAt) - 24 * 60 * 60_000).toISOString();
-  const stale = { ...bundled, generatedAt: staleAt, measuredAt: staleAt };
+  const now = new Date().toISOString();
+  const seed = { ...bundled, generatedAt: now, measuredAt: now };
+  const staleAt = new Date(Date.parse(now) - 24 * 60 * 60_000).toISOString();
+  const stale = { ...seed, generatedAt: staleAt, measuredAt: staleAt };
   const response = await worker.fetch(new Request("https://example.test/api/energy?v=bundled-newer"), {
     DB: createMockDb(stale),
-    ASSETS: {
-      fetch: async () => new Response(JSON.stringify(bundled), { headers: { "content-type": "application/json" } }),
-    },
+    ASSETS: { fetch: async () => new Response(JSON.stringify(seed), { headers: { "content-type": "application/json" } }) },
   }, { waitUntil: () => assert.fail("the newer bundled snapshot must avoid a background refresh") });
   const data = await response.json();
 
   assert.equal(response.status, 200);
   assert.equal(response.headers.get("x-energy-delivery"), "bundled-newer");
-  assert.equal(data.measuredAt, bundled.measuredAt);
+  assert.equal(data.measuredAt, seed.measuredAt);
   assert.equal(data.quality.checksPassed, data.quality.checksTotal);
 });
 
@@ -215,6 +250,34 @@ test("reports stored snapshot health without exposing the full dataset", async (
   assert.equal(health.status, "ok");
   assert.equal(health.checks, `${bundled.quality.checksPassed}/${bundled.quality.checksTotal}`);
   assert.equal("system" in health, false);
+});
+
+test("health reports a stale status when the last measurement is too old", async () => {
+  const bundled = JSON.parse(await readFile(new URL("../public/data/energy-latest.json", import.meta.url), "utf8"));
+  const staleAt = new Date(Date.now() - 20 * 60_000).toISOString();
+  const stale = { ...bundled, generatedAt: staleAt, measuredAt: staleAt };
+  const response = await worker.fetch(new Request("https://example.test/api/health"), {
+    DB: createMockDb(stale),
+  });
+  const health = await response.json();
+
+  assert.equal(response.status, 200);
+  assert.equal(health.status, "stale");
+  assert.ok(health.ageMinutes >= 19);
+});
+
+test("the worker exposes a Cloudflare scheduled-event refresh handler", async () => {
+  const bundled = JSON.parse(await readFile(new URL("../public/data/energy-latest.json", import.meta.url), "utf8"));
+  const staleAt = new Date(Date.now() - 20 * 60_000).toISOString();
+  const stale = { ...bundled, generatedAt: staleAt, measuredAt: staleAt };
+  let scheduledRefresh;
+
+  await worker.scheduled({}, { DB: createMockDb(stale, true) }, {
+    waitUntil: (promise) => { scheduledRefresh = promise; },
+  });
+
+  assert.ok(scheduledRefresh instanceof Promise);
+  assert.equal(await scheduledRefresh, null);
 });
 
 test("emits the files required by Sites packaging", async () => {

@@ -2,6 +2,7 @@ import { refreshEnergySnapshot } from "./energy-service.js";
 
 const SNAPSHOT_KEY = "latest";
 const REFRESH_AFTER_MS = 2 * 60_000;
+const STALE_AFTER_MS = 10 * 60_000;
 const LOCK_TIMEOUT_MS = 2 * 60_000;
 const GITHUB_PAGES_ORIGIN = "https://tothur.github.io/Energy-Dashboard";
 let activeRefresh = null;
@@ -102,7 +103,7 @@ async function refreshStored(env, previousSnapshot) {
   return activeRefresh;
 }
 
-async function energyApi(request, env, ctx) {
+async function readValidatedStored(request, env) {
   await ensureSchema(env.DB);
   let stored = await readStored(env.DB);
   let delivery = "stored";
@@ -150,6 +151,11 @@ async function energyApi(request, env, ctx) {
     }
   }
 
+  return { stored, delivery };
+}
+
+async function energyApi(request, env, ctx) {
+  const { stored, delivery } = await readValidatedStored(request, env);
   const ageMs = Date.now() - Date.parse(stored.data.measuredAt);
   if (ageMs > REFRESH_AFTER_MS) {
     if (ctx?.waitUntil) {
@@ -175,15 +181,57 @@ async function energyApi(request, env, ctx) {
   return jsonResponse(stored.data, 200, { "x-energy-delivery": delivery });
 }
 
+async function refreshApi(request, env) {
+  const { stored } = await readValidatedStored(request, env);
+  const ageMs = Date.now() - Date.parse(stored.data.measuredAt);
+  const ageMinutes = Math.max(0, Math.round(ageMs / 60_000));
+  if (ageMs <= REFRESH_AFTER_MS) {
+    return jsonResponse({
+      status: "fresh",
+      measuredAt: stored.data.measuredAt,
+      ageMinutes,
+      checks: `${stored.data.quality?.checksPassed}/${stored.data.quality?.checksTotal}`,
+    });
+  }
+
+  try {
+    const fresh = await refreshStored(env, stored.data);
+    if (fresh) {
+      return jsonResponse({
+        status: "refreshed",
+        measuredAt: fresh.measuredAt,
+        ageMinutes: Math.max(0, Math.round((Date.now() - Date.parse(fresh.measuredAt)) / 60_000)),
+        checks: `${fresh.quality?.checksPassed}/${fresh.quality?.checksTotal}`,
+      });
+    }
+
+    const latest = await readStored(env.DB);
+    return jsonResponse({
+      status: "busy",
+      measuredAt: latest?.data?.measuredAt ?? stored.data.measuredAt,
+      ageMinutes: Math.max(0, Math.round((Date.now() - Date.parse(latest?.data?.measuredAt ?? stored.data.measuredAt)) / 60_000)),
+      checks: `${latest?.data?.quality?.checksPassed ?? stored.data.quality?.checksPassed}/${latest?.data?.quality?.checksTotal ?? stored.data.quality?.checksTotal}`,
+    }, 202, { "retry-after": "15" });
+  } catch (error) {
+    return jsonResponse({
+      status: "error",
+      measuredAt: stored.data.measuredAt,
+      ageMinutes,
+      error: error.message.slice(0, 180),
+    }, 503);
+  }
+}
+
 async function healthApi(env) {
   await ensureSchema(env.DB);
   const stored = await readStored(env.DB);
   if (!stored) return jsonResponse({ status: "initializing" }, 503);
+  const ageMinutes = Math.max(0, Math.round((Date.now() - Date.parse(stored.data.measuredAt)) / 60_000));
   return jsonResponse({
-    status: "ok",
+    status: ageMinutes > STALE_AFTER_MS / 60_000 ? "stale" : "ok",
     measuredAt: stored.data.measuredAt,
     updatedAt: stored.updatedAt,
-    ageMinutes: Math.max(0, Math.round((Date.now() - Date.parse(stored.data.measuredAt)) / 60_000)),
+    ageMinutes,
     refreshing: Boolean(stored.refreshStartedAt),
     checks: `${stored.data.quality?.checksPassed}/${stored.data.quality?.checksTotal}`,
   });
@@ -204,6 +252,10 @@ async function withRuntimeMetadata(response, request) {
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
+    if (url.pathname === "/api/refresh") {
+      if (request.method !== "POST") return jsonResponse({ error: "Method not allowed" }, 405, { allow: "POST" });
+      return refreshApi(request, env);
+    }
     if (url.pathname === "/api/energy") {
       if (request.method !== "GET") return jsonResponse({ error: "Method not allowed" }, 405, { allow: "GET" });
       return energyApi(request, env, ctx);
@@ -223,5 +275,15 @@ export default {
     indexUrl.pathname = "/index.html";
     indexUrl.search = "";
     return withRuntimeMetadata(await env.ASSETS.fetch(new Request(indexUrl, request)), request);
+  },
+
+  async scheduled(_controller, env, ctx) {
+    await ensureSchema(env.DB);
+    const stored = await readStored(env.DB);
+    if (!stored || !hasHistoricalMix(stored.data)) return;
+    if (Date.now() - Date.parse(stored.data.measuredAt) <= REFRESH_AFTER_MS) return;
+    ctx.waitUntil(refreshStored(env, stored.data).catch((error) => {
+      console.error("Scheduled energy refresh failed", error);
+    }));
   },
 };

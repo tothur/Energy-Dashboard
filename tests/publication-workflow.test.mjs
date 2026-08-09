@@ -6,6 +6,11 @@ const workflow = await readFile(
   new URL("../.github/workflows/deploy-pages.yml", import.meta.url),
   "utf8",
 );
+const sitesRefreshWorkflow = await readFile(
+  new URL("../.github/workflows/refresh-sites.yml", import.meta.url),
+  "utf8",
+);
+const sitesRefreshScript = await readFile(new URL("../scripts/trigger-sites-refresh.mjs", import.meta.url), "utf8");
 const updater = await readFile(new URL("../scripts/update-energy-data.mjs", import.meta.url), "utf8");
 const app = await readFile(new URL("../src/App.jsx", import.meta.url), "utf8");
 
@@ -32,6 +37,17 @@ test("Pages publication supports main pushes, manual runs, and frequent refreshe
   assert.match(workflow, /pages: write/);
   assert.match(workflow, /id-token: write/);
   assert.match(workflow, /ENTSOE_SECURITY_TOKEN: \$\{\{ secrets\.ENTSOE_SECURITY_TOKEN \}\}/);
+});
+
+test("OpenAI Sites receives and verifies a server-side refresh every five minutes", () => {
+  assert.match(sitesRefreshWorkflow, /cron: "\*\/5 \* \* \* \*"/);
+  assert.match(sitesRefreshWorkflow, /workflow_dispatch:/);
+  assert.match(sitesRefreshWorkflow, /node scripts\/trigger-sites-refresh\.mjs/);
+  assert.match(sitesRefreshWorkflow, /cancel-in-progress: false/);
+  assert.match(sitesRefreshScript, /\/api\/refresh/);
+  assert.match(sitesRefreshScript, /\/api\/health/);
+  assert.match(sitesRefreshScript, /health\.body\.ageMinutes <= maximumHealthAgeMinutes/);
+  assert.match(sitesRefreshScript, /checksPass\(health\.body\.checks\)/);
 });
 
 test("the updater uses direct MAVIR exports and no intermediary", () => {
