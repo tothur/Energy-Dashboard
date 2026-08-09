@@ -78,6 +78,6 @@ export async function refreshEnergySnapshot(env, previousSnapshot) {
     normalizeMavirTables({ systemRows, flowRows, frequencyRows, loadRows, generatedAt }),
     { market, annualEmissions: previousSnapshot.annualEmissions, paksOperational },
   ));
-  normalized.source.delivery = "OpenAI Sites request-driven API";
+  normalized.source.delivery = "OpenAI Sites scheduled server API";
   return normalized;
 }
