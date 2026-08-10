@@ -2,6 +2,8 @@ node_modules/
 dist/
 .pnpm-store/
 .DS_Store
+.dev.vars*
+.wrangler/
 design/
 design-qa.md
 AGENTS.md

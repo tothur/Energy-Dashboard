@@ -11,6 +11,14 @@ const sitesRefreshWorkflow = await readFile(
   "utf8",
 );
 const sitesRefreshScript = await readFile(new URL("../scripts/trigger-sites-refresh.mjs", import.meta.url), "utf8");
+const cloudflareRefreshConfig = await readFile(
+  new URL("../cloudflare/refresh-trigger/wrangler.jsonc", import.meta.url),
+  "utf8",
+);
+const cloudflareRefreshWorker = await readFile(
+  new URL("../cloudflare/refresh-trigger/index.js", import.meta.url),
+  "utf8",
+);
 const updater = await readFile(new URL("../scripts/update-energy-data.mjs", import.meta.url), "utf8");
 const app = await readFile(new URL("../src/App.jsx", import.meta.url), "utf8");
 
@@ -39,15 +47,26 @@ test("Pages publication supports main pushes, manual runs, and frequent refreshe
   assert.match(workflow, /ENTSOE_SECURITY_TOKEN: \$\{\{ secrets\.ENTSOE_SECURITY_TOKEN \}\}/);
 });
 
-test("OpenAI Sites receives and verifies a server-side refresh every five minutes", () => {
-  assert.match(sitesRefreshWorkflow, /cron: "\*\/5 \* \* \* \*"/);
+test("GitHub retains an authenticated manual Sites refresh fallback", () => {
+  assert.doesNotMatch(sitesRefreshWorkflow, /schedule:/);
   assert.match(sitesRefreshWorkflow, /workflow_dispatch:/);
   assert.match(sitesRefreshWorkflow, /node scripts\/trigger-sites-refresh\.mjs/);
   assert.match(sitesRefreshWorkflow, /cancel-in-progress: false/);
+  assert.match(sitesRefreshWorkflow, /SITES_REFRESH_TOKEN: \$\{\{ secrets\.SITES_REFRESH_TOKEN \}\}/);
   assert.match(sitesRefreshScript, /\/api\/refresh/);
+  assert.match(sitesRefreshScript, /authorization: `Bearer \$\{refreshToken\}`/);
   assert.match(sitesRefreshScript, /\/api\/health/);
   assert.match(sitesRefreshScript, /health\.body\.ageMinutes <= maximumHealthAgeMinutes/);
   assert.match(sitesRefreshScript, /checksPass\(health\.body\.checks\)/);
+});
+
+test("Cloudflare owns the five-minute authenticated production schedule", () => {
+  assert.match(cloudflareRefreshConfig, /"crons": \["\*\/5 \* \* \* \*"\]/);
+  assert.match(cloudflareRefreshConfig, /hungary-energy-dashboard\.andrastoth\.chatgpt\.site/);
+  assert.match(cloudflareRefreshWorker, /SITES_REFRESH_TOKEN is required/);
+  assert.match(cloudflareRefreshWorker, /authorization: `Bearer \$\{env\.SITES_REFRESH_TOKEN\}`/);
+  assert.match(cloudflareRefreshWorker, /\/api\/health\?v=/);
+  assert.match(cloudflareRefreshWorker, /checksPass\(health\.body\.checks\)/);
 });
 
 test("the updater uses direct MAVIR exports and no intermediary", () => {

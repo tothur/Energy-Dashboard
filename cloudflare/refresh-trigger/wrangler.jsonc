@@ -1,0 +1,16 @@
+{
+  "$schema": "https://raw.githubusercontent.com/cloudflare/workers-sdk/main/packages/wrangler/config-schema.json",
+  "name": "hungary-energy-dashboard-refresh",
+  "main": "index.js",
+  "compatibility_date": "2026-08-10",
+  "triggers": {
+    "crons": ["*/5 * * * *"]
+  },
+  "vars": {
+    "SITE_URL": "https://hungary-energy-dashboard.andrastoth.chatgpt.site",
+    "MAXIMUM_HEALTH_AGE_MINUTES": "10"
+  },
+  "observability": {
+    "enabled": true
+  }
+}

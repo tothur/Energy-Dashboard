@@ -3,6 +3,15 @@ import { access, readFile } from "node:fs/promises";
 import test from "node:test";
 import worker from "../worker/index.js";
 
+const REFRESH_TOKEN = "test-refresh-token";
+
+function refreshRequest(url = "https://example.test/api/refresh", token = REFRESH_TOKEN) {
+  return new Request(url, {
+    method: "POST",
+    headers: token ? { authorization: `Bearer ${token}` } : {},
+  });
+}
+
 function createMockDb(snapshot, refreshLockActive = false) {
   let row = snapshot ? {
     payload: JSON.stringify(snapshot),
@@ -156,12 +165,19 @@ test("the scheduled refresh endpoint is POST-only and lock-aware", async () => {
   assert.equal(rejected.status, 405);
   assert.equal(rejected.headers.get("allow"), "POST");
 
+  const unauthorized = await worker.fetch(refreshRequest(undefined, "wrong-token"), {
+    SITES_REFRESH_TOKEN: REFRESH_TOKEN,
+  });
+  assert.equal(unauthorized.status, 401);
+  assert.equal(unauthorized.headers.get("www-authenticate"), "Bearer");
+
   const bundled = JSON.parse(await readFile(new URL("../public/data/energy-latest.json", import.meta.url), "utf8"));
   const staleAt = new Date(Date.now() - 30 * 60_000).toISOString();
   const stale = { ...bundled, generatedAt: staleAt, measuredAt: staleAt };
-  const response = await worker.fetch(new Request("https://example.test/api/refresh", { method: "POST" }), {
+  const response = await worker.fetch(refreshRequest(), {
     DB: createMockDb(stale, true),
     ASSETS: { fetch: async () => new Response(JSON.stringify(stale), { headers: { "content-type": "application/json" } }) },
+    SITES_REFRESH_TOKEN: REFRESH_TOKEN,
   });
   const data = await response.json();
 
@@ -175,9 +191,10 @@ test("the scheduled refresh endpoint skips upstream work for a fresh snapshot", 
   const bundled = JSON.parse(await readFile(new URL("../public/data/energy-latest.json", import.meta.url), "utf8"));
   const now = new Date().toISOString();
   const fresh = { ...bundled, generatedAt: now, measuredAt: now };
-  const response = await worker.fetch(new Request("https://example.test/api/refresh", { method: "POST" }), {
+  const response = await worker.fetch(refreshRequest(), {
     DB: createMockDb(fresh),
     ASSETS: { fetch: async () => new Response("missing", { status: 404 }) },
+    SITES_REFRESH_TOKEN: REFRESH_TOKEN,
   });
   const data = await response.json();
 

@@ -18,6 +18,26 @@ function jsonResponse(value, status = 200, headers = {}) {
   });
 }
 
+async function hasValidRefreshToken(request, env) {
+  const expected = env.SITES_REFRESH_TOKEN;
+  const authorization = request.headers.get("authorization") ?? "";
+  const provided = authorization.startsWith("Bearer ") ? authorization.slice(7) : "";
+  if (!expected || !provided) return false;
+
+  const encoder = new TextEncoder();
+  const [expectedHash, providedHash] = await Promise.all([
+    crypto.subtle.digest("SHA-256", encoder.encode(expected)),
+    crypto.subtle.digest("SHA-256", encoder.encode(provided)),
+  ]);
+  const left = new Uint8Array(expectedHash);
+  const right = new Uint8Array(providedHash);
+  let difference = left.length ^ right.length;
+  for (let index = 0; index < Math.min(left.length, right.length); index += 1) {
+    difference |= left[index] ^ right[index];
+  }
+  return difference === 0;
+}
+
 function hasHistoricalMix(data) {
   return data?.schemaVersion === 5
     && Number.isFinite(data?.system?.plantGenerationMW)
@@ -254,6 +274,9 @@ export default {
     const url = new URL(request.url);
     if (url.pathname === "/api/refresh") {
       if (request.method !== "POST") return jsonResponse({ error: "Method not allowed" }, 405, { allow: "POST" });
+      if (!await hasValidRefreshToken(request, env)) {
+        return jsonResponse({ error: "Unauthorized" }, 401, { "www-authenticate": "Bearer" });
+      }
       return refreshApi(request, env);
     }
     if (url.pathname === "/api/energy") {

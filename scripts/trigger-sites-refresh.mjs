@@ -3,6 +3,9 @@ const siteUrl = (process.env.SITES_REFRESH_URL || DEFAULT_SITE_URL).replace(/\/$
 const maximumHealthAgeMinutes = Number(process.env.MAXIMUM_HEALTH_AGE_MINUTES || 10);
 const pollAttempts = Number(process.env.REFRESH_POLL_ATTEMPTS || 8);
 const pollIntervalMs = Number(process.env.REFRESH_POLL_INTERVAL_MS || 15_000);
+const refreshToken = process.env.SITES_REFRESH_TOKEN;
+
+if (!refreshToken) throw new Error("SITES_REFRESH_TOKEN is required");
 
 function delay(milliseconds) {
   return new Promise((resolve) => setTimeout(resolve, milliseconds));
@@ -29,7 +32,10 @@ function checksPass(value) {
   return Boolean(match && Number(match[1]) > 0 && match[1] === match[2]);
 }
 
-const trigger = await readJson(`${siteUrl}/api/refresh`, { method: "POST" });
+const trigger = await readJson(`${siteUrl}/api/refresh`, {
+  method: "POST",
+  headers: { authorization: `Bearer ${refreshToken}` },
+});
 if (![200, 202].includes(trigger.response.status)) {
   throw new Error(`Sites refresh failed: HTTP ${trigger.response.status} · ${trigger.body.error || trigger.body.status || "unknown error"}`);
 }
