@@ -148,9 +148,14 @@ test("a visitor does not compete with Cloudflare while data is below the recover
   const measuredAt = new Date(Date.now() - 20 * 60_000).toISOString();
   const refreshedAt = new Date(Date.now() - 7 * 60_000).toISOString();
   const snapshot = { ...bundled, generatedAt: refreshedAt, measuredAt };
+  const bundledFallback = {
+    ...bundled,
+    generatedAt: new Date(Date.now() - 25 * 60_000).toISOString(),
+    measuredAt: new Date(Date.now() - 30 * 60_000).toISOString(),
+  };
   const response = await worker.fetch(new Request("https://example.test/api/energy?v=cloudflare-primary"), {
     DB: createMockDb(snapshot, false, refreshedAt),
-    ASSETS: { fetch: async () => new Response(JSON.stringify(bundled), { headers: { "content-type": "application/json" } }) },
+    ASSETS: { fetch: async () => new Response(JSON.stringify(bundledFallback), { headers: { "content-type": "application/json" } }) },
   }, { waitUntil: () => assert.fail("a visitor must not refresh data before the ten-minute recovery threshold") });
 
   assert.equal(response.status, 200);

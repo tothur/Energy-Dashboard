@@ -1,7 +1,7 @@
 {
   "schemaVersion": 5,
-  "generatedAt": "2026-08-10T15:48:12.028Z",
-  "measuredAt": "2026-08-10T14:33:12.000Z",
+  "generatedAt": "2026-08-10T16:28:18.596Z",
+  "measuredAt": "2026-08-10T16:13:18.000Z",
   "status": "verified_snapshot",
   "source": {
     "primary": "MAVIR RTDW",
@@ -16,12 +16,12 @@
     "price": "ENTSO-E Transparency Platform",
     "priceStatus": "unavailable_missing_entsoe_token",
     "measurements": {
-      "systemAt": "2026-08-10T14:33:12.000Z",
-      "distributedSolarAt": "2026-08-10T14:33:12.000Z",
-      "flowsAt": "2026-08-10T14:33:12.000Z",
-      "frequencyAt": "2026-08-10T14:33:12.000Z",
-      "loadPlanAt": "2026-08-10T14:33:12.000Z",
-      "paksOperationalAt": "2026-08-10T15:43:00.000Z"
+      "systemAt": "2026-08-10T16:13:18.000Z",
+      "distributedSolarAt": "2026-08-10T16:13:18.000Z",
+      "flowsAt": "2026-08-10T16:13:18.000Z",
+      "frequencyAt": "2026-08-10T16:13:18.000Z",
+      "loadPlanAt": "2026-08-10T16:13:18.000Z",
+      "paksOperationalAt": "2026-08-10T16:24:00.000Z"
     },
     "caveat": "Minden közzétett rendszeradat közvetlenül a MAVIR nyilvános RTDW-exportjából származik.",
     "annualEmissions": "EEA GHG Inventory",
@@ -29,18 +29,18 @@
     "paksOperationalStatus": "available"
   },
   "system": {
-    "frequencyHz": 49.994,
-    "consumptionMW": 6778,
-    "generationMW": 5602,
-    "plantGenerationMW": 4126,
-    "industrialSolarMW": 2858.6,
-    "scteSolarMW": 468,
-    "householdSolarMW": 1008,
-    "estimatedDistributedSolarMW": 1476,
-    "generationDefinitionCorrectionMW": 0,
-    "netImportMW": 1153,
-    "domesticCoveragePct": 82.6,
-    "lowCarbonSharePct": 84.2,
+    "frequencyHz": 49.975,
+    "consumptionMW": 6902,
+    "generationMW": 4082,
+    "plantGenerationMW": 3203.7,
+    "industrialSolarMW": 1274.1,
+    "scteSolarMW": 231,
+    "householdSolarMW": 647,
+    "estimatedDistributedSolarMW": 878,
+    "generationDefinitionCorrectionMW": 0.3,
+    "netImportMW": 2452,
+    "domesticCoveragePct": 59.1,
+    "lowCarbonSharePct": 62.7,
     "dayAheadPriceEurMWh": null,
     "carbonIntensityGco2Kwh": null,
     "carbonIntensityStatus": "insufficient_source_detail"
@@ -48,103 +48,103 @@
   "mix": [
     {
       "key": "Atom",
-      "mw": 226.2,
-      "share": 4
+      "mw": 253.2,
+      "share": 6.2
     },
     {
       "key": "Nap",
-      "mw": 4334.6,
-      "share": 77.4
+      "mw": 2152.1,
+      "share": 52.7
     },
     {
       "key": "Fosszilis",
-      "mw": 797.2,
-      "share": 14.2
+      "mw": 1466.7,
+      "share": 35.9
     },
     {
       "key": "Egyéb megújuló",
-      "mw": 153.5,
-      "share": 2.7
+      "mw": 153.2,
+      "share": 3.8
     },
     {
       "key": "Egyéb",
-      "mw": 90.4,
-      "share": 1.6
+      "mw": 56.3,
+      "share": 1.4
     }
   ],
   "flows": [
     {
       "code": "AT",
       "country": "Ausztria",
-      "mw": 378,
+      "mw": 719,
       "direction": "import",
-      "scheduledMW": 187,
+      "scheduledMW": 1565,
       "scheduledDirection": "import",
-      "deviationMW": 191
+      "deviationMW": -846
     },
     {
       "code": "SK",
       "country": "Szlovákia",
-      "mw": 951,
+      "mw": 2040,
       "direction": "import",
-      "scheduledMW": 1890,
+      "scheduledMW": 1420,
       "scheduledDirection": "import",
-      "deviationMW": -939
+      "deviationMW": 620
     },
     {
       "code": "UA",
       "country": "Ukrajna",
-      "mw": 25,
-      "direction": "import",
-      "scheduledMW": -98,
+      "mw": -4,
+      "direction": "export",
+      "scheduledMW": -393,
       "scheduledDirection": "export",
-      "deviationMW": 123
+      "deviationMW": 389
     },
     {
       "code": "RO",
       "country": "Románia",
-      "mw": 278,
-      "direction": "import",
-      "scheduledMW": 864,
-      "scheduledDirection": "import",
-      "deviationMW": -586
+      "mw": -74,
+      "direction": "export",
+      "scheduledMW": -434,
+      "scheduledDirection": "export",
+      "deviationMW": 360
     },
     {
       "code": "RS",
       "country": "Szerbia",
-      "mw": -68,
-      "direction": "export",
-      "scheduledMW": -195,
-      "scheduledDirection": "export",
-      "deviationMW": 127
+      "mw": 30,
+      "direction": "import",
+      "scheduledMW": 23,
+      "scheduledDirection": "import",
+      "deviationMW": 7
     },
     {
       "code": "HR",
       "country": "Horvátország",
-      "mw": -205,
+      "mw": -80,
       "direction": "export",
-      "scheduledMW": -961,
-      "scheduledDirection": "export",
-      "deviationMW": 756
+      "scheduledMW": 103,
+      "scheduledDirection": "import",
+      "deviationMW": -183
     },
     {
       "code": "SI",
       "country": "Szlovénia",
-      "mw": -206,
-      "direction": "export",
-      "scheduledMW": -474,
-      "scheduledDirection": "export",
-      "deviationMW": 268
+      "mw": 57,
+      "direction": "import",
+      "scheduledMW": 630,
+      "scheduledDirection": "import",
+      "deviationMW": -573
     }
   ],
   "movement15m": {
-    "comparisonAt": "2026-08-10T14:18:12.000Z",
+    "comparisonAt": "2026-08-10T15:58:18.000Z",
     "elapsedMinutes": 15,
-    "consumptionMW": 12,
-    "generationMW": -11,
-    "netImportMW": 216,
-    "domesticCoveragePct": -0.4,
-    "lowCarbonSharePct": -4.9
+    "consumptionMW": 244,
+    "generationMW": -124,
+    "netImportMW": 232,
+    "domesticCoveragePct": -4.1,
+    "lowCarbonSharePct": -1
   },
   "plants": [
     {
@@ -158,13 +158,13 @@
       "sourceUrl": "https://www.haea.hu/web/v3/OAHPortal.nsf/web?OpenAgent&article=paksnpp",
       "x": 46,
       "y": 69,
-      "mw": 227,
+      "mw": 274,
       "liveCoverage": "block_level",
       "status": "1/4 blokk termel",
       "statusTone": "attention",
-      "utilizationPct": 11.2,
+      "utilizationPct": 13.5,
       "statusNote": "Az aktuális teljesítmény az OAH négy blokkszintű adatának összege; a MAVIR országos nukleáris kategóriaértékét külön ellenőrizzük.",
-      "mavirCategoryMW": 226,
+      "mavirCategoryMW": 253,
       "operationalDataStatus": "available",
       "blocks": [
         {
@@ -173,7 +173,7 @@
         },
         {
           "block": 2,
-          "mw": 227
+          "mw": 274
         },
         {
           "block": 3,
@@ -184,7 +184,7 @@
           "mw": 0
         }
       ],
-      "operationalMeasuredAt": "2026-08-10T15:43:00.000Z",
+      "operationalMeasuredAt": "2026-08-10T16:24:00.000Z",
       "sourceName": "OAH aktuális üzemi adatok"
     },
     {
@@ -198,7 +198,7 @@
       "sourceUrl": "https://mert.mvm.hu/",
       "x": 63,
       "y": 37,
-      "mw": 267,
+      "mw": 431,
       "liveCoverage": "category_proxy",
       "status": "Termelés látható",
       "statusTone": "active",
@@ -244,121 +244,7 @@
   ],
   "history24h": [
     {
-      "time": "2026-08-09T14:33:12.000Z",
-      "loadMW": 5683,
-      "generationMW": 4892,
-      "plantGenerationMW": 3537.3,
-      "importMW": 768,
-      "nuclearMW": 226.3,
-      "solarMW": 4043.8,
-      "industrialSolarMW": 2688.8,
-      "scteSolarMW": 293,
-      "householdSolarMW": 1062,
-      "estimatedDistributedSolarMW": 1355,
-      "generationDefinitionCorrectionMW": -0.3,
-      "fossilMW": 377.7,
-      "renewableMW": 137.9,
-      "otherMW": 106.5,
-      "domesticCoveragePct": 86.1,
-      "lowCarbonSharePct": 90.1
-    },
-    {
-      "time": "2026-08-09T14:48:12.000Z",
-      "loadMW": 5721,
-      "generationMW": 4885,
-      "plantGenerationMW": 3640.9,
-      "importMW": 791,
-      "nuclearMW": 226.2,
-      "solarMW": 4007.8,
-      "industrialSolarMW": 2763.8,
-      "scteSolarMW": 295,
-      "householdSolarMW": 949,
-      "estimatedDistributedSolarMW": 1244,
-      "generationDefinitionCorrectionMW": 0.1,
-      "fossilMW": 396.6,
-      "renewableMW": 142.3,
-      "otherMW": 111.7,
-      "domesticCoveragePct": 85.4,
-      "lowCarbonSharePct": 89.6
-    },
-    {
-      "time": "2026-08-09T15:03:12.000Z",
-      "loadMW": 5680,
-      "generationMW": 4545,
-      "plantGenerationMW": 3421.8,
-      "importMW": 836,
-      "nuclearMW": 226.3,
-      "solarMW": 3654.2,
-      "industrialSolarMW": 2531.2,
-      "scteSolarMW": 285,
-      "householdSolarMW": 838,
-      "estimatedDistributedSolarMW": 1123,
-      "generationDefinitionCorrectionMW": 0.2,
-      "fossilMW": 411.7,
-      "renewableMW": 142.6,
-      "otherMW": 109.9,
-      "domesticCoveragePct": 80,
-      "lowCarbonSharePct": 88.5
-    },
-    {
-      "time": "2026-08-09T15:18:12.000Z",
-      "loadMW": 5679,
-      "generationMW": 4279,
-      "plantGenerationMW": 3276.2,
-      "importMW": 1135,
-      "nuclearMW": 226.2,
-      "solarMW": 3307.1,
-      "industrialSolarMW": 2304.1,
-      "scteSolarMW": 275,
-      "householdSolarMW": 728,
-      "estimatedDistributedSolarMW": 1003,
-      "generationDefinitionCorrectionMW": -0.2,
-      "fossilMW": 488.4,
-      "renewableMW": 144.8,
-      "otherMW": 112.6,
-      "domesticCoveragePct": 75.4,
-      "lowCarbonSharePct": 86
-    },
-    {
-      "time": "2026-08-09T15:33:12.000Z",
-      "loadMW": 5696,
-      "generationMW": 4100,
-      "plantGenerationMW": 3217.3,
-      "importMW": 1399,
-      "nuclearMW": 226.3,
-      "solarMW": 2904.6,
-      "industrialSolarMW": 2021.6,
-      "scteSolarMW": 262,
-      "householdSolarMW": 621,
-      "estimatedDistributedSolarMW": 883,
-      "generationDefinitionCorrectionMW": -0.3,
-      "fossilMW": 644.2,
-      "renewableMW": 148,
-      "otherMW": 177.1,
-      "domesticCoveragePct": 72,
-      "lowCarbonSharePct": 80
-    },
-    {
-      "time": "2026-08-09T15:48:12.000Z",
-      "loadMW": 5712,
-      "generationMW": 3767,
-      "plantGenerationMW": 2997.5,
-      "importMW": 1596,
-      "nuclearMW": 226.1,
-      "solarMW": 2487.1,
-      "industrialSolarMW": 1718.1,
-      "scteSolarMW": 249,
-      "householdSolarMW": 520,
-      "estimatedDistributedSolarMW": 769,
-      "generationDefinitionCorrectionMW": 0.5,
-      "fossilMW": 683.8,
-      "renewableMW": 153.3,
-      "otherMW": 216.2,
-      "domesticCoveragePct": 65.9,
-      "lowCarbonSharePct": 76.1
-    },
-    {
-      "time": "2026-08-09T16:03:12.000Z",
+      "time": "2026-08-09T16:13:18.000Z",
       "loadMW": 5716,
       "generationMW": 3138,
       "plantGenerationMW": 2500.7,
@@ -377,7 +263,7 @@
       "lowCarbonSharePct": 76.8
     },
     {
-      "time": "2026-08-09T16:18:12.000Z",
+      "time": "2026-08-09T16:28:18.000Z",
       "loadMW": 5661,
       "generationMW": 2780,
       "plantGenerationMW": 2287.4,
@@ -396,7 +282,7 @@
       "lowCarbonSharePct": 70.4
     },
     {
-      "time": "2026-08-09T16:33:12.000Z",
+      "time": "2026-08-09T16:43:18.000Z",
       "loadMW": 5617,
       "generationMW": 2448,
       "plantGenerationMW": 2082,
@@ -415,7 +301,7 @@
       "lowCarbonSharePct": 63.8
     },
     {
-      "time": "2026-08-09T16:48:12.000Z",
+      "time": "2026-08-09T16:58:18.000Z",
       "loadMW": 5573,
       "generationMW": 2242,
       "plantGenerationMW": 1985.4,
@@ -434,7 +320,7 @@
       "lowCarbonSharePct": 54.4
     },
     {
-      "time": "2026-08-09T17:03:12.000Z",
+      "time": "2026-08-09T17:13:18.000Z",
       "loadMW": 5563,
       "generationMW": 1983,
       "plantGenerationMW": 1812.8,
@@ -453,7 +339,7 @@
       "lowCarbonSharePct": 48.4
     },
     {
-      "time": "2026-08-09T17:18:12.000Z",
+      "time": "2026-08-09T17:28:18.000Z",
       "loadMW": 5520,
       "generationMW": 1843,
       "plantGenerationMW": 1748,
@@ -472,7 +358,7 @@
       "lowCarbonSharePct": 41.4
     },
     {
-      "time": "2026-08-09T17:33:12.000Z",
+      "time": "2026-08-09T17:43:18.000Z",
       "loadMW": 5479,
       "generationMW": 1853,
       "plantGenerationMW": 1811.6,
@@ -491,7 +377,7 @@
       "lowCarbonSharePct": 34.6
     },
     {
-      "time": "2026-08-09T17:48:12.000Z",
+      "time": "2026-08-09T17:58:18.000Z",
       "loadMW": 5433,
       "generationMW": 1772,
       "plantGenerationMW": 1757.3,
@@ -510,7 +396,7 @@
       "lowCarbonSharePct": 32.7
     },
     {
-      "time": "2026-08-09T18:03:12.000Z",
+      "time": "2026-08-09T18:13:18.000Z",
       "loadMW": 5417,
       "generationMW": 1940,
       "plantGenerationMW": 1931.4,
@@ -529,7 +415,7 @@
       "lowCarbonSharePct": 28.9
     },
     {
-      "time": "2026-08-09T18:18:12.000Z",
+      "time": "2026-08-09T18:28:18.000Z",
       "loadMW": 5383,
       "generationMW": 1848,
       "plantGenerationMW": 1840.3,
@@ -548,7 +434,7 @@
       "lowCarbonSharePct": 27.1
     },
     {
-      "time": "2026-08-09T18:33:12.000Z",
+      "time": "2026-08-09T18:43:18.000Z",
       "loadMW": 5403,
       "generationMW": 1773,
       "plantGenerationMW": 1766.9,
@@ -567,7 +453,7 @@
       "lowCarbonSharePct": 27.1
     },
     {
-      "time": "2026-08-09T18:48:12.000Z",
+      "time": "2026-08-09T18:58:18.000Z",
       "loadMW": 5354,
       "generationMW": 1758,
       "plantGenerationMW": 1752.3,
@@ -586,7 +472,7 @@
       "lowCarbonSharePct": 27
     },
     {
-      "time": "2026-08-09T19:03:12.000Z",
+      "time": "2026-08-09T19:13:18.000Z",
       "loadMW": 5288,
       "generationMW": 1780,
       "plantGenerationMW": 1767.9,
@@ -605,7 +491,7 @@
       "lowCarbonSharePct": 27.2
     },
     {
-      "time": "2026-08-09T19:18:12.000Z",
+      "time": "2026-08-09T19:28:18.000Z",
       "loadMW": 5214,
       "generationMW": 1779,
       "plantGenerationMW": 1765.6,
@@ -624,7 +510,7 @@
       "lowCarbonSharePct": 27.1
     },
     {
-      "time": "2026-08-09T19:33:12.000Z",
+      "time": "2026-08-09T19:43:18.000Z",
       "loadMW": 5112,
       "generationMW": 1594,
       "plantGenerationMW": 1589.4,
@@ -643,7 +529,7 @@
       "lowCarbonSharePct": 29.8
     },
     {
-      "time": "2026-08-09T19:48:12.000Z",
+      "time": "2026-08-09T19:58:18.000Z",
       "loadMW": 5027,
       "generationMW": 1385,
       "plantGenerationMW": 1385.4,
@@ -662,7 +548,7 @@
       "lowCarbonSharePct": 33.6
     },
     {
-      "time": "2026-08-09T20:03:12.000Z",
+      "time": "2026-08-09T20:13:18.000Z",
       "loadMW": 5058,
       "generationMW": 1384,
       "plantGenerationMW": 1381.2,
@@ -681,7 +567,7 @@
       "lowCarbonSharePct": 34.2
     },
     {
-      "time": "2026-08-09T20:18:12.000Z",
+      "time": "2026-08-09T20:28:18.000Z",
       "loadMW": 5023,
       "generationMW": 1350,
       "plantGenerationMW": 1343.1,
@@ -700,7 +586,7 @@
       "lowCarbonSharePct": 36.2
     },
     {
-      "time": "2026-08-09T20:33:12.000Z",
+      "time": "2026-08-09T20:43:18.000Z",
       "loadMW": 4893,
       "generationMW": 1311,
       "plantGenerationMW": 1308,
@@ -719,7 +605,7 @@
       "lowCarbonSharePct": 37.7
     },
     {
-      "time": "2026-08-09T20:48:12.000Z",
+      "time": "2026-08-09T20:58:18.000Z",
       "loadMW": 4837,
       "generationMW": 1318,
       "plantGenerationMW": 1314.9,
@@ -738,7 +624,7 @@
       "lowCarbonSharePct": 38.4
     },
     {
-      "time": "2026-08-09T21:03:12.000Z",
+      "time": "2026-08-09T21:13:18.000Z",
       "loadMW": 4777,
       "generationMW": 1357,
       "plantGenerationMW": 1357.5,
@@ -757,7 +643,7 @@
       "lowCarbonSharePct": 37.5
     },
     {
-      "time": "2026-08-09T21:18:12.000Z",
+      "time": "2026-08-09T21:28:18.000Z",
       "loadMW": 4654,
       "generationMW": 1340,
       "plantGenerationMW": 1340.3,
@@ -776,7 +662,7 @@
       "lowCarbonSharePct": 37.7
     },
     {
-      "time": "2026-08-09T21:33:12.000Z",
+      "time": "2026-08-09T21:43:18.000Z",
       "loadMW": 4550,
       "generationMW": 1338,
       "plantGenerationMW": 1337.7,
@@ -795,7 +681,7 @@
       "lowCarbonSharePct": 37.7
     },
     {
-      "time": "2026-08-09T21:48:12.000Z",
+      "time": "2026-08-09T21:58:18.000Z",
       "loadMW": 4461,
       "generationMW": 1346,
       "plantGenerationMW": 1345.7,
@@ -814,7 +700,7 @@
       "lowCarbonSharePct": 38.1
     },
     {
-      "time": "2026-08-09T22:03:12.000Z",
+      "time": "2026-08-09T22:13:18.000Z",
       "loadMW": 4383,
       "generationMW": 1341,
       "plantGenerationMW": 1341.4,
@@ -833,7 +719,7 @@
       "lowCarbonSharePct": 38
     },
     {
-      "time": "2026-08-09T22:18:12.000Z",
+      "time": "2026-08-09T22:28:18.000Z",
       "loadMW": 4297,
       "generationMW": 1321,
       "plantGenerationMW": 1320.9,
@@ -852,7 +738,7 @@
       "lowCarbonSharePct": 38.5
     },
     {
-      "time": "2026-08-09T22:33:12.000Z",
+      "time": "2026-08-09T22:43:18.000Z",
       "loadMW": 4229,
       "generationMW": 1326,
       "plantGenerationMW": 1326.5,
@@ -871,7 +757,7 @@
       "lowCarbonSharePct": 38.5
     },
     {
-      "time": "2026-08-09T22:48:12.000Z",
+      "time": "2026-08-09T22:58:18.000Z",
       "loadMW": 4131,
       "generationMW": 1305,
       "plantGenerationMW": 1304.9,
@@ -890,7 +776,7 @@
       "lowCarbonSharePct": 38.8
     },
     {
-      "time": "2026-08-09T23:03:12.000Z",
+      "time": "2026-08-09T23:13:18.000Z",
       "loadMW": 4046,
       "generationMW": 1275,
       "plantGenerationMW": 1275.5,
@@ -909,7 +795,7 @@
       "lowCarbonSharePct": 39.5
     },
     {
-      "time": "2026-08-09T23:18:12.000Z",
+      "time": "2026-08-09T23:28:18.000Z",
       "loadMW": 3992,
       "generationMW": 1152,
       "plantGenerationMW": 1152,
@@ -928,7 +814,7 @@
       "lowCarbonSharePct": 43.7
     },
     {
-      "time": "2026-08-09T23:33:12.000Z",
+      "time": "2026-08-09T23:43:18.000Z",
       "loadMW": 3940,
       "generationMW": 1157,
       "plantGenerationMW": 1157.1,
@@ -947,7 +833,7 @@
       "lowCarbonSharePct": 43.3
     },
     {
-      "time": "2026-08-09T23:48:12.000Z",
+      "time": "2026-08-09T23:58:18.000Z",
       "loadMW": 3898,
       "generationMW": 1200,
       "plantGenerationMW": 1200.1,
@@ -966,7 +852,7 @@
       "lowCarbonSharePct": 41.1
     },
     {
-      "time": "2026-08-10T00:03:12.000Z",
+      "time": "2026-08-10T00:13:18.000Z",
       "loadMW": 3875,
       "generationMW": 1258,
       "plantGenerationMW": 1258.2,
@@ -985,7 +871,7 @@
       "lowCarbonSharePct": 38.4
     },
     {
-      "time": "2026-08-10T00:18:12.000Z",
+      "time": "2026-08-10T00:28:18.000Z",
       "loadMW": 3861,
       "generationMW": 1243,
       "plantGenerationMW": 1243.2,
@@ -1004,7 +890,7 @@
       "lowCarbonSharePct": 38.7
     },
     {
-      "time": "2026-08-10T00:33:12.000Z",
+      "time": "2026-08-10T00:43:18.000Z",
       "loadMW": 3834,
       "generationMW": 1220,
       "plantGenerationMW": 1219.5,
@@ -1023,7 +909,7 @@
       "lowCarbonSharePct": 39.3
     },
     {
-      "time": "2026-08-10T00:48:12.000Z",
+      "time": "2026-08-10T00:58:18.000Z",
       "loadMW": 3803,
       "generationMW": 1196,
       "plantGenerationMW": 1196.4,
@@ -1042,7 +928,7 @@
       "lowCarbonSharePct": 40.1
     },
     {
-      "time": "2026-08-10T01:03:12.000Z",
+      "time": "2026-08-10T01:13:18.000Z",
       "loadMW": 3805,
       "generationMW": 1218,
       "plantGenerationMW": 1218,
@@ -1061,7 +947,7 @@
       "lowCarbonSharePct": 39.4
     },
     {
-      "time": "2026-08-10T01:18:12.000Z",
+      "time": "2026-08-10T01:28:18.000Z",
       "loadMW": 3811,
       "generationMW": 1233,
       "plantGenerationMW": 1233.4,
@@ -1080,7 +966,7 @@
       "lowCarbonSharePct": 38.7
     },
     {
-      "time": "2026-08-10T01:33:12.000Z",
+      "time": "2026-08-10T01:43:18.000Z",
       "loadMW": 3808,
       "generationMW": 1231,
       "plantGenerationMW": 1230.9,
@@ -1099,7 +985,7 @@
       "lowCarbonSharePct": 38.6
     },
     {
-      "time": "2026-08-10T01:48:12.000Z",
+      "time": "2026-08-10T01:58:18.000Z",
       "loadMW": 3807,
       "generationMW": 1252,
       "plantGenerationMW": 1252.2,
@@ -1118,7 +1004,7 @@
       "lowCarbonSharePct": 38.5
     },
     {
-      "time": "2026-08-10T02:03:12.000Z",
+      "time": "2026-08-10T02:13:18.000Z",
       "loadMW": 3857,
       "generationMW": 1223,
       "plantGenerationMW": 1222.7,
@@ -1137,7 +1023,7 @@
       "lowCarbonSharePct": 40.7
     },
     {
-      "time": "2026-08-10T02:18:12.000Z",
+      "time": "2026-08-10T02:28:18.000Z",
       "loadMW": 3879,
       "generationMW": 1248,
       "plantGenerationMW": 1247.9,
@@ -1156,7 +1042,7 @@
       "lowCarbonSharePct": 40.6
     },
     {
-      "time": "2026-08-10T02:33:12.000Z",
+      "time": "2026-08-10T02:43:18.000Z",
       "loadMW": 3928,
       "generationMW": 1262,
       "plantGenerationMW": 1262,
@@ -1175,7 +1061,7 @@
       "lowCarbonSharePct": 40.2
     },
     {
-      "time": "2026-08-10T02:48:12.000Z",
+      "time": "2026-08-10T02:58:18.000Z",
       "loadMW": 3975,
       "generationMW": 1280,
       "plantGenerationMW": 1280.5,
@@ -1194,7 +1080,7 @@
       "lowCarbonSharePct": 39.7
     },
     {
-      "time": "2026-08-10T03:03:12.000Z",
+      "time": "2026-08-10T03:13:18.000Z",
       "loadMW": 4059,
       "generationMW": 1320,
       "plantGenerationMW": 1301.3,
@@ -1213,7 +1099,7 @@
       "lowCarbonSharePct": 40.3
     },
     {
-      "time": "2026-08-10T03:18:12.000Z",
+      "time": "2026-08-10T03:28:18.000Z",
       "loadMW": 4103,
       "generationMW": 1352,
       "plantGenerationMW": 1326.3,
@@ -1232,7 +1118,7 @@
       "lowCarbonSharePct": 40.2
     },
     {
-      "time": "2026-08-10T03:33:12.000Z",
+      "time": "2026-08-10T03:43:18.000Z",
       "loadMW": 4136,
       "generationMW": 1366,
       "plantGenerationMW": 1347.4,
@@ -1251,7 +1137,7 @@
       "lowCarbonSharePct": 40.3
     },
     {
-      "time": "2026-08-10T03:48:12.000Z",
+      "time": "2026-08-10T03:58:18.000Z",
       "loadMW": 4228,
       "generationMW": 1410,
       "plantGenerationMW": 1368,
@@ -1270,7 +1156,7 @@
       "lowCarbonSharePct": 43.1
     },
     {
-      "time": "2026-08-10T04:03:12.000Z",
+      "time": "2026-08-10T04:13:18.000Z",
       "loadMW": 4434,
       "generationMW": 1574,
       "plantGenerationMW": 1484.9,
@@ -1289,7 +1175,7 @@
       "lowCarbonSharePct": 45.8
     },
     {
-      "time": "2026-08-10T04:18:12.000Z",
+      "time": "2026-08-10T04:28:18.000Z",
       "loadMW": 4590,
       "generationMW": 1818,
       "plantGenerationMW": 1658.7,
@@ -1308,7 +1194,7 @@
       "lowCarbonSharePct": 49.3
     },
     {
-      "time": "2026-08-10T04:33:12.000Z",
+      "time": "2026-08-10T04:43:18.000Z",
       "loadMW": 4737,
       "generationMW": 2021,
       "plantGenerationMW": 1773.1,
@@ -1327,7 +1213,7 @@
       "lowCarbonSharePct": 55.9
     },
     {
-      "time": "2026-08-10T04:48:12.000Z",
+      "time": "2026-08-10T04:58:18.000Z",
       "loadMW": 4830,
       "generationMW": 2294,
       "plantGenerationMW": 1938.5,
@@ -1346,7 +1232,7 @@
       "lowCarbonSharePct": 62.9
     },
     {
-      "time": "2026-08-10T05:03:12.000Z",
+      "time": "2026-08-10T05:13:18.000Z",
       "loadMW": 4980,
       "generationMW": 2665,
       "plantGenerationMW": 2186.5,
@@ -1365,7 +1251,7 @@
       "lowCarbonSharePct": 68
     },
     {
-      "time": "2026-08-10T05:18:12.000Z",
+      "time": "2026-08-10T05:28:18.000Z",
       "loadMW": 5109,
       "generationMW": 3064,
       "plantGenerationMW": 2447.9,
@@ -1384,7 +1270,7 @@
       "lowCarbonSharePct": 72.9
     },
     {
-      "time": "2026-08-10T05:33:12.000Z",
+      "time": "2026-08-10T05:43:18.000Z",
       "loadMW": 5256,
       "generationMW": 3493,
       "plantGenerationMW": 2729.7,
@@ -1403,7 +1289,7 @@
       "lowCarbonSharePct": 76.7
     },
     {
-      "time": "2026-08-10T05:48:12.000Z",
+      "time": "2026-08-10T05:58:18.000Z",
       "loadMW": 5307,
       "generationMW": 3918,
       "plantGenerationMW": 3014.4,
@@ -1422,7 +1308,7 @@
       "lowCarbonSharePct": 79.6
     },
     {
-      "time": "2026-08-10T06:03:12.000Z",
+      "time": "2026-08-10T06:13:18.000Z",
       "loadMW": 5464,
       "generationMW": 4452,
       "plantGenerationMW": 3377.9,
@@ -1441,7 +1327,7 @@
       "lowCarbonSharePct": 80.6
     },
     {
-      "time": "2026-08-10T06:18:12.000Z",
+      "time": "2026-08-10T06:28:18.000Z",
       "loadMW": 5618,
       "generationMW": 4941,
       "plantGenerationMW": 3718.1,
@@ -1460,7 +1346,7 @@
       "lowCarbonSharePct": 81.2
     },
     {
-      "time": "2026-08-10T06:33:12.000Z",
+      "time": "2026-08-10T06:43:18.000Z",
       "loadMW": 5770,
       "generationMW": 5290,
       "plantGenerationMW": 3912.6,
@@ -1479,7 +1365,7 @@
       "lowCarbonSharePct": 83.1
     },
     {
-      "time": "2026-08-10T06:48:12.000Z",
+      "time": "2026-08-10T06:58:18.000Z",
       "loadMW": 5897,
       "generationMW": 5611,
       "plantGenerationMW": 4095.3,
@@ -1498,7 +1384,7 @@
       "lowCarbonSharePct": 84.5
     },
     {
-      "time": "2026-08-10T07:03:12.000Z",
+      "time": "2026-08-10T07:13:18.000Z",
       "loadMW": 5995,
       "generationMW": 5926,
       "plantGenerationMW": 4270.7,
@@ -1517,7 +1403,7 @@
       "lowCarbonSharePct": 85.5
     },
     {
-      "time": "2026-08-10T07:18:12.000Z",
+      "time": "2026-08-10T07:28:18.000Z",
       "loadMW": 6055,
       "generationMW": 6216,
       "plantGenerationMW": 4431.1,
@@ -1536,7 +1422,7 @@
       "lowCarbonSharePct": 86.4
     },
     {
-      "time": "2026-08-10T07:33:12.000Z",
+      "time": "2026-08-10T07:43:18.000Z",
       "loadMW": 6201,
       "generationMW": 6476,
       "plantGenerationMW": 4565.4,
@@ -1555,7 +1441,7 @@
       "lowCarbonSharePct": 87.6
     },
     {
-      "time": "2026-08-10T07:48:12.000Z",
+      "time": "2026-08-10T07:58:18.000Z",
       "loadMW": 6272,
       "generationMW": 6764,
       "plantGenerationMW": 4730.5,
@@ -1574,7 +1460,7 @@
       "lowCarbonSharePct": 87.8
     },
     {
-      "time": "2026-08-10T08:03:12.000Z",
+      "time": "2026-08-10T08:13:18.000Z",
       "loadMW": 6433,
       "generationMW": 6927,
       "plantGenerationMW": 4789.6,
@@ -1593,7 +1479,7 @@
       "lowCarbonSharePct": 89
     },
     {
-      "time": "2026-08-10T08:18:12.000Z",
+      "time": "2026-08-10T08:28:18.000Z",
       "loadMW": 6541,
       "generationMW": 6992,
       "plantGenerationMW": 4758.9,
@@ -1612,7 +1498,7 @@
       "lowCarbonSharePct": 91.2
     },
     {
-      "time": "2026-08-10T08:33:12.000Z",
+      "time": "2026-08-10T08:43:18.000Z",
       "loadMW": 6657,
       "generationMW": 7139,
       "plantGenerationMW": 4826.4,
@@ -1631,7 +1517,7 @@
       "lowCarbonSharePct": 91.7
     },
     {
-      "time": "2026-08-10T08:48:12.000Z",
+      "time": "2026-08-10T08:58:18.000Z",
       "loadMW": 6780,
       "generationMW": 7275,
       "plantGenerationMW": 4891.5,
@@ -1650,7 +1536,7 @@
       "lowCarbonSharePct": 91.8
     },
     {
-      "time": "2026-08-10T09:03:12.000Z",
+      "time": "2026-08-10T09:13:18.000Z",
       "loadMW": 6778,
       "generationMW": 7478,
       "plantGenerationMW": 5030.4,
@@ -1669,7 +1555,7 @@
       "lowCarbonSharePct": 91.1
     },
     {
-      "time": "2026-08-10T09:18:12.000Z",
+      "time": "2026-08-10T09:28:18.000Z",
       "loadMW": 6816,
       "generationMW": 7542,
       "plantGenerationMW": 5047.4,
@@ -1688,7 +1574,7 @@
       "lowCarbonSharePct": 91.6
     },
     {
-      "time": "2026-08-10T09:33:12.000Z",
+      "time": "2026-08-10T09:43:18.000Z",
       "loadMW": 6903,
       "generationMW": 7620,
       "plantGenerationMW": 5091.1,
@@ -1707,7 +1593,7 @@
       "lowCarbonSharePct": 91.4
     },
     {
-      "time": "2026-08-10T09:48:12.000Z",
+      "time": "2026-08-10T09:58:18.000Z",
       "loadMW": 6932,
       "generationMW": 7637,
       "plantGenerationMW": 5077.8,
@@ -1726,7 +1612,7 @@
       "lowCarbonSharePct": 92
     },
     {
-      "time": "2026-08-10T10:03:12.000Z",
+      "time": "2026-08-10T10:13:18.000Z",
       "loadMW": 7174,
       "generationMW": 7585,
       "plantGenerationMW": 5003.6,
@@ -1745,7 +1631,7 @@
       "lowCarbonSharePct": 92.3
     },
     {
-      "time": "2026-08-10T10:18:12.000Z",
+      "time": "2026-08-10T10:28:18.000Z",
       "loadMW": 7159,
       "generationMW": 7556,
       "plantGenerationMW": 4965.5,
@@ -1764,7 +1650,7 @@
       "lowCarbonSharePct": 92.6
     },
     {
-      "time": "2026-08-10T10:33:12.000Z",
+      "time": "2026-08-10T10:43:18.000Z",
       "loadMW": 7264,
       "generationMW": 7605,
       "plantGenerationMW": 5012.5,
@@ -1783,7 +1669,7 @@
       "lowCarbonSharePct": 92.7
     },
     {
-      "time": "2026-08-10T10:48:12.000Z",
+      "time": "2026-08-10T10:58:18.000Z",
       "loadMW": 7248,
       "generationMW": 7615,
       "plantGenerationMW": 5018.6,
@@ -1802,7 +1688,7 @@
       "lowCarbonSharePct": 92.7
     },
     {
-      "time": "2026-08-10T11:03:12.000Z",
+      "time": "2026-08-10T11:13:18.000Z",
       "loadMW": 7235,
       "generationMW": 7575,
       "plantGenerationMW": 4985.1,
@@ -1821,7 +1707,7 @@
       "lowCarbonSharePct": 92.9
     },
     {
-      "time": "2026-08-10T11:18:12.000Z",
+      "time": "2026-08-10T11:28:18.000Z",
       "loadMW": 7201,
       "generationMW": 7510,
       "plantGenerationMW": 4946.6,
@@ -1840,7 +1726,7 @@
       "lowCarbonSharePct": 92.8
     },
     {
-      "time": "2026-08-10T11:33:12.000Z",
+      "time": "2026-08-10T11:43:18.000Z",
       "loadMW": 7079,
       "generationMW": 7424,
       "plantGenerationMW": 4890.9,
@@ -1859,7 +1745,7 @@
       "lowCarbonSharePct": 92.8
     },
     {
-      "time": "2026-08-10T11:48:12.000Z",
+      "time": "2026-08-10T11:58:18.000Z",
       "loadMW": 7057,
       "generationMW": 7388,
       "plantGenerationMW": 4892.2,
@@ -1878,7 +1764,7 @@
       "lowCarbonSharePct": 92.9
     },
     {
-      "time": "2026-08-10T12:03:12.000Z",
+      "time": "2026-08-10T12:13:18.000Z",
       "loadMW": 7043,
       "generationMW": 7350,
       "plantGenerationMW": 4892.1,
@@ -1897,7 +1783,7 @@
       "lowCarbonSharePct": 92.8
     },
     {
-      "time": "2026-08-10T12:18:12.000Z",
+      "time": "2026-08-10T12:28:18.000Z",
       "loadMW": 6984,
       "generationMW": 7256,
       "plantGenerationMW": 4847.3,
@@ -1916,7 +1802,7 @@
       "lowCarbonSharePct": 92.7
     },
     {
-      "time": "2026-08-10T12:33:12.000Z",
+      "time": "2026-08-10T12:43:18.000Z",
       "loadMW": 7018,
       "generationMW": 7159,
       "plantGenerationMW": 4814,
@@ -1935,7 +1821,7 @@
       "lowCarbonSharePct": 92.4
     },
     {
-      "time": "2026-08-10T12:48:12.000Z",
+      "time": "2026-08-10T12:58:18.000Z",
       "loadMW": 6959,
       "generationMW": 7031,
       "plantGenerationMW": 4759.2,
@@ -1954,7 +1840,7 @@
       "lowCarbonSharePct": 92.2
     },
     {
-      "time": "2026-08-10T13:03:12.000Z",
+      "time": "2026-08-10T13:13:18.000Z",
       "loadMW": 6978,
       "generationMW": 6897,
       "plantGenerationMW": 4710.1,
@@ -1973,7 +1859,7 @@
       "lowCarbonSharePct": 91.6
     },
     {
-      "time": "2026-08-10T13:18:12.000Z",
+      "time": "2026-08-10T13:28:18.000Z",
       "loadMW": 6936,
       "generationMW": 6688,
       "plantGenerationMW": 4596.6,
@@ -1992,7 +1878,7 @@
       "lowCarbonSharePct": 91.5
     },
     {
-      "time": "2026-08-10T13:33:12.000Z",
+      "time": "2026-08-10T13:43:18.000Z",
       "loadMW": 6899,
       "generationMW": 6454,
       "plantGenerationMW": 4477,
@@ -2011,7 +1897,7 @@
       "lowCarbonSharePct": 90.5
     },
     {
-      "time": "2026-08-10T13:48:12.000Z",
+      "time": "2026-08-10T13:58:18.000Z",
       "loadMW": 6814,
       "generationMW": 6328,
       "plantGenerationMW": 4458.7,
@@ -2030,7 +1916,7 @@
       "lowCarbonSharePct": 88.4
     },
     {
-      "time": "2026-08-10T14:03:12.000Z",
+      "time": "2026-08-10T14:13:18.000Z",
       "loadMW": 6845,
       "generationMW": 5908,
       "plantGenerationMW": 4161.4,
@@ -2049,7 +1935,7 @@
       "lowCarbonSharePct": 90.2
     },
     {
-      "time": "2026-08-10T14:18:12.000Z",
+      "time": "2026-08-10T14:28:18.000Z",
       "loadMW": 6766,
       "generationMW": 5613,
       "plantGenerationMW": 4019.1,
@@ -2068,7 +1954,7 @@
       "lowCarbonSharePct": 89.1
     },
     {
-      "time": "2026-08-10T14:33:12.000Z",
+      "time": "2026-08-10T14:43:18.000Z",
       "loadMW": 6778,
       "generationMW": 5602,
       "plantGenerationMW": 4126,
@@ -2085,590 +1971,704 @@
       "otherMW": 90.4,
       "domesticCoveragePct": 82.6,
       "lowCarbonSharePct": 84.2
+    },
+    {
+      "time": "2026-08-10T14:58:18.000Z",
+      "loadMW": 6759,
+      "generationMW": 5375,
+      "plantGenerationMW": 4048.5,
+      "importMW": 1176,
+      "nuclearMW": 226.2,
+      "solarMW": 3979.5,
+      "industrialSolarMW": 2652.5,
+      "scteSolarMW": 433,
+      "householdSolarMW": 894,
+      "estimatedDistributedSolarMW": 1327,
+      "generationDefinitionCorrectionMW": -0.5,
+      "fossilMW": 888.1,
+      "renewableMW": 153.8,
+      "otherMW": 127.6,
+      "domesticCoveragePct": 79.5,
+      "lowCarbonSharePct": 81.1
+    },
+    {
+      "time": "2026-08-10T15:13:18.000Z",
+      "loadMW": 6720,
+      "generationMW": 5099,
+      "plantGenerationMW": 3905.9,
+      "importMW": 1383,
+      "nuclearMW": 226.3,
+      "solarMW": 3645.8,
+      "industrialSolarMW": 2452.8,
+      "scteSolarMW": 404,
+      "householdSolarMW": 789,
+      "estimatedDistributedSolarMW": 1193,
+      "generationDefinitionCorrectionMW": 0.1,
+      "fossilMW": 1004.4,
+      "renewableMW": 156.4,
+      "otherMW": 65.9,
+      "domesticCoveragePct": 75.9,
+      "lowCarbonSharePct": 79
+    },
+    {
+      "time": "2026-08-10T15:28:18.000Z",
+      "loadMW": 6692,
+      "generationMW": 4866,
+      "plantGenerationMW": 3827.9,
+      "importMW": 1621,
+      "nuclearMW": 226.6,
+      "solarMW": 3222.9,
+      "industrialSolarMW": 2184.9,
+      "scteSolarMW": 359,
+      "householdSolarMW": 679,
+      "estimatedDistributedSolarMW": 1038,
+      "generationDefinitionCorrectionMW": 0.1,
+      "fossilMW": 1199.6,
+      "renewableMW": 154.5,
+      "otherMW": 62.2,
+      "domesticCoveragePct": 72.7,
+      "lowCarbonSharePct": 74.1
+    },
+    {
+      "time": "2026-08-10T15:43:18.000Z",
+      "loadMW": 6688,
+      "generationMW": 4467,
+      "plantGenerationMW": 3593.3,
+      "importMW": 1826,
+      "nuclearMW": 226.6,
+      "solarMW": 2742.2,
+      "industrialSolarMW": 1868.2,
+      "scteSolarMW": 305,
+      "householdSolarMW": 569,
+      "estimatedDistributedSolarMW": 874,
+      "generationDefinitionCorrectionMW": -0.3,
+      "fossilMW": 1270.7,
+      "renewableMW": 151.6,
+      "otherMW": 76.1,
+      "domesticCoveragePct": 66.8,
+      "lowCarbonSharePct": 69.8
+    },
+    {
+      "time": "2026-08-10T15:58:18.000Z",
+      "loadMW": 6658,
+      "generationMW": 4206,
+      "plantGenerationMW": 3477.6,
+      "importMW": 2220,
+      "nuclearMW": 227.3,
+      "solarMW": 2302.8,
+      "industrialSolarMW": 1574.8,
+      "scteSolarMW": 257,
+      "householdSolarMW": 471,
+      "estimatedDistributedSolarMW": 728,
+      "generationDefinitionCorrectionMW": 0.4,
+      "fossilMW": 1387.6,
+      "renewableMW": 149.4,
+      "otherMW": 138.3,
+      "domesticCoveragePct": 63.2,
+      "lowCarbonSharePct": 63.7
+    },
+    {
+      "time": "2026-08-10T16:13:18.000Z",
+      "loadMW": 6902,
+      "generationMW": 4082,
+      "plantGenerationMW": 3203.7,
+      "importMW": 2452,
+      "nuclearMW": 253.2,
+      "solarMW": 2152.1,
+      "industrialSolarMW": 1274.1,
+      "scteSolarMW": 231,
+      "householdSolarMW": 647,
+      "estimatedDistributedSolarMW": 878,
+      "generationDefinitionCorrectionMW": 0.3,
+      "fossilMW": 1466.7,
+      "renewableMW": 153.2,
+      "otherMW": 56.3,
+      "domesticCoveragePct": 59.1,
+      "lowCarbonSharePct": 62.7
     }
   ],
   "loadHistory24h": [
     {
-      "time": "2026-08-09T14:33:12.000Z",
-      "actualMW": 4168,
-      "plannedMW": 4206,
-      "deviationMW": -38
-    },
-    {
-      "time": "2026-08-09T14:48:12.000Z",
-      "actualMW": 4328,
-      "plannedMW": 4277,
-      "deviationMW": 51
-    },
-    {
-      "time": "2026-08-09T15:03:12.000Z",
-      "actualMW": 4477,
-      "plannedMW": 4278,
-      "deviationMW": 199
-    },
-    {
-      "time": "2026-08-09T15:18:12.000Z",
-      "actualMW": 4557,
-      "plannedMW": 4396,
-      "deviationMW": 161
-    },
-    {
-      "time": "2026-08-09T15:33:12.000Z",
-      "actualMW": 4676,
-      "plannedMW": 4542,
-      "deviationMW": 134
-    },
-    {
-      "time": "2026-08-09T15:48:12.000Z",
-      "actualMW": 4813,
-      "plannedMW": 4715,
-      "deviationMW": 98
-    },
-    {
-      "time": "2026-08-09T16:03:12.000Z",
+      "time": "2026-08-09T16:13:18.000Z",
       "actualMW": 4943,
       "plannedMW": 4925,
       "deviationMW": 18
     },
     {
-      "time": "2026-08-09T16:18:12.000Z",
+      "time": "2026-08-09T16:28:18.000Z",
       "actualMW": 5079,
       "plannedMW": 5011,
       "deviationMW": 68
     },
     {
-      "time": "2026-08-09T16:33:12.000Z",
+      "time": "2026-08-09T16:43:18.000Z",
       "actualMW": 5168,
       "plannedMW": 5184,
       "deviationMW": -16
     },
     {
-      "time": "2026-08-09T16:48:12.000Z",
+      "time": "2026-08-09T16:58:18.000Z",
       "actualMW": 5251,
       "plannedMW": 5306,
       "deviationMW": -55
     },
     {
-      "time": "2026-08-09T17:03:12.000Z",
+      "time": "2026-08-09T17:13:18.000Z",
       "actualMW": 5316,
       "plannedMW": 5345,
       "deviationMW": -29
     },
     {
-      "time": "2026-08-09T17:18:12.000Z",
+      "time": "2026-08-09T17:28:18.000Z",
       "actualMW": 5393,
       "plannedMW": 5295,
       "deviationMW": 98
     },
     {
-      "time": "2026-08-09T17:33:12.000Z",
+      "time": "2026-08-09T17:43:18.000Z",
       "actualMW": 5425,
       "plannedMW": 5388,
       "deviationMW": 37
     },
     {
-      "time": "2026-08-09T17:48:12.000Z",
+      "time": "2026-08-09T17:58:18.000Z",
       "actualMW": 5438,
       "plannedMW": 5399,
       "deviationMW": 39
     },
     {
-      "time": "2026-08-09T18:03:12.000Z",
+      "time": "2026-08-09T18:13:18.000Z",
       "actualMW": 5418,
       "plannedMW": 5368,
       "deviationMW": 50
     },
     {
-      "time": "2026-08-09T18:18:12.000Z",
+      "time": "2026-08-09T18:28:18.000Z",
       "actualMW": 5408,
       "plannedMW": 5346,
       "deviationMW": 62
     },
     {
-      "time": "2026-08-09T18:33:12.000Z",
+      "time": "2026-08-09T18:43:18.000Z",
       "actualMW": 5375,
       "plannedMW": 5455,
       "deviationMW": -80
     },
     {
-      "time": "2026-08-09T18:48:12.000Z",
+      "time": "2026-08-09T18:58:18.000Z",
       "actualMW": 5397,
       "plannedMW": 5418,
       "deviationMW": -21
     },
     {
-      "time": "2026-08-09T19:03:12.000Z",
+      "time": "2026-08-09T19:13:18.000Z",
       "actualMW": 5348,
       "plannedMW": 5345,
       "deviationMW": 3
     },
     {
-      "time": "2026-08-09T19:18:12.000Z",
+      "time": "2026-08-09T19:28:18.000Z",
       "actualMW": 5276,
       "plannedMW": 5244,
       "deviationMW": 32
     },
     {
-      "time": "2026-08-09T19:33:12.000Z",
+      "time": "2026-08-09T19:43:18.000Z",
       "actualMW": 5201,
       "plannedMW": 5201,
       "deviationMW": 0
     },
     {
-      "time": "2026-08-09T19:48:12.000Z",
+      "time": "2026-08-09T19:58:18.000Z",
       "actualMW": 5107,
       "plannedMW": 5124,
       "deviationMW": -17
     },
     {
-      "time": "2026-08-09T20:03:12.000Z",
+      "time": "2026-08-09T20:13:18.000Z",
       "actualMW": 5027,
       "plannedMW": 5147,
       "deviationMW": -120
     },
     {
-      "time": "2026-08-09T20:18:12.000Z",
+      "time": "2026-08-09T20:28:18.000Z",
       "actualMW": 5055,
       "plannedMW": 5068,
       "deviationMW": -13
     },
     {
-      "time": "2026-08-09T20:33:12.000Z",
+      "time": "2026-08-09T20:43:18.000Z",
       "actualMW": 5016,
       "plannedMW": 4970,
       "deviationMW": 46
     },
     {
-      "time": "2026-08-09T20:48:12.000Z",
+      "time": "2026-08-09T20:58:18.000Z",
       "actualMW": 4890,
       "plannedMW": 4880,
       "deviationMW": 10
     },
     {
-      "time": "2026-08-09T21:03:12.000Z",
+      "time": "2026-08-09T21:13:18.000Z",
       "actualMW": 4834,
       "plannedMW": 4756,
       "deviationMW": 78
     },
     {
-      "time": "2026-08-09T21:18:12.000Z",
+      "time": "2026-08-09T21:28:18.000Z",
       "actualMW": 4777,
       "plannedMW": 4648,
       "deviationMW": 129
     },
     {
-      "time": "2026-08-09T21:33:12.000Z",
+      "time": "2026-08-09T21:43:18.000Z",
       "actualMW": 4654,
       "plannedMW": 4528,
       "deviationMW": 126
     },
     {
-      "time": "2026-08-09T21:48:12.000Z",
+      "time": "2026-08-09T21:58:18.000Z",
       "actualMW": 4550,
       "plannedMW": 4415,
       "deviationMW": 135
     },
     {
-      "time": "2026-08-09T22:03:12.000Z",
+      "time": "2026-08-09T22:13:18.000Z",
       "actualMW": 4461,
       "plannedMW": 4310,
       "deviationMW": 151
     },
     {
-      "time": "2026-08-09T22:18:12.000Z",
+      "time": "2026-08-09T22:28:18.000Z",
       "actualMW": 4383,
       "plannedMW": 4229,
       "deviationMW": 154
     },
     {
-      "time": "2026-08-09T22:33:12.000Z",
+      "time": "2026-08-09T22:43:18.000Z",
       "actualMW": 4297,
       "plannedMW": 4145,
       "deviationMW": 152
     },
     {
-      "time": "2026-08-09T22:48:12.000Z",
+      "time": "2026-08-09T22:58:18.000Z",
       "actualMW": 4229,
       "plannedMW": 4032,
       "deviationMW": 197
     },
     {
-      "time": "2026-08-09T23:03:12.000Z",
+      "time": "2026-08-09T23:13:18.000Z",
       "actualMW": 4131,
       "plannedMW": 3916,
       "deviationMW": 215
     },
     {
-      "time": "2026-08-09T23:18:12.000Z",
+      "time": "2026-08-09T23:28:18.000Z",
       "actualMW": 4046,
       "plannedMW": 3831,
       "deviationMW": 215
     },
     {
-      "time": "2026-08-09T23:33:12.000Z",
+      "time": "2026-08-09T23:43:18.000Z",
       "actualMW": 3992,
       "plannedMW": 3764,
       "deviationMW": 228
     },
     {
-      "time": "2026-08-09T23:48:12.000Z",
+      "time": "2026-08-09T23:58:18.000Z",
       "actualMW": 3940,
       "plannedMW": 3737,
       "deviationMW": 203
     },
     {
-      "time": "2026-08-10T00:03:12.000Z",
+      "time": "2026-08-10T00:13:18.000Z",
       "actualMW": 3898,
       "plannedMW": 3724,
       "deviationMW": 174
     },
     {
-      "time": "2026-08-10T00:18:12.000Z",
+      "time": "2026-08-10T00:28:18.000Z",
       "actualMW": 3875,
       "plannedMW": 3695,
       "deviationMW": 180
     },
     {
-      "time": "2026-08-10T00:33:12.000Z",
+      "time": "2026-08-10T00:43:18.000Z",
       "actualMW": 3861,
       "plannedMW": 3727,
       "deviationMW": 134
     },
     {
-      "time": "2026-08-10T00:48:12.000Z",
+      "time": "2026-08-10T00:58:18.000Z",
       "actualMW": 3834,
       "plannedMW": 3706,
       "deviationMW": 128
     },
     {
-      "time": "2026-08-10T01:03:12.000Z",
+      "time": "2026-08-10T01:13:18.000Z",
       "actualMW": 3803,
       "plannedMW": 3723,
       "deviationMW": 80
     },
     {
-      "time": "2026-08-10T01:18:12.000Z",
+      "time": "2026-08-10T01:28:18.000Z",
       "actualMW": 3805,
       "plannedMW": 3747,
       "deviationMW": 58
     },
     {
-      "time": "2026-08-10T01:33:12.000Z",
+      "time": "2026-08-10T01:43:18.000Z",
       "actualMW": 3811,
       "plannedMW": 3741,
       "deviationMW": 70
     },
     {
-      "time": "2026-08-10T01:48:12.000Z",
+      "time": "2026-08-10T01:58:18.000Z",
       "actualMW": 3808,
       "plannedMW": 3693,
       "deviationMW": 115
     },
     {
-      "time": "2026-08-10T02:03:12.000Z",
+      "time": "2026-08-10T02:13:18.000Z",
       "actualMW": 3807,
       "plannedMW": 3754,
       "deviationMW": 53
     },
     {
-      "time": "2026-08-10T02:18:12.000Z",
+      "time": "2026-08-10T02:28:18.000Z",
       "actualMW": 3857,
       "plannedMW": 3806,
       "deviationMW": 51
     },
     {
-      "time": "2026-08-10T02:33:12.000Z",
+      "time": "2026-08-10T02:43:18.000Z",
       "actualMW": 3879,
       "plannedMW": 3820,
       "deviationMW": 59
     },
     {
-      "time": "2026-08-10T02:48:12.000Z",
+      "time": "2026-08-10T02:58:18.000Z",
       "actualMW": 3928,
       "plannedMW": 3867,
       "deviationMW": 61
     },
     {
-      "time": "2026-08-10T03:03:12.000Z",
+      "time": "2026-08-10T03:13:18.000Z",
       "actualMW": 3975,
       "plannedMW": 4022,
       "deviationMW": -47
     },
     {
-      "time": "2026-08-10T03:18:12.000Z",
+      "time": "2026-08-10T03:28:18.000Z",
       "actualMW": 4040,
       "plannedMW": 3996,
       "deviationMW": 44
     },
     {
-      "time": "2026-08-10T03:33:12.000Z",
+      "time": "2026-08-10T03:43:18.000Z",
       "actualMW": 4077,
       "plannedMW": 4057,
       "deviationMW": 20
     },
     {
-      "time": "2026-08-10T03:48:12.000Z",
+      "time": "2026-08-10T03:58:18.000Z",
       "actualMW": 4117,
       "plannedMW": 4154,
       "deviationMW": -37
     },
     {
-      "time": "2026-08-10T04:03:12.000Z",
+      "time": "2026-08-10T04:13:18.000Z",
       "actualMW": 4186,
       "plannedMW": 4311,
       "deviationMW": -125
     },
     {
-      "time": "2026-08-10T04:18:12.000Z",
+      "time": "2026-08-10T04:28:18.000Z",
       "actualMW": 4345,
       "plannedMW": 4379,
       "deviationMW": -34
     },
     {
-      "time": "2026-08-10T04:33:12.000Z",
+      "time": "2026-08-10T04:43:18.000Z",
       "actualMW": 4431,
       "plannedMW": 4405,
       "deviationMW": 26
     },
     {
-      "time": "2026-08-10T04:48:12.000Z",
+      "time": "2026-08-10T04:58:18.000Z",
       "actualMW": 4489,
       "plannedMW": 4403,
       "deviationMW": 86
     },
     {
-      "time": "2026-08-10T05:03:12.000Z",
+      "time": "2026-08-10T05:13:18.000Z",
       "actualMW": 4474,
       "plannedMW": 4469,
       "deviationMW": 5
     },
     {
-      "time": "2026-08-10T05:18:12.000Z",
+      "time": "2026-08-10T05:28:18.000Z",
       "actualMW": 4501,
       "plannedMW": 4443,
       "deviationMW": 58
     },
     {
-      "time": "2026-08-10T05:33:12.000Z",
+      "time": "2026-08-10T05:43:18.000Z",
       "actualMW": 4493,
       "plannedMW": 4391,
       "deviationMW": 102
     },
     {
-      "time": "2026-08-10T05:48:12.000Z",
+      "time": "2026-08-10T05:58:18.000Z",
       "actualMW": 4493,
       "plannedMW": 4322,
       "deviationMW": 171
     },
     {
-      "time": "2026-08-10T06:03:12.000Z",
+      "time": "2026-08-10T06:13:18.000Z",
       "actualMW": 4403,
       "plannedMW": 4379,
       "deviationMW": 24
     },
     {
-      "time": "2026-08-10T06:18:12.000Z",
+      "time": "2026-08-10T06:28:18.000Z",
       "actualMW": 4390,
       "plannedMW": 4307,
       "deviationMW": 83
     },
     {
-      "time": "2026-08-10T06:33:12.000Z",
+      "time": "2026-08-10T06:43:18.000Z",
       "actualMW": 4395,
       "plannedMW": 4318,
       "deviationMW": 77
     },
     {
-      "time": "2026-08-10T06:48:12.000Z",
+      "time": "2026-08-10T06:58:18.000Z",
       "actualMW": 4393,
       "plannedMW": 4243,
       "deviationMW": 150
     },
     {
-      "time": "2026-08-10T07:03:12.000Z",
+      "time": "2026-08-10T07:13:18.000Z",
       "actualMW": 4381,
       "plannedMW": 4250,
       "deviationMW": 131
     },
     {
-      "time": "2026-08-10T07:18:12.000Z",
+      "time": "2026-08-10T07:28:18.000Z",
       "actualMW": 4340,
       "plannedMW": 4205,
       "deviationMW": 135
     },
     {
-      "time": "2026-08-10T07:33:12.000Z",
+      "time": "2026-08-10T07:43:18.000Z",
       "actualMW": 4270,
       "plannedMW": 4235,
       "deviationMW": 35
     },
     {
-      "time": "2026-08-10T07:48:12.000Z",
+      "time": "2026-08-10T07:58:18.000Z",
       "actualMW": 4290,
       "plannedMW": 4138,
       "deviationMW": 152
     },
     {
-      "time": "2026-08-10T08:03:12.000Z",
+      "time": "2026-08-10T08:13:18.000Z",
       "actualMW": 4239,
       "plannedMW": 4254,
       "deviationMW": -15
     },
     {
-      "time": "2026-08-10T08:18:12.000Z",
+      "time": "2026-08-10T08:28:18.000Z",
       "actualMW": 4296,
       "plannedMW": 4224,
       "deviationMW": 72
     },
     {
-      "time": "2026-08-10T08:33:12.000Z",
+      "time": "2026-08-10T08:43:18.000Z",
       "actualMW": 4308,
       "plannedMW": 4232,
       "deviationMW": 76
     },
     {
-      "time": "2026-08-10T08:48:12.000Z",
+      "time": "2026-08-10T08:58:18.000Z",
       "actualMW": 4344,
       "plannedMW": 4253,
       "deviationMW": 91
     },
     {
-      "time": "2026-08-10T09:03:12.000Z",
+      "time": "2026-08-10T09:13:18.000Z",
       "actualMW": 4397,
       "plannedMW": 4186,
       "deviationMW": 211
     },
     {
-      "time": "2026-08-10T09:18:12.000Z",
+      "time": "2026-08-10T09:28:18.000Z",
       "actualMW": 4330,
       "plannedMW": 4205,
       "deviationMW": 125
     },
     {
-      "time": "2026-08-10T09:33:12.000Z",
+      "time": "2026-08-10T09:43:18.000Z",
       "actualMW": 4321,
       "plannedMW": 4277,
       "deviationMW": 44
     },
     {
-      "time": "2026-08-10T09:48:12.000Z",
+      "time": "2026-08-10T09:58:18.000Z",
       "actualMW": 4374,
       "plannedMW": 4296,
       "deviationMW": 78
     },
     {
-      "time": "2026-08-10T10:03:12.000Z",
+      "time": "2026-08-10T10:13:18.000Z",
       "actualMW": 4373,
       "plannedMW": 4542,
       "deviationMW": -169
     },
     {
-      "time": "2026-08-10T10:18:12.000Z",
+      "time": "2026-08-10T10:28:18.000Z",
       "actualMW": 4593,
       "plannedMW": 4557,
       "deviationMW": 36
     },
     {
-      "time": "2026-08-10T10:33:12.000Z",
+      "time": "2026-08-10T10:43:18.000Z",
       "actualMW": 4569,
       "plannedMW": 4600,
       "deviationMW": -31
     },
     {
-      "time": "2026-08-10T10:48:12.000Z",
+      "time": "2026-08-10T10:58:18.000Z",
       "actualMW": 4671,
       "plannedMW": 4583,
       "deviationMW": 88
     },
     {
-      "time": "2026-08-10T11:03:12.000Z",
+      "time": "2026-08-10T11:13:18.000Z",
       "actualMW": 4652,
       "plannedMW": 4576,
       "deviationMW": 76
     },
     {
-      "time": "2026-08-10T11:18:12.000Z",
+      "time": "2026-08-10T11:28:18.000Z",
       "actualMW": 4645,
       "plannedMW": 4590,
       "deviationMW": 55
     },
     {
-      "time": "2026-08-10T11:33:12.000Z",
+      "time": "2026-08-10T11:43:18.000Z",
       "actualMW": 4638,
       "plannedMW": 4562,
       "deviationMW": 76
     },
     {
-      "time": "2026-08-10T11:48:12.000Z",
+      "time": "2026-08-10T11:58:18.000Z",
       "actualMW": 4546,
       "plannedMW": 4562,
       "deviationMW": -16
     },
     {
-      "time": "2026-08-10T12:03:12.000Z",
+      "time": "2026-08-10T12:13:18.000Z",
       "actualMW": 4561,
       "plannedMW": 4480,
       "deviationMW": 81
     },
     {
-      "time": "2026-08-10T12:18:12.000Z",
+      "time": "2026-08-10T12:28:18.000Z",
       "actualMW": 4585,
       "plannedMW": 4498,
       "deviationMW": 87
     },
     {
-      "time": "2026-08-10T12:33:12.000Z",
+      "time": "2026-08-10T12:43:18.000Z",
       "actualMW": 4575,
       "plannedMW": 4613,
       "deviationMW": -38
     },
     {
-      "time": "2026-08-10T12:48:12.000Z",
+      "time": "2026-08-10T12:58:18.000Z",
       "actualMW": 4673,
       "plannedMW": 4629,
       "deviationMW": 44
     },
     {
-      "time": "2026-08-10T13:03:12.000Z",
+      "time": "2026-08-10T13:13:18.000Z",
       "actualMW": 4687,
       "plannedMW": 4563,
       "deviationMW": 124
     },
     {
-      "time": "2026-08-10T13:18:12.000Z",
+      "time": "2026-08-10T13:28:18.000Z",
       "actualMW": 4791,
       "plannedMW": 4625,
       "deviationMW": 166
     },
     {
-      "time": "2026-08-10T13:33:12.000Z",
+      "time": "2026-08-10T13:43:18.000Z",
       "actualMW": 4845,
       "plannedMW": 4689,
       "deviationMW": 156
     },
     {
-      "time": "2026-08-10T13:48:12.000Z",
+      "time": "2026-08-10T13:58:18.000Z",
       "actualMW": 4922,
       "plannedMW": 4748,
       "deviationMW": 174
     },
     {
-      "time": "2026-08-10T14:03:12.000Z",
+      "time": "2026-08-10T14:13:18.000Z",
       "actualMW": 4945,
       "plannedMW": 4860,
       "deviationMW": 85
     },
     {
-      "time": "2026-08-10T14:18:12.000Z",
+      "time": "2026-08-10T14:28:18.000Z",
       "actualMW": 5098,
       "plannedMW": 5027,
       "deviationMW": 71
     },
     {
-      "time": "2026-08-10T14:33:12.000Z",
+      "time": "2026-08-10T14:43:18.000Z",
       "actualMW": 5172,
       "plannedMW": 5139,
       "deviationMW": 33
+    },
+    {
+      "time": "2026-08-10T14:58:18.000Z",
+      "actualMW": 5302,
+      "plannedMW": 5300,
+      "deviationMW": 2
+    },
+    {
+      "time": "2026-08-10T15:13:18.000Z",
+      "actualMW": 5432,
+      "plannedMW": 5330,
+      "deviationMW": 102
+    },
+    {
+      "time": "2026-08-10T15:28:18.000Z",
+      "actualMW": 5527,
+      "plannedMW": 5480,
+      "deviationMW": 47
+    },
+    {
+      "time": "2026-08-10T15:43:18.000Z",
+      "actualMW": 5654,
+      "plannedMW": 5645,
+      "deviationMW": 9
+    },
+    {
+      "time": "2026-08-10T15:58:18.000Z",
+      "actualMW": 5814,
+      "plannedMW": 5723,
+      "deviationMW": 91
+    },
+    {
+      "time": "2026-08-10T16:13:18.000Z",
+      "actualMW": 5930,
+      "plannedMW": 5863,
+      "deviationMW": 67
     }
   ],
   "quality": {
@@ -2678,20 +2678,20 @@
       "MAVIR 4444",
       "MAVIR 7678"
     ],
-    "systemGapMW": 22.7,
-    "flowGapMW": -0.4,
-    "mixGapMW": -0.1,
+    "systemGapMW": 368.2,
+    "flowGapMW": 235.9,
+    "mixGapMW": -0.2,
     "generationDefinitionGapMW": 0,
-    "mixToleranceMW": 14,
+    "mixToleranceMW": 10.2,
     "maxFeedOffsetMinutes": 0,
-    "provisionalRowsSkipped": 5,
+    "provisionalRowsSkipped": 1,
     "solarCompletenessStatus": "passed",
     "loadPlanCoveragePoints": 97,
     "loadPlanLatestOffsetMinutes": 0,
-    "loadPlanMeanAbsoluteErrorMW": 87.6,
+    "loadPlanMeanAbsoluteErrorMW": 83.9,
     "checksPassed": 16,
     "checksTotal": 16,
-    "paksVsMavirGapMW": 1,
+    "paksVsMavirGapMW": 21,
     "enrichment": {
       "lowCarbonShare": "passed",
       "marketPrice": "unavailable_missing_entsoe_token",
@@ -2722,6 +2722,6 @@
     },
     "changePct": -4.8,
     "submissionVersion": "20260315",
-    "fetchedAt": "2026-08-10T15:48:12.028Z"
+    "fetchedAt": "2026-08-10T16:28:18.596Z"
   }
 }

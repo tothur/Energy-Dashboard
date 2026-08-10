@@ -9,13 +9,13 @@ The frontend only renders `public/data/energy-latest.json` after `validateNormal
 - any required upstream feed reports unhealthy;
 - the measurement time is missing or implausible;
 - generation categories do not reconcile with total domestic generation;
-- border flows do not reconcile with reported net imports;
-- generation plus net imports differs excessively from consumption;
+- the physical border-flow sum differs implausibly from the separately published net-import series;
+- the published load/generation/import difference is implausible;
 - the 24-hour series or seven-country border-flow set is incomplete.
 
 Missing metrics remain unavailable. The dashboard does not estimate real-time carbon intensity from an insufficiently detailed generation mix. It publishes the directly calculable low-carbon generation share and the latest reported EEA national inventory for public electricity and heat production as two explicitly different metrics.
 
-The scheduled updater downloads three 15-minute XLSX feeds directly from MAVIR's public RTDW service: chart 20001 for load and production mix, chart 5229 for physical and scheduled cross-border flows, and chart 4444 for grid frequency. The snapshot is published only when source freshness, timestamp alignment, system balance, production mix, cross-border reconciliation, schedule deviation, 15-minute movement, and history completeness all pass validation. The measured cross-border sum gap remains visible in the methodology drawer instead of being silently adjusted.
+The scheduled updater downloads four 15-minute XLSX feeds directly from MAVIR's public RTDW service: chart 20001 for load and production mix, chart 5229 for physical and scheduled cross-border flows, chart 4444 for grid frequency, and chart 7678 for planned versus actual gross load. A system row is accepted only when MAVIR's documented internal identities reconcile: plant categories sum to plant generation, SCTE + HMKE bridge plant and extended generation, and the same distributed-PV estimate bridges operational and extended load. Physical border flows and the separately published net-import series are checked for plausibility but are not treated as a false exact identity. Their measured gap remains visible in the methodology drawer instead of being silently adjusted.
 
 Hungarian day-ahead prices come only from the official ENTSO-E Transparency Platform A44 feed. Set an `ENTSOE_SECURITY_TOKEN` GitHub Actions secret to enable the price card; when the token is missing or the official feed fails, the value stays unavailable instead of falling back to an intermediary.
 

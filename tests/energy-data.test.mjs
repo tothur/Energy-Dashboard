@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
-import { systemSolarComponentsAreCoherent, validateNormalizedEnergyData } from "../src/data/energy-schema.mjs";
+import { systemRowIsSettled, systemSolarComponentsAreCoherent, validateNormalizedEnergyData } from "../src/data/energy-schema.mjs";
 
 const data = JSON.parse(
   await readFile(new URL("../public/data/energy-latest.json", import.meta.url), "utf8"),
@@ -22,17 +22,32 @@ test("the published snapshot passes every declared quality check", () => {
   assert.ok(data.quality.requiredFeeds.every((feed) => feed.startsWith("MAVIR ")));
 });
 
-test("generation, import, and consumption reconcile within the declared gap", () => {
+test("generation, import, and consumption retain the declared MAVIR system difference", () => {
   const gap = data.system.consumptionMW - data.system.generationMW - data.system.netImportMW;
   assert.ok(Math.abs(gap - data.quality.systemGapMW) <= 1);
-  assert.ok(Math.abs(gap) <= 120);
+  assert.ok(Math.abs(gap) <= Math.max(750, data.system.consumptionMW * 0.12));
+});
+
+test("MAVIR rows are settled by their documented internal identities, not by a false zero-balance assumption", () => {
+  const row = {
+    B: 6657.914, D: 4205.592, F: 5929.914, G: 3477.592,
+    H: 227.295, I: 407.845, J: 979.634, K: 0, L: 0.1,
+    M: 1.712, N: 108.431, O: 15.656, P: 4.21, Q: 4.644,
+    R: 14.754, S: 138.318, T: 1574.817, U: 257, V: 471,
+    W: 2220.436,
+  };
+
+  assert.equal(systemRowIsSettled(row), true);
+  assert.ok(Math.abs(row.B - row.D - row.W) > 200);
+  assert.equal(systemRowIsSettled({ ...row, D: row.D + 100 }), false);
+  assert.equal(systemRowIsSettled({ ...row, F: row.F - 100 }), false);
 });
 
 test("generation shares and cross-border flows are internally consistent", () => {
   const mixTotal = data.mix.reduce((sum, item) => sum + item.mw, 0);
   const flowTotal = data.flows.reduce((sum, item) => sum + item.mw, 0);
   assert.ok(Math.abs(mixTotal - data.system.generationMW) <= Math.max(5, data.system.generationMW * 0.0025));
-  assert.ok(Math.abs(flowTotal - data.system.netImportMW) <= Math.max(75, data.system.consumptionMW * 0.015));
+  assert.ok(Math.abs(flowTotal - data.system.netImportMW) <= Math.max(350, data.system.consumptionMW * 0.05));
   const lowCarbonMW = data.mix.filter((item) => ["Atom", "Nap", "Egyéb megújuló"].includes(item.key)).reduce((sum, item) => sum + item.mw, 0);
   assert.ok(Math.abs(data.system.lowCarbonSharePct - (lowCarbonMW / data.system.generationMW) * 100) <= 0.2);
   data.flows.forEach((flow) => {
