@@ -285,6 +285,8 @@ test("replaces a retained pre-contract solar snapshot before serving it", async 
   const data = await response.json();
 
   assert.equal(response.status, 200);
+  assert.equal(response.headers.get("x-energy-delivery"), "stored-upgraded");
+  assert.equal(data.measuredAt, incompatible.measuredAt);
   assert.equal(data.source.measurements.distributedSolarAt, data.measuredAt);
   assert.equal(data.quality.solarCompletenessStatus, "passed");
 });

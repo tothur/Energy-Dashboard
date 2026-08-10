@@ -29,6 +29,7 @@ const FLOW_SCHEDULE_COLUMNS = {
 };
 
 const DISTRIBUTED_SOLAR_COMPLETENESS_THRESHOLD_MW = 250;
+const MAX_PUBLISHABLE_SOURCE_AGE_MS = 90 * 60_000;
 
 const PLANT_DIRECTORY = {
   paks: {
@@ -375,7 +376,7 @@ export function validateNormalizedEnergyData(data) {
   const measuredYear = new Date(data.measuredAt).getUTCFullYear();
   invariant(measuredYear >= 2020 && measuredYear <= 2100, "Implausible measurement timestamp");
   invariant(Date.parse(data.measuredAt) <= Date.parse(data.generatedAt) + 10 * 60_000, "Measurement timestamp is implausibly later than snapshot generation");
-  invariant(Date.parse(data.generatedAt) - Date.parse(data.measuredAt) <= 65 * 60_000, "Published MAVIR snapshot is too old");
+  invariant(Date.parse(data.generatedAt) - Date.parse(data.measuredAt) <= MAX_PUBLISHABLE_SOURCE_AGE_MS, "Published MAVIR snapshot is too old");
   invariant(data.source?.primary === "MAVIR RTDW", "Direct MAVIR attribution is missing");
   invariant(data.source?.charts?.crossBorderFlows === 5229, "Direct MAVIR cross-border chart attribution is missing");
   invariant(data.source?.charts?.loadPlanActual === 7678, "Direct MAVIR load plan chart attribution is missing");

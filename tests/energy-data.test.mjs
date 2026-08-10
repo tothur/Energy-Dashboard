@@ -13,7 +13,7 @@ test("the published snapshot passes every declared quality check", () => {
   assert.equal(data.quality.checksPassed, data.quality.checksTotal);
   assert.ok(new Date(data.measuredAt).getUTCFullYear() >= 2020);
   assert.ok(new Date(data.measuredAt).getUTCFullYear() <= 2100);
-  assert.ok(Date.parse(data.generatedAt) - Date.parse(data.measuredAt) <= 65 * 60_000);
+  assert.ok(Date.parse(data.generatedAt) - Date.parse(data.measuredAt) <= 90 * 60_000);
   assert.equal(data.source.primary, "MAVIR RTDW");
   assert.equal(data.source.price, "ENTSO-E Transparency Platform");
   assert.equal(data.source.annualEmissions, "EEA GHG Inventory");

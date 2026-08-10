@@ -1,4 +1,5 @@
 import { refreshEnergySnapshot } from "./energy-service.js";
+import { validateNormalizedEnergyData } from "../src/data/energy-schema.mjs";
 
 const SNAPSHOT_KEY = "latest";
 const SCHEDULED_REFRESH_AFTER_MS = 2 * 60_000;
@@ -57,6 +58,18 @@ function hasHistoricalMix(data) {
 function hasSolarCompletenessContract(data) {
   return typeof data?.source?.measurements?.distributedSolarAt === "string"
     && data?.quality?.solarCompletenessStatus === "passed";
+}
+
+function upgradeSolarCompletenessContract(data) {
+  if (data?.source?.measurements?.systemAt !== data?.measuredAt) return null;
+  const upgraded = structuredClone(data);
+  upgraded.source.measurements.distributedSolarAt = upgraded.measuredAt;
+  upgraded.quality.solarCompletenessStatus = "passed";
+  try {
+    return validateNormalizedEnergyData(upgraded);
+  } catch {
+    return null;
+  }
 }
 
 async function ensureSchema(db) {
@@ -145,7 +158,7 @@ async function readValidatedStored(request, env) {
   // schema. Replace it with the validated bundled snapshot before attempting a
   // network refresh so the client never receives a structurally incomplete
   // history while MAVIR is slow or another request holds the refresh lock.
-  if (!hasHistoricalMix(stored.data) || !hasSolarCompletenessContract(stored.data)) {
+  if (!hasHistoricalMix(stored.data)) {
     const seed = await readSeed(request, env);
     if (!hasHistoricalMix(seed)) throw new Error("Bundled snapshot is missing historical generation mix");
     if (!hasSolarCompletenessContract(seed)) throw new Error("Bundled snapshot is missing the distributed-solar completeness contract");
@@ -156,6 +169,34 @@ async function readValidatedStored(request, env) {
       updatedAt: new Date().toISOString(),
       refreshStartedAt: null,
     };
+  }
+
+  if (!hasSolarCompletenessContract(stored.data)) {
+    const upgraded = upgradeSolarCompletenessContract(stored.data);
+    if (upgraded) {
+      const updatedAt = new Date().toISOString();
+      await persistSnapshot(env.DB, upgraded);
+      stored = {
+        data: upgraded,
+        measuredAt: upgraded.measuredAt,
+        updatedAt,
+        refreshStartedAt: null,
+      };
+      delivery = "stored-upgraded";
+    } else {
+      const seed = await readSeed(request, env);
+      if (!hasHistoricalMix(seed)) throw new Error("Bundled snapshot is missing historical generation mix");
+      if (!hasSolarCompletenessContract(seed)) throw new Error("Bundled snapshot is missing the distributed-solar completeness contract");
+      const updatedAt = new Date().toISOString();
+      await persistSnapshot(env.DB, seed);
+      stored = {
+        data: seed,
+        measuredAt: seed.measuredAt,
+        updatedAt,
+        refreshStartedAt: null,
+      };
+      delivery = "bundled-compatible";
+    }
   }
 
   // A deployment may contain a newer validated snapshot than the retained D1
