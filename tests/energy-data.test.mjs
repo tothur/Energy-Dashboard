@@ -66,6 +66,23 @@ test("partial daytime solar rows cannot masquerade as complete measurements", ()
   );
 });
 
+test("a coherent pre-contract snapshot remains displayable during a rolling deployment", () => {
+  const legacySnapshot = structuredClone(data);
+  delete legacySnapshot.source.measurements.distributedSolarAt;
+  delete legacySnapshot.quality.solarCompletenessStatus;
+
+  assert.doesNotThrow(() => validateNormalizedEnergyData(legacySnapshot));
+
+  const explicitlyMisaligned = structuredClone(data);
+  explicitlyMisaligned.source.measurements.distributedSolarAt = new Date(
+    Date.parse(data.measuredAt) - 15 * 60_000,
+  ).toISOString();
+  assert.throws(
+    () => validateNormalizedEnergyData(explicitlyMisaligned),
+    /Distributed PV measurement timestamp is not aligned/i,
+  );
+});
+
 test("15-minute movement reconciles to the retained MAVIR history", () => {
   const comparison = data.history24h.find((point) => point.time === data.movement15m.comparisonAt);
   assert.ok(comparison);

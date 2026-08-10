@@ -272,6 +272,23 @@ test("replaces an incompatible stored history before serving it", async () => {
   assert.ok(data.history24h.every((point) => Number.isFinite(point.nuclearMW)));
 });
 
+test("replaces a retained pre-contract solar snapshot before serving it", async () => {
+  const bundled = JSON.parse(await readFile(new URL("../public/data/energy-latest.json", import.meta.url), "utf8"));
+  const incompatible = structuredClone(bundled);
+  delete incompatible.source.measurements.distributedSolarAt;
+  delete incompatible.quality.solarCompletenessStatus;
+
+  const response = await worker.fetch(new Request("https://example.test/api/energy?v=solar-contract"), {
+    DB: createMockDb(incompatible),
+    ASSETS: { fetch: async () => new Response(JSON.stringify(bundled), { headers: { "content-type": "application/json" } }) },
+  });
+  const data = await response.json();
+
+  assert.equal(response.status, 200);
+  assert.equal(data.source.measurements.distributedSolarAt, data.measuredAt);
+  assert.equal(data.quality.solarCompletenessStatus, "passed");
+});
+
 test("reports stored snapshot health without exposing the full dataset", async () => {
   const bundled = JSON.parse(await readFile(new URL("../public/data/energy-latest.json", import.meta.url), "utf8"));
   const now = new Date().toISOString();

@@ -54,6 +54,11 @@ function hasHistoricalMix(data) {
       .every((key) => Number.isFinite(data.history24h.at(-1)?.[key]));
 }
 
+function hasSolarCompletenessContract(data) {
+  return typeof data?.source?.measurements?.distributedSolarAt === "string"
+    && data?.quality?.solarCompletenessStatus === "passed";
+}
+
 async function ensureSchema(db) {
   await db.prepare(`
     CREATE TABLE IF NOT EXISTS energy_snapshot (
@@ -140,9 +145,10 @@ async function readValidatedStored(request, env) {
   // schema. Replace it with the validated bundled snapshot before attempting a
   // network refresh so the client never receives a structurally incomplete
   // history while MAVIR is slow or another request holds the refresh lock.
-  if (!hasHistoricalMix(stored.data)) {
+  if (!hasHistoricalMix(stored.data) || !hasSolarCompletenessContract(stored.data)) {
     const seed = await readSeed(request, env);
     if (!hasHistoricalMix(seed)) throw new Error("Bundled snapshot is missing historical generation mix");
+    if (!hasSolarCompletenessContract(seed)) throw new Error("Bundled snapshot is missing the distributed-solar completeness contract");
     await persistSnapshot(env.DB, seed);
     stored = {
       data: seed,

@@ -393,7 +393,9 @@ export function validateNormalizedEnergyData(data) {
     industrialSolarMW < DISTRIBUTED_SOLAR_COMPLETENESS_THRESHOLD_MW || (scteSolarMW > 0 && householdSolarMW > 0),
     "Distributed PV components are missing while industrial solar production is substantial",
   );
-  invariant(data.source?.measurements?.distributedSolarAt === data.measuredAt, "Distributed PV measurement timestamp is not aligned with the coherent system interval");
+  const distributedSolarAt = data.source?.measurements?.distributedSolarAt
+    ?? data.source?.measurements?.systemAt;
+  invariant(distributedSolarAt === data.measuredAt, "Distributed PV measurement timestamp is not aligned with the coherent system interval");
   invariant(Math.abs(generationMW - plantGenerationMW - estimatedDistributedSolarMW - generationDefinitionCorrectionMW) <= 0.2, "MAVIR generation definitions do not reconcile");
   invariant(Math.abs(netImportMW) < 10_000, "Net import is outside the plausible validation range");
   invariant(domesticCoveragePct >= 0 && domesticCoveragePct <= 250, "Domestic coverage is outside the plausible validation range");
@@ -550,6 +552,9 @@ export function validateNormalizedEnergyData(data) {
   invariant(Math.abs(systemGapMW) <= Math.max(120, consumptionMW * 0.025), "Published system balance does not reconcile");
   invariant(data.quality.maxFeedOffsetMinutes <= 20, "Published feeds are not time-aligned");
   invariant(Number.isInteger(data.quality.provisionalRowsSkipped) && data.quality.provisionalRowsSkipped >= 0, "Invalid provisional-row count");
-  invariant(data.quality.solarCompletenessStatus === "passed", "Distributed PV completeness validation is missing");
+  invariant(
+    data.quality.solarCompletenessStatus == null || data.quality.solarCompletenessStatus === "passed",
+    "Distributed PV completeness validation is invalid",
+  );
   return data;
 }
