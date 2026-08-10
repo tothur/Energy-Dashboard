@@ -57,6 +57,7 @@ test("GitHub retains an authenticated manual Sites refresh fallback", () => {
   assert.match(sitesRefreshScript, /authorization: `Bearer \$\{refreshToken\}`/);
   assert.match(sitesRefreshScript, /\/api\/health/);
   assert.match(sitesRefreshScript, /health\.body\.ageMinutes <= maximumHealthAgeMinutes/);
+  assert.match(sitesRefreshScript, /health\.body\.refreshAgeMinutes <= maximumRefreshAgeMinutes/);
   assert.match(sitesRefreshScript, /checksPass\(health\.body\.checks\)/);
 });
 
@@ -66,6 +67,7 @@ test("Cloudflare owns the five-minute authenticated production schedule", () => 
   assert.match(cloudflareRefreshWorker, /SITES_REFRESH_TOKEN is required/);
   assert.match(cloudflareRefreshWorker, /authorization: `Bearer \$\{env\.SITES_REFRESH_TOKEN\}`/);
   assert.match(cloudflareRefreshWorker, /\/api\/health\?v=/);
+  assert.match(cloudflareRefreshWorker, /health\.body\.refreshAgeMinutes <= maximumRefreshAgeMinutes/);
   assert.match(cloudflareRefreshWorker, /checksPass\(health\.body\.checks\)/);
 });
 

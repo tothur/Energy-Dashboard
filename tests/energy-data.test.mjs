@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
-import { validateNormalizedEnergyData } from "../src/data/energy-schema.mjs";
+import { systemSolarComponentsAreCoherent, validateNormalizedEnergyData } from "../src/data/energy-schema.mjs";
 
 const data = JSON.parse(
   await readFile(new URL("../public/data/energy-latest.json", import.meta.url), "utf8"),
@@ -48,6 +48,22 @@ test("MAVIR plant generation and estimated distributed solar definitions stay ex
   assert.ok(Math.abs(solar.mw - data.system.industrialSolarMW - data.system.estimatedDistributedSolarMW) <= 1);
   assert.ok(Number.isFinite(data.quality.generationDefinitionGapMW));
   assert.ok(Math.abs(data.quality.generationDefinitionGapMW) <= 5);
+});
+
+test("partial daytime solar rows cannot masquerade as complete measurements", () => {
+  assert.equal(systemSolarComponentsAreCoherent({ T: 3857, U: 0, V: 0 }), false);
+  assert.equal(systemSolarComponentsAreCoherent({ T: 3857, U: 644, V: 1803 }), true);
+  assert.equal(systemSolarComponentsAreCoherent({ T: 12, U: 0, V: 0 }), true);
+
+  const partialDaytimeSnapshot = structuredClone(data);
+  partialDaytimeSnapshot.system.industrialSolarMW = 3857;
+  partialDaytimeSnapshot.system.scteSolarMW = 0;
+  partialDaytimeSnapshot.system.householdSolarMW = 0;
+  partialDaytimeSnapshot.system.estimatedDistributedSolarMW = 0;
+  assert.throws(
+    () => validateNormalizedEnergyData(partialDaytimeSnapshot),
+    /Distributed PV components are missing/i,
+  );
 });
 
 test("15-minute movement reconciles to the retained MAVIR history", () => {

@@ -45,7 +45,9 @@ MAVIR exports are requested sequentially, with explicit spacing and `429 Too Man
 
 ## OpenAI Sites publication
 
-The Sites build exposes `/api/energy`, backed by a D1 snapshot and direct request-driven MAVIR refreshes. A snapshot older than two minutes is refreshed in the background with a database lock so concurrent visitors do not create a burst of source requests. The first request initializes from the bundled validated snapshot and attempts an immediate direct refresh. `/api/health` exposes freshness and validation status without returning the full dataset. GitHub Pages remains a static fallback and continues to use its bundled JSON when the Sites API is unavailable.
+The Sites build exposes `/api/energy`, backed by a D1 snapshot and direct MAVIR refreshes. Cloudflare is the primary five-minute scheduler; visitor traffic only starts a locked recovery refresh when the last successful updater run is more than ten minutes old. Source measurement age and updater age remain separate because MAVIR's complete HMKE/SCTE interval can naturally lag the fetch time. `/api/health` requires a successful refresh within ten minutes and a coherent measurement within thirty minutes without returning the full dataset. GitHub Pages remains a static fallback and continues to use its bundled JSON when the Sites API is unavailable.
+
+Daytime system rows with substantial industrial solar but missing HMKE or SCTE estimates are treated as provisional and cannot become the headline snapshot. The updater publishes the newest fully reconciled interval and reports the number of skipped provisional rows instead of displaying the missing distributed-solar components as zero.
 
 ## Key files
 

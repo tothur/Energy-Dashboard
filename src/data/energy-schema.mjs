@@ -28,6 +28,8 @@ const FLOW_SCHEDULE_COLUMNS = {
   RO: "O",
 };
 
+const DISTRIBUTED_SOLAR_COMPLETENESS_THRESHOLD_MW = 250;
+
 const PLANT_DIRECTORY = {
   paks: {
     name: "Paks",
@@ -121,6 +123,12 @@ function systemRowIsSettled(row) {
     && Math.abs(mixGapMW) <= Math.max(5, generationMW * 0.0025);
 }
 
+export function systemSolarComponentsAreCoherent(row) {
+  if (![row?.T, row?.U, row?.V].every(Number.isFinite)) return false;
+  if (row.T < DISTRIBUTED_SOLAR_COMPLETENESS_THRESHOLD_MW) return true;
+  return row.U > 0 && row.V > 0;
+}
+
 function mixFromRow(row) {
   const values = [
     { key: "Atom", mw: row.H },
@@ -164,7 +172,7 @@ export function normalizeMavirTables({ systemRows, flowRows, frequencyRows, load
   const flowColumns = [...FLOW_COLUMNS.map(([, column]) => column), ...Object.values(FLOW_SCHEDULE_COLUMNS)];
   const completeSystemRows = systemRows.slice(1).filter((row) => hasFiniteColumns(row, systemColumns) && typeof row.A === "string");
   const systemRow = completeSystemRows.findLast((candidate) => {
-    if (!systemRowIsSettled(candidate)) return false;
+    if (!systemRowIsSettled(candidate) || !systemSolarComponentsAreCoherent(candidate)) return false;
     const matchingFlow = nearestComplete(flowRows, flowColumns, candidate.A, "flow");
     const flowTotal = FLOW_COLUMNS.reduce((sum, [, column]) => sum + matchingFlow[column], 0);
     return Math.abs(flowTotal - candidate.W) <= Math.max(75, candidate.B * 0.015);
@@ -249,7 +257,7 @@ export function normalizeMavirTables({ systemRows, flowRows, frequencyRows, load
   const loadPlanMeanAbsoluteErrorMW = loadHistory24h.reduce((sum, point) => sum + Math.abs(point.deviationMW), 0) / loadHistory24h.length;
 
   const history24h = systemRows.slice(1)
-    .filter((row) => hasFiniteColumns(row, systemColumns) && typeof row.A === "string")
+    .filter((row) => hasFiniteColumns(row, systemColumns) && typeof row.A === "string" && systemSolarComponentsAreCoherent(row))
     .map((row) => {
       const rowMix = mixFromRow(row);
       const mixByKey = Object.fromEntries(rowMix.map((item) => [item.key, item.mw]));
@@ -310,7 +318,7 @@ export function normalizeMavirTables({ systemRows, flowRows, frequencyRows, load
       charts: { systemAndMix: 20001, crossBorderFlows: 5229, frequency: 4444, loadPlanActual: 7678 },
       price: "ENTSO-E Transparency Platform",
       priceStatus: "unavailable_missing_entsoe_token",
-      measurements: { systemAt: measuredAt, flowsAt: flowMeasuredAt, frequencyAt: frequencyMeasuredAt, loadPlanAt: latestLoadPoint.time },
+      measurements: { systemAt: measuredAt, distributedSolarAt: measuredAt, flowsAt: flowMeasuredAt, frequencyAt: frequencyMeasuredAt, loadPlanAt: latestLoadPoint.time },
       caveat: "Minden közzétett rendszeradat közvetlenül a MAVIR nyilvános RTDW-exportjából származik.",
     },
     system: {
@@ -350,11 +358,12 @@ export function normalizeMavirTables({ systemRows, flowRows, frequencyRows, load
       mixToleranceMW: rounded(allowedMixGapMW, 1),
       maxFeedOffsetMinutes: rounded(alignmentMinutes, 1),
       provisionalRowsSkipped,
+      solarCompletenessStatus: "passed",
       loadPlanCoveragePoints: loadHistory24h.length,
       loadPlanLatestOffsetMinutes: rounded(loadPlanLatestOffsetMinutes, 1),
       loadPlanMeanAbsoluteErrorMW: rounded(loadPlanMeanAbsoluteErrorMW, 1),
-      checksPassed: 13,
-      checksTotal: 13,
+      checksPassed: 14,
+      checksTotal: 14,
     },
   };
 }
@@ -380,6 +389,11 @@ export function validateNormalizedEnergyData(data) {
   invariant(consumptionMW > 0 && consumptionMW < 20_000, "Consumption is outside the plausible validation range");
   invariant(generationMW >= 0 && generationMW < 20_000, "Generation is outside the plausible validation range");
   invariant(Math.abs(estimatedDistributedSolarMW - scteSolarMW - householdSolarMW) <= 1, "Distributed PV components do not reconcile");
+  invariant(
+    industrialSolarMW < DISTRIBUTED_SOLAR_COMPLETENESS_THRESHOLD_MW || (scteSolarMW > 0 && householdSolarMW > 0),
+    "Distributed PV components are missing while industrial solar production is substantial",
+  );
+  invariant(data.source?.measurements?.distributedSolarAt === data.measuredAt, "Distributed PV measurement timestamp is not aligned with the coherent system interval");
   invariant(Math.abs(generationMW - plantGenerationMW - estimatedDistributedSolarMW - generationDefinitionCorrectionMW) <= 0.2, "MAVIR generation definitions do not reconcile");
   invariant(Math.abs(netImportMW) < 10_000, "Net import is outside the plausible validation range");
   invariant(domesticCoveragePct >= 0 && domesticCoveragePct <= 250, "Domestic coverage is outside the plausible validation range");
@@ -536,5 +550,6 @@ export function validateNormalizedEnergyData(data) {
   invariant(Math.abs(systemGapMW) <= Math.max(120, consumptionMW * 0.025), "Published system balance does not reconcile");
   invariant(data.quality.maxFeedOffsetMinutes <= 20, "Published feeds are not time-aligned");
   invariant(Number.isInteger(data.quality.provisionalRowsSkipped) && data.quality.provisionalRowsSkipped >= 0, "Invalid provisional-row count");
+  invariant(data.quality.solarCompletenessStatus === "passed", "Distributed PV completeness validation is missing");
   return data;
 }

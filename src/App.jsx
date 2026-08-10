@@ -618,6 +618,105 @@ function EnergyMap({ data }) {
   );
 }
 
+function PaksStatusCard({ data }) {
+  const paks = data.plants.find((plant) => plant.key === "paks");
+  const blocks = paks?.blocks ?? [];
+  const firstProducingBlock = blocks.find((block) => block.mw > 5)?.block ?? blocks[0]?.block ?? 1;
+  const [selectedBlockNumber, setSelectedBlockNumber] = useState(firstProducingBlock);
+
+  useEffect(() => {
+    if (!blocks.some((block) => block.block === selectedBlockNumber)) {
+      setSelectedBlockNumber(firstProducingBlock);
+    }
+  }, [blocks, firstProducingBlock, selectedBlockNumber]);
+
+  if (!paks) return null;
+
+  const selectedBlock = blocks.find((block) => block.block === selectedBlockNumber) ?? blocks[0];
+  const activeBlocks = blocks.filter((block) => block.mw > 5).length;
+  const blockCapacityMW = Number.isFinite(paks.capacityMW) ? paks.capacityMW / 4 : null;
+  const blockUtilizationPct = selectedBlock && Number.isFinite(blockCapacityMW)
+    ? (selectedBlock.mw / blockCapacityMW) * 100
+    : null;
+  const available = paks.liveCoverage === "block_level" && blocks.length === 4;
+
+  return (
+    <section className={`panel paks-status-card ${available ? "available" : "unavailable"}`} aria-labelledby="paks-status-title">
+      <div className="paks-card-heading">
+        <div>
+          <span className="eyebrow">PAKSI ATOMERŐMŰ · ÉLŐ BLOKKSTÁTUSZ</span>
+          <h2 id="paks-status-title">Mi történik most Pakson?</h2>
+        </div>
+        <span className={`paks-live-badge ${available ? (activeBlocks === 4 ? "normal" : "attention") : "unknown"}`}>
+          <span className="status-dot" />
+          {available ? `${activeBlocks}/4 BLOKK TERMEL` : "BLOKKADAT NEM ELÉRHETŐ"}
+        </span>
+      </div>
+
+      <div className="paks-card-body">
+        <div className="paks-overview">
+          <div className="paks-reactor-mark"><Atom size={36} weight="duotone" /></div>
+          <span>Aktuális összteljesítmény</span>
+          <div className="paks-total"><strong>{formatMW(paks.mw)}</strong><small>MW</small></div>
+          <div className="paks-capacity-line">
+            <span style={{ width: `${Math.max(0, Math.min(100, paks.utilizationPct ?? 0))}%` }} />
+          </div>
+          <small>{Number.isFinite(paks.utilizationPct) ? `${decimalFormatter.format(paks.utilizationPct)}%` : "—"} a {formatMW(paks.capacityMW)} MW névleges kapacitásból</small>
+        </div>
+
+        {available ? (
+          <div className="paks-block-board" role="group" aria-label="Válassz paksi blokkot a részletekhez">
+            {blocks.map((block) => {
+              const producing = block.mw > 5;
+              const selected = block.block === selectedBlock?.block;
+              return (
+                <button
+                  key={block.block}
+                  className={`paks-block-tile ${producing ? "producing" : "idle"} ${selected ? "selected" : ""}`}
+                  onClick={() => setSelectedBlockNumber(block.block)}
+                  aria-pressed={selected}
+                  aria-label={`${block.block}. blokk: ${producing ? "termel" : "nem termel"}, ${formatMW(block.mw)} megawatt`}
+                >
+                  <span className="paks-block-topline"><b>{block.block}. BLOKK</b><i>{producing ? "TERMEL" : "NEM TERMEL"}</i></span>
+                  <Atom size={27} weight={producing ? "fill" : "regular"} />
+                  <strong>{formatMW(block.mw)} <small>MW</small></strong>
+                  <span className="paks-block-meter"><i style={{ width: `${Math.max(0, Math.min(100, blockCapacityMW ? (block.mw / blockCapacityMW) * 100 : 0))}%` }} /></span>
+                </button>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="paks-block-unavailable"><Info size={24} /><span><b>Az OAH blokkszintű feedje jelenleg nem érhető el.</b><small>A kártya nem helyettesíti találgatással a hiányzó állapotokat.</small></span></div>
+        )}
+
+        <div className="paks-block-detail" aria-live="polite">
+          {selectedBlock ? (
+            <>
+              <div className="paks-detail-title">
+                <span>{selectedBlock.block}. BLOKK</span>
+                <b className={selectedBlock.mw > 5 ? "producing" : "idle"}>{selectedBlock.mw > 5 ? "ÜZEMBEN" : "NEM TERMEL"}</b>
+              </div>
+              <div className="paks-detail-output"><strong>{formatMW(selectedBlock.mw)}</strong><span>MW</span></div>
+              <div className="paks-detail-grid">
+                <div><span>Blokkszintű terhelés</span><b>{Number.isFinite(blockUtilizationPct) ? `${decimalFormatter.format(blockUtilizationPct)}%` : "—"}</b></div>
+                <div><span>Turbinák üzemi száma</span><b className="unknown">NINCS KÖZVETLEN ADAT</b></div>
+              </div>
+              <p><Info size={14} /> Az OAH blokkonkénti villamos teljesítményt közöl, turbinánkénti státuszt nem. A dashboard ezért nem következtet a működő turbinák számára.</p>
+            </>
+          ) : null}
+        </div>
+      </div>
+
+      <div className="paks-card-footer">
+        <span><Clock size={15} /> OAH mérés: <b>{paks.operationalMeasuredAt ? formatLocalTime(paks.operationalMeasuredAt, true) : "nem elérhető"}</b></span>
+        <span><Database size={15} /> MAVIR nukleáris kategória: <b>{formatMW(paks.mavirCategoryMW)} MW</b></span>
+        {Number.isFinite(data.quality.paksVsMavirGapMW) ? <span>OAH − MAVIR: <b>{formatSigned(data.quality.paksVsMavirGapMW, 1)} MW</b></span> : null}
+        <a href={paks.sourceUrl} target="_blank" rel="noreferrer">OAH adatforrás <ArrowSquareOut size={13} /></a>
+      </div>
+    </section>
+  );
+}
+
 const HISTORY_MIX_SERIES = [
   { key: "solarMW", label: "Nap", color: "#ffd04d", className: "solar" },
   { key: "nuclearMW", label: "Atom", color: "#6ca8ff", className: "nuclear" },
@@ -908,6 +1007,7 @@ export function App() {
           <BalancePanel data={data} />
         </div>
         <EnergyMap data={data} />
+        <PaksStatusCard data={data} />
         <div className="analytics-grid">
           <TrendCard data={data} />
           <LoadForecastCard data={data} />

@@ -1,5 +1,6 @@
 const DEFAULT_SITE_URL = "https://hungary-energy-dashboard.andrastoth.chatgpt.site";
-const DEFAULT_MAXIMUM_HEALTH_AGE_MINUTES = 10;
+const DEFAULT_MAXIMUM_HEALTH_AGE_MINUTES = 30;
+const DEFAULT_MAXIMUM_REFRESH_AGE_MINUTES = 10;
 const DEFAULT_POLL_ATTEMPTS = 8;
 const DEFAULT_POLL_INTERVAL_MS = 15_000;
 
@@ -33,6 +34,7 @@ export async function refreshAndVerify(env, options = {}) {
   const wait = options.wait ?? delay;
   const siteUrl = (env.SITE_URL || DEFAULT_SITE_URL).replace(/\/$/, "");
   const maximumHealthAgeMinutes = Number(env.MAXIMUM_HEALTH_AGE_MINUTES || DEFAULT_MAXIMUM_HEALTH_AGE_MINUTES);
+  const maximumRefreshAgeMinutes = Number(env.MAXIMUM_REFRESH_AGE_MINUTES || DEFAULT_MAXIMUM_REFRESH_AGE_MINUTES);
   const pollAttempts = Number(env.REFRESH_POLL_ATTEMPTS || DEFAULT_POLL_ATTEMPTS);
   const pollIntervalMs = Number(env.REFRESH_POLL_INTERVAL_MS || DEFAULT_POLL_INTERVAL_MS);
   if (!env.SITES_REFRESH_TOKEN) throw new Error("SITES_REFRESH_TOKEN is required");
@@ -55,6 +57,8 @@ export async function refreshAndVerify(env, options = {}) {
       && health.body.refreshing === false
       && Number.isFinite(health.body.ageMinutes)
       && health.body.ageMinutes <= maximumHealthAgeMinutes
+      && Number.isFinite(health.body.refreshAgeMinutes)
+      && health.body.refreshAgeMinutes <= maximumRefreshAgeMinutes
       && checksPass(health.body.checks);
 
     if (ready) return { trigger: trigger.body, health: health.body };
