@@ -34,6 +34,7 @@ import {
   YAxis,
 } from "recharts";
 import { validateNormalizedEnergyData } from "./data/energy-schema.mjs";
+import { estimatePaksTurbines } from "./domain/paks-turbine-estimate.mjs";
 
 const MIX_META = {
   Atom: { className: "nuclear", icon: Atom, short: "Atom" },
@@ -638,6 +639,7 @@ function PaksStatusCard({ data }) {
   const blockUtilizationPct = selectedBlock && Number.isFinite(blockCapacityMW)
     ? (selectedBlock.mw / blockCapacityMW) * 100
     : null;
+  const turbineEstimate = estimatePaksTurbines(selectedBlock?.mw, blockCapacityMW);
   const available = paks.liveCoverage === "block_level" && blocks.length === 4;
 
   return (
@@ -699,9 +701,13 @@ function PaksStatusCard({ data }) {
               <div className="paks-detail-output"><strong>{formatMW(selectedBlock.mw)}</strong><span>MW</span></div>
               <div className="paks-detail-grid">
                 <div><span>Blokkszintű terhelés</span><b>{Number.isFinite(blockUtilizationPct) ? `${decimalFormatter.format(blockUtilizationPct)}%` : "—"}</b></div>
-                <div><span>Turbinák üzemi száma</span><b className="unknown">NINCS KÖZVETLEN ADAT</b></div>
+                <div className="paks-turbine-estimate">
+                  <span>Becsült turbinastátusz</span>
+                  <b className={turbineEstimate.confidence}>{turbineEstimate.label} <small>VALÓSZÍNŰ</small></b>
+                  <em>{turbineEstimate.confidenceLabel}</em>
+                </div>
               </div>
-              <p><Info size={14} /> Az OAH blokkonkénti villamos teljesítményt közöl, turbinánkénti státuszt nem. A dashboard ezért nem következtet a működő turbinák számára.</p>
+              <p><Info size={14} /> Teljesítményből becsülve, nem közvetlen turbinamérés. Részterhelésnél mindkét turbina is működhet, ezért a becslés bizonytalanabb.</p>
             </>
           ) : null}
         </div>
