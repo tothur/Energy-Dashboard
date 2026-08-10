@@ -92,6 +92,10 @@ test("an open dashboard polls for newly published snapshots", () => {
   assert.match(app, /visibilitychange/);
 });
 
+test("the header does not expose inert global range controls", () => {
+  assert.doesNotMatch(app, /RangeControl|range-control|setRange|onRangeChange/);
+});
+
 test("the dashboard links to the related Climate Dashboard", () => {
   assert.match(app, /https:\/\/tothur\.github\.io\/Climate-Dashboard\//);
   assert.match(app, /aria-label="Climate Dashboard megnyitása új lapon"/);

@@ -174,16 +174,6 @@ function ErrorScreen({ error }) {
   );
 }
 
-function RangeControl({ range, onChange }) {
-  return (
-    <div className="range-control" aria-label="Időtáv">
-      <button className={range === "now" ? "active" : ""} onClick={() => onChange("now")}>MOST</button>
-      <button className={range === "24h" ? "active" : ""} onClick={() => onChange("24h")}>24 ÓRA</button>
-      <button disabled title="A hét napos, közvetlen forrás még nincs bekötve">7 NAP</button>
-    </div>
-  );
-}
-
 function MetricDelta({ value, unit = "MW", elapsedMinutes, positiveTone = "good", negativeTone = "warning" }) {
   const direction = value > 0 ? "up" : value < 0 ? "down" : "flat";
   const tone = direction === "up" ? positiveTone : direction === "down" ? negativeTone : "neutral";
@@ -197,7 +187,7 @@ function MetricDelta({ value, unit = "MW", elapsedMinutes, positiveTone = "good"
   );
 }
 
-function Header({ data, range, onRangeChange, onOpenSources }) {
+function Header({ data, onOpenSources }) {
   const [, forceMinuteTick] = useState(0);
   useEffect(() => {
     const timer = window.setInterval(() => forceMinuteTick((value) => value + 1), 60_000);
@@ -227,8 +217,6 @@ function Header({ data, range, onRangeChange, onOpenSources }) {
           {stale ? `ELAVULT · ${age} PERCE` : `MÉRT ADAT · ${age} PERCE`}
         </button>
       </div>
-
-      <RangeControl range={range} onChange={onRangeChange} />
     </header>
   );
 }
@@ -997,7 +985,6 @@ function SourcesDrawer({ data, onClose }) {
 
 export function App() {
   const { status, data, error } = useEnergyData();
-  const [range, setRange] = useState("now");
   const [selectedMix, setSelectedMix] = useState("Atom");
   const [sourcesOpen, setSourcesOpen] = useState(false);
 
@@ -1006,7 +993,7 @@ export function App() {
 
   return (
     <div className="dashboard-shell">
-      <Header data={data} range={range} onRangeChange={setRange} onOpenSources={() => setSourcesOpen(true)} />
+      <Header data={data} onOpenSources={() => setSourcesOpen(true)} />
       <main>
         <div className="hero-grid">
           <GenerationMix data={data} selected={selectedMix} onSelect={setSelectedMix} />

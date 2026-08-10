@@ -48,7 +48,7 @@ button:focus-visible, a:focus-visible { outline: 2px solid var(--cyan); outline-
 .topbar {
   min-height: 64px;
   display: grid;
-  grid-template-columns: minmax(250px, 0.9fr) minmax(500px, 1.3fr) auto;
+  grid-template-columns: minmax(250px, 1fr) auto;
   align-items: center;
   gap: 22px;
   padding: 2px 0 11px;
@@ -63,7 +63,7 @@ button:focus-visible, a:focus-visible { outline: 2px solid var(--cyan); outline-
 .brand span { color: #8de5ed; }
 .brand-subtitle { margin-top: 7px; color: #9baeba; font-size: 13px; letter-spacing: 0.015em; }
 
-.live-metrics { display: flex; align-items: center; justify-content: center; gap: 24px; }
+.live-metrics { display: flex; align-items: center; justify-content: flex-end; gap: 24px; }
 .frequency, .measurement-time, .freshness { display: flex; align-items: center; gap: 8px; white-space: nowrap; }
 .frequency { color: var(--cyan); font-family: "IBM Plex Mono", monospace; }
 .frequency strong { font-size: 21px; letter-spacing: 0.02em; }
@@ -80,12 +80,6 @@ button:focus-visible, a:focus-visible { outline: 2px solid var(--cyan); outline-
 }
 .freshness.stale { color: var(--orange); }
 .status-dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; box-shadow: 0 0 10px currentColor; }
-
-.range-control { display: inline-grid; grid-template-columns: repeat(3, 1fr); min-width: 284px; border: 1px solid #3b5060; border-radius: 5px; overflow: hidden; }
-.range-control button { min-height: 36px; border: 0; border-right: 1px solid #3b5060; background: #09141e; color: #b8c6cf; cursor: pointer; font-family: "IBM Plex Mono", monospace; font-size: 12px; font-weight: 600; letter-spacing: 0.05em; }
-.range-control button:last-child { border-right: 0; }
-.range-control button.active { color: var(--cyan); background: #11242e; box-shadow: inset 0 -2px 0 var(--cyan); }
-.range-control button:disabled { color: #526675; cursor: not-allowed; }
 
 main { display: grid; gap: 10px; }
 .hero-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; }
@@ -439,8 +433,6 @@ footer button { padding: 4px 0; border: 0; border-bottom: 1px solid #577687; bac
 
 @media (max-width: 1180px) {
   .topbar { grid-template-columns: 1fr auto; }
-  .live-metrics { grid-column: 1 / -1; grid-row: 2; justify-content: flex-start; }
-  .range-control { grid-column: 2; grid-row: 1; }
   .hero-grid { grid-template-columns: 1fr; }
   .analytics-grid { grid-template-columns: 1fr 1fr; }
   .trend-card { grid-column: 1 / -1; }
@@ -457,7 +449,6 @@ footer button { padding: 4px 0; border: 0; border-bottom: 1px solid #577687; bac
   .brand-block { text-align: left; }
   .live-metrics { flex-wrap: wrap; justify-content: flex-start; gap: 12px 18px; }
   .measurement-time { order: 3; width: 100%; }
-  .range-control { min-width: 0; width: 100%; }
   .panel { padding: 14px; }
   .generation-panel { min-height: 470px; padding: 14px; }
   .generation-race-heading { grid-template-columns: 1fr; gap: 10px; }
