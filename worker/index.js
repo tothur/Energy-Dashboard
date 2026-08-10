@@ -1,8 +1,10 @@
 import { refreshEnergySnapshot } from "./energy-service.js";
 
 const SNAPSHOT_KEY = "latest";
-const REFRESH_AFTER_MS = 2 * 60_000;
+const SCHEDULED_REFRESH_AFTER_MS = 2 * 60_000;
+const BUNDLED_PROMOTION_AFTER_MS = 2 * 60_000;
 const STALE_AFTER_MS = 10 * 60_000;
+const VISITOR_RECOVERY_AFTER_MS = STALE_AFTER_MS;
 const LOCK_TIMEOUT_MS = 2 * 60_000;
 const GITHUB_PAGES_ORIGIN = "https://tothur.github.io/Energy-Dashboard";
 let activeRefresh = null;
@@ -152,7 +154,7 @@ async function readValidatedStored(request, env) {
   // A deployment may contain a newer validated snapshot than the retained D1
   // row. Prefer that exact published snapshot before attempting an outbound
   // refresh, which also recovers cleanly when a Sites background task stalls.
-  if (Date.now() - Date.parse(stored.data.measuredAt) > REFRESH_AFTER_MS) {
+  if (Date.now() - Date.parse(stored.data.measuredAt) > BUNDLED_PROMOTION_AFTER_MS) {
     try {
       const seed = await readSeed(request, env);
       if (hasHistoricalMix(seed) && Date.parse(seed.measuredAt) > Date.parse(stored.data.measuredAt)) {
@@ -177,7 +179,7 @@ async function readValidatedStored(request, env) {
 async function energyApi(request, env, ctx) {
   const { stored, delivery } = await readValidatedStored(request, env);
   const ageMs = Date.now() - Date.parse(stored.data.measuredAt);
-  if (ageMs > REFRESH_AFTER_MS) {
+  if (ageMs > VISITOR_RECOVERY_AFTER_MS) {
     if (ctx?.waitUntil) {
       ctx.waitUntil(refreshStored(env, stored.data).catch(() => null));
       return jsonResponse(stored.data, 200, {
@@ -205,7 +207,7 @@ async function refreshApi(request, env) {
   const { stored } = await readValidatedStored(request, env);
   const ageMs = Date.now() - Date.parse(stored.data.measuredAt);
   const ageMinutes = Math.max(0, Math.round(ageMs / 60_000));
-  if (ageMs <= REFRESH_AFTER_MS) {
+  if (ageMs <= SCHEDULED_REFRESH_AFTER_MS) {
     return jsonResponse({
       status: "fresh",
       measuredAt: stored.data.measuredAt,
@@ -304,7 +306,7 @@ export default {
     await ensureSchema(env.DB);
     const stored = await readStored(env.DB);
     if (!stored || !hasHistoricalMix(stored.data)) return;
-    if (Date.now() - Date.parse(stored.data.measuredAt) <= REFRESH_AFTER_MS) return;
+    if (Date.now() - Date.parse(stored.data.measuredAt) <= SCHEDULED_REFRESH_AFTER_MS) return;
     ctx.waitUntil(refreshStored(env, stored.data).catch((error) => {
       console.error("Scheduled energy refresh failed", error);
     }));
