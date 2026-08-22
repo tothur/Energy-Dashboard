@@ -50,21 +50,35 @@ test("EEA annual inventory change reconciles to consecutive reported years", () 
   assert.equal(emissions.changePct, -4.8);
 });
 
-test("OAH Paks page preserves the measurement time and all four block outputs", () => {
+test("OAH Paks page accepts the current update label and preserves all four block outputs", () => {
   const paks = parseHaeaPaksOperationalPage(`
     <h1>A Paksi Atomerőmű aktuális üzemi adatai</h1>
-    <tr><td colspan="4">Mérés dátuma: 2026. 08. 06 21:04</td></tr>
+    <tr><td colspan="4">Utolsó frissítés: 2026. 08. 22 22:33</td></tr>
+    <table><tr><td>A Paksi Atomerőmű elektromos teljesítmény adatai</td></tr>
     <tr><td>1. blokk</td><td>2. blokk</td><td>3. blokk</td><td>4. blokk</td></tr>
-    <tr><td style="color: blue">0 MW</td><td style="color: blue">225 MW</td><td style="color: blue">0 MW</td><td style="color: blue">0 MW</td></tr>
-  `, "2026-08-06T19:15:00.000Z");
+    <tr><td style="color: blue">0 MW</td><td style="color: blue">480 MW</td><td style="color: blue">0 MW</td><td style="color: blue">0 MW</td></tr></table>
+    <table><tr><td>A környezeti mérés nem blokkteljesítmény: 65 MW</td></tr></table>
+  `, "2026-08-22T20:40:00.000Z");
 
-  assert.equal(paks.measuredAt, "2026-08-06T19:04:00.000Z");
+  assert.equal(paks.measuredAt, "2026-08-22T20:33:00.000Z");
   assert.deepEqual(paks.blocks, [
     { block: 1, mw: 0 },
-    { block: 2, mw: 225 },
+    { block: 2, mw: 480 },
     { block: 3, mw: 0 },
     { block: 4, mw: 0 },
   ]);
-  assert.equal(paks.totalMW, 225);
+  assert.equal(paks.totalMW, 480);
   assert.equal(paks.source, "Országos Atomenergia Hivatal");
+});
+
+test("OAH Paks parser remains compatible with the former measurement label", () => {
+  const paks = parseHaeaPaksOperationalPage(`
+    <h1>A Paksi Atomerőmű aktuális üzemi adatai</h1>
+    <tr><td colspan="4">Mérés dátuma: 2026. 08. 06 21:04</td></tr>
+    <table><tr><td>A Paksi Atomerőmű elektromos teljesítmény adatai</td></tr>
+    <tr><td>0 MW</td><td>225 MW</td><td>0 MW</td><td>0 MW</td></tr></table>
+  `, "2026-08-06T19:15:00.000Z");
+
+  assert.equal(paks.measuredAt, "2026-08-06T19:04:00.000Z");
+  assert.equal(paks.totalMW, 225);
 });

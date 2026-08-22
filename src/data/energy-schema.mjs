@@ -550,7 +550,11 @@ export function validateNormalizedEnergyData(data) {
     invariant(Math.abs(data.movement15m[key] - value) <= 0.2, `movement15m.${key} does not reconcile`);
   });
 
-  invariant(data.quality?.checksPassed === data.quality?.checksTotal && data.quality.checksTotal >= 6, "Not all data quality checks passed");
+  const expectedFailedChecks = data.source.paksOperationalStatus === "available" ? 0 : 2;
+  invariant(
+    data.quality?.checksPassed === data.quality?.checksTotal - expectedFailedChecks && data.quality.checksTotal >= 6,
+    "Data-quality check counts are inconsistent",
+  );
   invariant(data.quality.enrichment?.lowCarbonShare === "passed", "Low-carbon enrichment validation is missing");
   invariant(data.quality.enrichment?.marketPrice === data.market.status, "Market-price enrichment status is inconsistent");
   invariant(data.quality.enrichment?.annualEmissions === "available", "Annual-emissions enrichment validation is missing");

@@ -149,6 +149,25 @@ test("plant markers state the limits of their live status", () => {
   assert.match(gonyu.sourceUrl, /^https:\/\//);
 });
 
+test("missing OAH block telemetry remains displayable but fails two monitored quality checks", () => {
+  const fallback = structuredClone(data);
+  const paks = fallback.plants.find((plant) => plant.key === "paks");
+  fallback.source.paksOperationalStatus = "unavailable_fetch_failed";
+  delete fallback.source.measurements.paksOperationalAt;
+  fallback.quality.enrichment.paksOperational = "unavailable_fetch_failed";
+  fallback.quality.checksPassed -= 2;
+  delete fallback.quality.paksVsMavirGapMW;
+  paks.mw = paks.mavirCategoryMW;
+  paks.liveCoverage = "category_proxy";
+  paks.liveMetric = "MAVIR · Nukleáris erőművek";
+  paks.operationalDataStatus = "unavailable_fetch_failed";
+  delete paks.blocks;
+  delete paks.operationalMeasuredAt;
+
+  assert.doesNotThrow(() => validateNormalizedEnergyData(fallback));
+  assert.equal(fallback.quality.checksTotal - fallback.quality.checksPassed, 2);
+});
+
 test("runtime validation fails closed when published values are tampered with", () => {
   const badMix = structuredClone(data);
   badMix.mix[0].mw += 100;
