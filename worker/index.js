@@ -1,10 +1,12 @@
 import { refreshEnergySnapshot } from "./energy-service.js";
+import { validateNormalizedEnergyData } from "../src/data/energy-schema.mjs";
 
 const SNAPSHOT_KEY = "latest";
 const SCHEDULED_REFRESH_AFTER_MS = 2 * 60_000;
 const BUNDLED_PROMOTION_AFTER_MS = 2 * 60_000;
-const STALE_AFTER_MS = 10 * 60_000;
-const VISITOR_RECOVERY_AFTER_MS = STALE_AFTER_MS;
+const MEASUREMENT_STALE_AFTER_MS = 30 * 60_000;
+const REFRESH_STALE_AFTER_MS = 10 * 60_000;
+const VISITOR_RECOVERY_AFTER_MS = REFRESH_STALE_AFTER_MS;
 const LOCK_TIMEOUT_MS = 2 * 60_000;
 const GITHUB_PAGES_ORIGIN = "https://tothur.github.io/Energy-Dashboard";
 let activeRefresh = null;
@@ -49,8 +51,25 @@ function hasHistoricalMix(data) {
     && Array.isArray(data?.loadHistory24h)
     && data.loadHistory24h.length > 0
     && ["actualMW", "plannedMW", "deviationMW"].every((key) => Number.isFinite(data.loadHistory24h.at(-1)?.[key]))
-    && ["nuclearMW", "solarMW", "fossilMW", "renewableMW", "otherMW", "plantGenerationMW", "estimatedDistributedSolarMW"]
+    && ["nuclearMW", "solarMW", "fossilMW", "renewableMW", "otherMW", "unallocatedMW", "plantGenerationMW", "estimatedDistributedSolarMW"]
       .every((key) => Number.isFinite(data.history24h.at(-1)?.[key]));
+}
+
+function hasSolarCompletenessContract(data) {
+  return typeof data?.source?.measurements?.distributedSolarAt === "string"
+    && data?.quality?.solarCompletenessStatus === "passed";
+}
+
+function upgradeSolarCompletenessContract(data) {
+  if (data?.source?.measurements?.systemAt !== data?.measuredAt) return null;
+  const upgraded = structuredClone(data);
+  upgraded.source.measurements.distributedSolarAt = upgraded.measuredAt;
+  upgraded.quality.solarCompletenessStatus = "passed";
+  try {
+    return validateNormalizedEnergyData(upgraded);
+  } catch {
+    return null;
+  }
 }
 
 async function ensureSchema(db) {
@@ -142,6 +161,7 @@ async function readValidatedStored(request, env) {
   if (!hasHistoricalMix(stored.data)) {
     const seed = await readSeed(request, env);
     if (!hasHistoricalMix(seed)) throw new Error("Bundled snapshot is missing historical generation mix");
+    if (!hasSolarCompletenessContract(seed)) throw new Error("Bundled snapshot is missing the distributed-solar completeness contract");
     await persistSnapshot(env.DB, seed);
     stored = {
       data: seed,
@@ -149,6 +169,34 @@ async function readValidatedStored(request, env) {
       updatedAt: new Date().toISOString(),
       refreshStartedAt: null,
     };
+  }
+
+  if (!hasSolarCompletenessContract(stored.data)) {
+    const upgraded = upgradeSolarCompletenessContract(stored.data);
+    if (upgraded) {
+      const updatedAt = new Date().toISOString();
+      await persistSnapshot(env.DB, upgraded);
+      stored = {
+        data: upgraded,
+        measuredAt: upgraded.measuredAt,
+        updatedAt,
+        refreshStartedAt: null,
+      };
+      delivery = "stored-upgraded";
+    } else {
+      const seed = await readSeed(request, env);
+      if (!hasHistoricalMix(seed)) throw new Error("Bundled snapshot is missing historical generation mix");
+      if (!hasSolarCompletenessContract(seed)) throw new Error("Bundled snapshot is missing the distributed-solar completeness contract");
+      const updatedAt = new Date().toISOString();
+      await persistSnapshot(env.DB, seed);
+      stored = {
+        data: seed,
+        measuredAt: seed.measuredAt,
+        updatedAt,
+        refreshStartedAt: null,
+      };
+      delivery = "bundled-compatible";
+    }
   }
 
   // A deployment may contain a newer validated snapshot than the retained D1
@@ -178,8 +226,8 @@ async function readValidatedStored(request, env) {
 
 async function energyApi(request, env, ctx) {
   const { stored, delivery } = await readValidatedStored(request, env);
-  const ageMs = Date.now() - Date.parse(stored.data.measuredAt);
-  if (ageMs > VISITOR_RECOVERY_AFTER_MS) {
+  const refreshAgeMs = Date.now() - Date.parse(stored.updatedAt);
+  if (refreshAgeMs > VISITOR_RECOVERY_AFTER_MS) {
     if (ctx?.waitUntil) {
       ctx.waitUntil(refreshStored(env, stored.data).catch(() => null));
       return jsonResponse(stored.data, 200, {
@@ -206,12 +254,15 @@ async function energyApi(request, env, ctx) {
 async function refreshApi(request, env) {
   const { stored } = await readValidatedStored(request, env);
   const ageMs = Date.now() - Date.parse(stored.data.measuredAt);
+  const refreshAgeMs = Date.now() - Date.parse(stored.updatedAt);
   const ageMinutes = Math.max(0, Math.round(ageMs / 60_000));
-  if (ageMs <= SCHEDULED_REFRESH_AFTER_MS) {
+  const refreshAgeMinutes = Math.max(0, Math.round(refreshAgeMs / 60_000));
+  if (refreshAgeMs <= SCHEDULED_REFRESH_AFTER_MS) {
     return jsonResponse({
       status: "fresh",
       measuredAt: stored.data.measuredAt,
       ageMinutes,
+      refreshAgeMinutes,
       checks: `${stored.data.quality?.checksPassed}/${stored.data.quality?.checksTotal}`,
     });
   }
@@ -223,6 +274,7 @@ async function refreshApi(request, env) {
         status: "refreshed",
         measuredAt: fresh.measuredAt,
         ageMinutes: Math.max(0, Math.round((Date.now() - Date.parse(fresh.measuredAt)) / 60_000)),
+        refreshAgeMinutes: 0,
         checks: `${fresh.quality?.checksPassed}/${fresh.quality?.checksTotal}`,
       });
     }
@@ -232,6 +284,7 @@ async function refreshApi(request, env) {
       status: "busy",
       measuredAt: latest?.data?.measuredAt ?? stored.data.measuredAt,
       ageMinutes: Math.max(0, Math.round((Date.now() - Date.parse(latest?.data?.measuredAt ?? stored.data.measuredAt)) / 60_000)),
+      refreshAgeMinutes: Math.max(0, Math.round((Date.now() - Date.parse(latest?.updatedAt ?? stored.updatedAt)) / 60_000)),
       checks: `${latest?.data?.quality?.checksPassed ?? stored.data.quality?.checksPassed}/${latest?.data?.quality?.checksTotal ?? stored.data.quality?.checksTotal}`,
     }, 202, { "retry-after": "15" });
   } catch (error) {
@@ -239,6 +292,7 @@ async function refreshApi(request, env) {
       status: "error",
       measuredAt: stored.data.measuredAt,
       ageMinutes,
+      refreshAgeMinutes,
       error: error.message.slice(0, 180),
     }, 503);
   }
@@ -249,11 +303,13 @@ async function healthApi(env) {
   const stored = await readStored(env.DB);
   if (!stored) return jsonResponse({ status: "initializing" }, 503);
   const ageMinutes = Math.max(0, Math.round((Date.now() - Date.parse(stored.data.measuredAt)) / 60_000));
+  const refreshAgeMinutes = Math.max(0, Math.round((Date.now() - Date.parse(stored.updatedAt)) / 60_000));
   return jsonResponse({
-    status: ageMinutes > STALE_AFTER_MS / 60_000 ? "stale" : "ok",
+    status: ageMinutes > MEASUREMENT_STALE_AFTER_MS / 60_000 || refreshAgeMinutes > REFRESH_STALE_AFTER_MS / 60_000 ? "stale" : "ok",
     measuredAt: stored.data.measuredAt,
     updatedAt: stored.updatedAt,
     ageMinutes,
+    refreshAgeMinutes,
     refreshing: Boolean(stored.refreshStartedAt),
     checks: `${stored.data.quality?.checksPassed}/${stored.data.quality?.checksTotal}`,
   });
@@ -306,7 +362,7 @@ export default {
     await ensureSchema(env.DB);
     const stored = await readStored(env.DB);
     if (!stored || !hasHistoricalMix(stored.data)) return;
-    if (Date.now() - Date.parse(stored.data.measuredAt) <= SCHEDULED_REFRESH_AFTER_MS) return;
+    if (Date.now() - Date.parse(stored.updatedAt) <= SCHEDULED_REFRESH_AFTER_MS) return;
     ctx.waitUntil(refreshStored(env, stored.data).catch((error) => {
       console.error("Scheduled energy refresh failed", error);
     }));

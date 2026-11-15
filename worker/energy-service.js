@@ -2,6 +2,9 @@ import { applyEnergyEnrichment, fetchEntsoePrices, fetchHaeaPaksOperational } fr
 import { normalizeMavirTables, validateNormalizedEnergyData } from "../src/data/energy-schema.mjs";
 import { parseFirstWorksheet } from "./xlsx-table.js";
 
+// MAVIR RTDW starts throttling when exports are requested less than ~10 s apart.
+const MAVIR_REQUEST_SPACING_MS = 10_000;
+const MAVIR_THROTTLE_BACKOFF_MS = 15_000;
 const MAVIR_EXPORT_BASE = "https://rtdwweb.mavir.hu/rtdwweb/webuser/chart";
 
 function delay(milliseconds) {
@@ -27,11 +30,13 @@ async function fetchChart(chartId, startTime, endTime) {
       });
       if (!response.ok) {
         const error = new Error(`MAVIR chart ${chartId}: HTTP ${response.status}`);
-        if (response.status === 429) {
+        // MAVIR RTDW throttles bursts with 429 or with an HTML "404 HIBA" page
+        // for an otherwise valid export URL; both are retried with backoff.
+        if (response.status === 429 || response.status === 404) {
           const retryAfterSeconds = Number(response.headers.get("retry-after"));
           error.retryAfterMs = Number.isFinite(retryAfterSeconds) && retryAfterSeconds > 0
             ? retryAfterSeconds * 1_000
-            : attempt * 10_000;
+            : MAVIR_THROTTLE_BACKOFF_MS * attempt;
         }
         throw error;
       }
@@ -56,11 +61,11 @@ export async function refreshEnergySnapshot(env, previousSnapshot) {
   const endTime = Date.now();
   const startTime = endTime - 26 * 60 * 60_000;
   const systemRows = await fetchChart(20001, startTime, endTime);
-  await delay(2_000);
+  await delay(MAVIR_REQUEST_SPACING_MS);
   const flowRows = await fetchChart(5229, startTime, endTime);
-  await delay(2_000);
+  await delay(MAVIR_REQUEST_SPACING_MS);
   const frequencyRows = await fetchChart(4444, startTime, endTime);
-  await delay(2_000);
+  await delay(MAVIR_REQUEST_SPACING_MS);
   const loadRows = await fetchChart(7678, startTime, endTime);
   const market = await fetchEntsoePrices(env.ENTSOE_SECURITY_TOKEN, generatedAt).catch(() => ({
     status: "unavailable_fetch_failed",

@@ -9,13 +9,13 @@ The frontend only renders `public/data/energy-latest.json` after `validateNormal
 - any required upstream feed reports unhealthy;
 - the measurement time is missing or implausible;
 - generation categories do not reconcile with total domestic generation;
-- border flows do not reconcile with reported net imports;
-- generation plus net imports differs excessively from consumption;
+- the physical border-flow sum differs implausibly from the separately published net-import series;
+- the published load/generation/import difference is implausible;
 - the 24-hour series or seven-country border-flow set is incomplete.
 
 Missing metrics remain unavailable. The dashboard does not estimate real-time carbon intensity from an insufficiently detailed generation mix. It publishes the directly calculable low-carbon generation share and the latest reported EEA national inventory for public electricity and heat production as two explicitly different metrics.
 
-The scheduled updater downloads three 15-minute XLSX feeds directly from MAVIR's public RTDW service: chart 20001 for load and production mix, chart 5229 for physical and scheduled cross-border flows, and chart 4444 for grid frequency. The snapshot is published only when source freshness, timestamp alignment, system balance, production mix, cross-border reconciliation, schedule deviation, 15-minute movement, and history completeness all pass validation. The measured cross-border sum gap remains visible in the methodology drawer instead of being silently adjusted.
+The scheduled updater downloads four 15-minute XLSX feeds directly from MAVIR's public RTDW service: chart 20001 for load and production mix, chart 5229 for physical and scheduled cross-border flows, chart 4444 for grid frequency, and chart 7678 for planned versus actual gross load. A system row is accepted only when MAVIR's documented internal identities reconcile: plant categories sum to plant generation, SCTE + HMKE bridge plant and extended generation, and the same distributed-PV estimate bridges operational and extended load. Physical border flows and the separately published net-import series are checked for plausibility but are not treated as a false exact identity. Their measured gap remains visible in the methodology drawer instead of being silently adjusted.
 
 Hungarian day-ahead prices come only from the official ENTSO-E Transparency Platform A44 feed. Set an `ENTSOE_SECURITY_TOKEN` GitHub Actions secret to enable the price card; when the token is missing or the official feed fails, the value stays unavailable instead of falling back to an intermediary.
 
@@ -45,7 +45,9 @@ MAVIR exports are requested sequentially, with explicit spacing and `429 Too Man
 
 ## OpenAI Sites publication
 
-The Sites build exposes `/api/energy`, backed by a D1 snapshot and direct request-driven MAVIR refreshes. A snapshot older than two minutes is refreshed in the background with a database lock so concurrent visitors do not create a burst of source requests. The first request initializes from the bundled validated snapshot and attempts an immediate direct refresh. `/api/health` exposes freshness and validation status without returning the full dataset. GitHub Pages remains a static fallback and continues to use its bundled JSON when the Sites API is unavailable.
+The Sites build exposes `/api/energy`, backed by a D1 snapshot and direct MAVIR refreshes. Cloudflare is the primary five-minute scheduler; visitor traffic only starts a locked recovery refresh when the last successful updater run is more than ten minutes old. Source measurement age and updater age remain separate because MAVIR's complete HMKE/SCTE interval can naturally lag the fetch time. `/api/health` requires a successful refresh within ten minutes and a coherent measurement within thirty minutes without returning the full dataset. Coherent delayed data may remain displayable for up to ninety minutes with the stale warning visible; older snapshots fail closed. GitHub Pages remains a static fallback and continues to use its bundled JSON when the Sites API is unavailable.
+
+Daytime system rows with substantial industrial solar but missing HMKE or SCTE estimates are treated as provisional and cannot become the headline snapshot. The updater publishes the newest fully reconciled interval and reports the number of skipped provisional rows instead of displaying the missing distributed-solar components as zero.
 
 ## Key files
 

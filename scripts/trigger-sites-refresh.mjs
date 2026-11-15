@@ -1,6 +1,7 @@
 const DEFAULT_SITE_URL = "https://hungary-energy-dashboard.andrastoth.chatgpt.site";
 const siteUrl = (process.env.SITES_REFRESH_URL || DEFAULT_SITE_URL).replace(/\/$/, "");
-const maximumHealthAgeMinutes = Number(process.env.MAXIMUM_HEALTH_AGE_MINUTES || 10);
+const maximumHealthAgeMinutes = Number(process.env.MAXIMUM_HEALTH_AGE_MINUTES || 30);
+const maximumRefreshAgeMinutes = Number(process.env.MAXIMUM_REFRESH_AGE_MINUTES || 10);
 const pollAttempts = Number(process.env.REFRESH_POLL_ATTEMPTS || 8);
 const pollIntervalMs = Number(process.env.REFRESH_POLL_INTERVAL_MS || 15_000);
 const refreshToken = process.env.SITES_REFRESH_TOKEN;
@@ -50,6 +51,8 @@ for (let attempt = 1; attempt <= pollAttempts; attempt += 1) {
     && health.body.refreshing === false
     && Number.isFinite(health.body.ageMinutes)
     && health.body.ageMinutes <= maximumHealthAgeMinutes
+    && Number.isFinite(health.body.refreshAgeMinutes)
+    && health.body.refreshAgeMinutes <= maximumRefreshAgeMinutes
     && checksPass(health.body.checks);
 
   if (ready) {

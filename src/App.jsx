@@ -14,6 +14,7 @@ import {
   Lightning,
   MapPin,
   Minus,
+  Question,
   ShieldCheck,
   Sun,
   TrendDown,
@@ -34,6 +35,7 @@ import {
   YAxis,
 } from "recharts";
 import { validateNormalizedEnergyData } from "./data/energy-schema.mjs";
+import { estimatePaksTurbines } from "./domain/paks-turbine-estimate.mjs";
 
 const MIX_META = {
   Atom: { className: "nuclear", icon: Atom, short: "Atom" },
@@ -41,6 +43,7 @@ const MIX_META = {
   Fosszilis: { className: "fossil", icon: Flame, short: "Fosszilis" },
   "Egyéb megújuló": { className: "renewable", icon: Wind, short: "Megújuló" },
   Egyéb: { className: "other", icon: Factory, short: "Egyéb" },
+  "Nem részletezett": { className: "unallocated", icon: Question, short: "Nem részl." },
 };
 
 const MIX_HISTORY_KEY = {
@@ -49,6 +52,7 @@ const MIX_HISTORY_KEY = {
   Fosszilis: "fossilMW",
   "Egyéb megújuló": "renewableMW",
   Egyéb: "otherMW",
+  "Nem részletezett": "unallocatedMW",
 };
 
 const FLOW_POSITIONS = {
@@ -173,16 +177,6 @@ function ErrorScreen({ error }) {
   );
 }
 
-function RangeControl({ range, onChange }) {
-  return (
-    <div className="range-control" aria-label="Időtáv">
-      <button className={range === "now" ? "active" : ""} onClick={() => onChange("now")}>MOST</button>
-      <button className={range === "24h" ? "active" : ""} onClick={() => onChange("24h")}>24 ÓRA</button>
-      <button disabled title="A hét napos, közvetlen forrás még nincs bekötve">7 NAP</button>
-    </div>
-  );
-}
-
 function MetricDelta({ value, unit = "MW", elapsedMinutes, positiveTone = "good", negativeTone = "warning" }) {
   const direction = value > 0 ? "up" : value < 0 ? "down" : "flat";
   const tone = direction === "up" ? positiveTone : direction === "down" ? negativeTone : "neutral";
@@ -196,7 +190,7 @@ function MetricDelta({ value, unit = "MW", elapsedMinutes, positiveTone = "good"
   );
 }
 
-function Header({ data, range, onRangeChange, onOpenSources }) {
+function Header({ data, onOpenSources }) {
   const [, forceMinuteTick] = useState(0);
   useEffect(() => {
     const timer = window.setInterval(() => forceMinuteTick((value) => value + 1), 60_000);
@@ -226,8 +220,6 @@ function Header({ data, range, onRangeChange, onOpenSources }) {
           {stale ? `ELAVULT · ${age} PERCE` : `MÉRT ADAT · ${age} PERCE`}
         </button>
       </div>
-
-      <RangeControl range={range} onChange={onRangeChange} />
     </header>
   );
 }
@@ -618,12 +610,117 @@ function EnergyMap({ data }) {
   );
 }
 
+function PaksStatusCard({ data }) {
+  const paks = data.plants.find((plant) => plant.key === "paks");
+  const blocks = paks?.blocks ?? [];
+  const firstProducingBlock = blocks.find((block) => block.mw > 5)?.block ?? blocks[0]?.block ?? 1;
+  const [selectedBlockNumber, setSelectedBlockNumber] = useState(firstProducingBlock);
+
+  useEffect(() => {
+    if (!blocks.some((block) => block.block === selectedBlockNumber)) {
+      setSelectedBlockNumber(firstProducingBlock);
+    }
+  }, [blocks, firstProducingBlock, selectedBlockNumber]);
+
+  if (!paks) return null;
+
+  const selectedBlock = blocks.find((block) => block.block === selectedBlockNumber) ?? blocks[0];
+  const activeBlocks = blocks.filter((block) => block.mw > 5).length;
+  const blockCapacityMW = Number.isFinite(paks.capacityMW) ? paks.capacityMW / 4 : null;
+  const blockUtilizationPct = selectedBlock && Number.isFinite(blockCapacityMW)
+    ? (selectedBlock.mw / blockCapacityMW) * 100
+    : null;
+  const turbineEstimate = estimatePaksTurbines(selectedBlock?.mw, blockCapacityMW);
+  const available = paks.liveCoverage === "block_level" && blocks.length === 4;
+
+  return (
+    <section className={`panel paks-status-card ${available ? "available" : "unavailable"}`} aria-labelledby="paks-status-title">
+      <div className="paks-card-heading">
+        <div>
+          <span className="eyebrow">PAKSI ATOMERŐMŰ · ÉLŐ BLOKKSTÁTUSZ</span>
+          <h2 id="paks-status-title">Mi történik most Pakson?</h2>
+        </div>
+        <span className={`paks-live-badge ${available ? (activeBlocks === 4 ? "normal" : "attention") : "unknown"}`}>
+          <span className="status-dot" />
+          {available ? `${activeBlocks}/4 BLOKK TERMEL` : "BLOKKADAT NEM ELÉRHETŐ"}
+        </span>
+      </div>
+
+      <div className="paks-card-body">
+        <div className="paks-overview">
+          <div className="paks-reactor-mark"><Atom size={36} weight="duotone" /></div>
+          <span>Aktuális összteljesítmény</span>
+          <div className="paks-total"><strong>{formatMW(paks.mw)}</strong><small>MW</small></div>
+          <div className="paks-capacity-line">
+            <span style={{ width: `${Math.max(0, Math.min(100, paks.utilizationPct ?? 0))}%` }} />
+          </div>
+          <small>{Number.isFinite(paks.utilizationPct) ? `${decimalFormatter.format(paks.utilizationPct)}%` : "—"} a {formatMW(paks.capacityMW)} MW névleges kapacitásból</small>
+        </div>
+
+        {available ? (
+          <div className="paks-block-board" role="group" aria-label="Válassz paksi blokkot a részletekhez">
+            {blocks.map((block) => {
+              const producing = block.mw > 5;
+              const selected = block.block === selectedBlock?.block;
+              return (
+                <button
+                  key={block.block}
+                  className={`paks-block-tile ${producing ? "producing" : "idle"} ${selected ? "selected" : ""}`}
+                  onClick={() => setSelectedBlockNumber(block.block)}
+                  aria-pressed={selected}
+                  aria-label={`${block.block}. blokk: ${producing ? "termel" : "nem termel"}, ${formatMW(block.mw)} megawatt`}
+                >
+                  <span className="paks-block-topline"><b>{block.block}. BLOKK</b><i>{producing ? "TERMEL" : "NEM TERMEL"}</i></span>
+                  <Atom size={27} weight={producing ? "fill" : "regular"} />
+                  <strong>{formatMW(block.mw)} <small>MW</small></strong>
+                  <span className="paks-block-meter"><i style={{ width: `${Math.max(0, Math.min(100, blockCapacityMW ? (block.mw / blockCapacityMW) * 100 : 0))}%` }} /></span>
+                </button>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="paks-block-unavailable"><Info size={24} /><span><b>Az OAH blokkszintű feedje jelenleg nem érhető el.</b><small>A kártya nem helyettesíti találgatással a hiányzó állapotokat.</small></span></div>
+        )}
+
+        <div className="paks-block-detail" aria-live="polite">
+          {selectedBlock ? (
+            <>
+              <div className="paks-detail-title">
+                <span>{selectedBlock.block}. BLOKK</span>
+                <b className={selectedBlock.mw > 5 ? "producing" : "idle"}>{selectedBlock.mw > 5 ? "ÜZEMBEN" : "NEM TERMEL"}</b>
+              </div>
+              <div className="paks-detail-output"><strong>{formatMW(selectedBlock.mw)}</strong><span>MW</span></div>
+              <div className="paks-detail-grid">
+                <div><span>Blokkszintű terhelés</span><b>{Number.isFinite(blockUtilizationPct) ? `${decimalFormatter.format(blockUtilizationPct)}%` : "—"}</b></div>
+                <div className="paks-turbine-estimate">
+                  <span>Becsült turbinastátusz</span>
+                  <b className={turbineEstimate.confidence}>{turbineEstimate.label} <small>VALÓSZÍNŰ</small></b>
+                  <em>{turbineEstimate.confidenceLabel}</em>
+                </div>
+              </div>
+              <p><Info size={14} /> Teljesítményből becsülve, nem közvetlen turbinamérés. Részterhelésnél mindkét turbina is működhet, ezért a becslés bizonytalanabb.</p>
+            </>
+          ) : null}
+        </div>
+      </div>
+
+      <div className="paks-card-footer">
+        <span><Clock size={15} /> OAH mérés: <b>{paks.operationalMeasuredAt ? formatLocalTime(paks.operationalMeasuredAt, true) : "nem elérhető"}</b></span>
+        <span><Database size={15} /> MAVIR nukleáris kategória: <b>{formatMW(paks.mavirCategoryMW)} MW</b></span>
+        {Number.isFinite(data.quality.paksVsMavirGapMW) ? <span>OAH − MAVIR: <b>{formatSigned(data.quality.paksVsMavirGapMW, 1)} MW</b></span> : null}
+        <a href={paks.sourceUrl} target="_blank" rel="noreferrer">OAH adatforrás <ArrowSquareOut size={13} /></a>
+      </div>
+    </section>
+  );
+}
+
 const HISTORY_MIX_SERIES = [
   { key: "solarMW", label: "Nap", color: "#ffd04d", className: "solar" },
   { key: "nuclearMW", label: "Atom", color: "#6ca8ff", className: "nuclear" },
   { key: "fossilMW", label: "Fosszilis", color: "#c67260", className: "fossil" },
   { key: "renewableMW", label: "Egyéb megújuló", color: "#62c878", className: "renewable" },
   { key: "otherMW", label: "Egyéb", color: "#718594", className: "other" },
+  { key: "unallocatedMW", label: "Nem részletezett", color: "#a59bc4", className: "unallocated" },
   { key: "positiveImportMW", label: "Behozatal", color: "#f39b45", className: "import" },
 ];
 
@@ -867,6 +964,7 @@ function SourcesDrawer({ data, onClose }) {
 
         <div className="quality-box">
           <div><span>Forrásmix összege</span><b>{data.quality.mixGapMW.toFixed(1)} MW eltérés</b></div>
+          {Number.isFinite(data.quality.unallocatedPlantMW) ? <div><span>MAVIR kategóriákra nem bontott erőművi termelés</span><b>{formatMW(data.quality.unallocatedPlantMW)} MW ({data.quality.unallocatedPlantSharePct.toFixed(1)}%)</b></div> : null}
           <div><span>Erőművi + becsült PV egyezés</span><b>{data.quality.generationDefinitionGapMW.toFixed(1)} MW eltérés</b></div>
           {Number.isFinite(data.quality.paksVsMavirGapMW) ? <div><span>Paks OAH − MAVIR</span><b>{formatSigned(data.quality.paksVsMavirGapMW, 1)} MW eltérés</b></div> : null}
           <div><span>Határáramlások</span><b>{data.quality.flowGapMW.toFixed(1)} MW eltérés</b></div>
@@ -892,7 +990,6 @@ function SourcesDrawer({ data, onClose }) {
 
 export function App() {
   const { status, data, error } = useEnergyData();
-  const [range, setRange] = useState("now");
   const [selectedMix, setSelectedMix] = useState("Atom");
   const [sourcesOpen, setSourcesOpen] = useState(false);
 
@@ -901,13 +998,14 @@ export function App() {
 
   return (
     <div className="dashboard-shell">
-      <Header data={data} range={range} onRangeChange={setRange} onOpenSources={() => setSourcesOpen(true)} />
+      <Header data={data} onOpenSources={() => setSourcesOpen(true)} />
       <main>
         <div className="hero-grid">
           <GenerationMix data={data} selected={selectedMix} onSelect={setSelectedMix} />
           <BalancePanel data={data} />
         </div>
         <EnergyMap data={data} />
+        <PaksStatusCard data={data} />
         <div className="analytics-grid">
           <TrendCard data={data} />
           <LoadForecastCard data={data} />

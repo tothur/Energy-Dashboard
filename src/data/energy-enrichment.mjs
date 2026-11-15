@@ -1,6 +1,7 @@
 const ENTSOE_API_URL = "https://web-api.tp.entsoe.eu/api";
 const HU_BIDDING_ZONE = "10YHU-MAVIR----U";
 const EEA_SQL_URL = "https://discodata.eea.europa.eu/sql";
+const OAH_MIN_BLOCK_MW = -50;
 const HAEA_PAKS_URL = "https://www.haea.hu/web/v3/OAHPortal.nsf/web?OpenAgent&article=paksnpp";
 
 function invariant(condition, message) {
@@ -53,13 +54,17 @@ function budapestLocalToIso(year, month, day, hour, minute) {
 
 export function parseHaeaPaksOperationalPage(html, fetchedAt = new Date().toISOString()) {
   invariant(typeof html === "string" && /Paksi Atomerőmű aktuális üzemi adatai/.test(html), "Invalid OAH Paks operational page");
-  const timestamp = html.match(/Mérés dátuma:\s*(\d{4})\.\s*(\d{2})\.\s*(\d{2})\s+(\d{2}):(\d{2})/);
+  const timestamp = html.match(/(?:Mérés dátuma|Utolsó frissítés):\s*(\d{4})\.\s*(\d{2})\.\s*(\d{2})\s+(\d{2}):(\d{2})/i);
   invariant(timestamp, "OAH Paks measurement timestamp is missing");
   const measuredAt = budapestLocalToIso(...timestamp.slice(1).map(Number));
-  const blockValues = [...html.matchAll(/<td[^>]*>\s*(\d+(?:[.,]\d+)?)\s*MW\s*<\/td>/gi)]
+  const electricalOutputTable = html.match(/A Paksi Atomerőmű elektromos teljesítmény adatai([\s\S]*?)<\/table>/i)?.[1];
+  invariant(electricalOutputTable, "OAH Paks electrical-output table is missing");
+  const blockValues = [...electricalOutputTable.matchAll(/<td[^>]*>\s*([-−]?\d+(?:[.,]\d+)?)\s*MW\s*<\/td>/gi)]
     .slice(0, 4)
-    .map((match) => Number(match[1].replace(",", ".")));
-  invariant(blockValues.length === 4 && blockValues.every((value) => Number.isFinite(value) && value >= 0 && value <= 600), "OAH Paks block data is incomplete or implausible");
+    // OAH reports an offline block as "-0 MW" (or a small negative net value
+    // while it draws auxiliary power); keep the reported sign, normalise -0.
+    .map((match) => Number(match[1].replace("−", "-").replace(",", ".")) + 0);
+  invariant(blockValues.length === 4 && blockValues.every((value) => Number.isFinite(value) && value >= OAH_MIN_BLOCK_MW && value <= 600), "OAH Paks block data is incomplete or implausible");
   const fetchedMs = Date.parse(fetchedAt);
   const measuredMs = Date.parse(measuredAt);
   invariant(measuredMs <= fetchedMs + 10 * 60_000, "OAH Paks measurement is implausibly in the future");
@@ -181,9 +186,14 @@ where country_code='HU' and variable_uid='${EEA_POWER_HEAT_VARIABLE}'
 order by inventory_year desc, submission_version desc`;
 
 export async function fetchEeaAnnualEmissions(generatedAt = new Date().toISOString()) {
-  const url = new URL(EEA_SQL_URL);
-  url.search = new URLSearchParams({ query: EEA_QUERY, p: "1", nrOfHits: "10" });
-  const response = await fetch(url, { signal: AbortSignal.timeout(30_000) });
+  // Discodata's Azure gateway rejects SQL in the query string (HTTP 403), so the
+  // query is sent as a form-encoded POST body instead.
+  const response = await fetch(EEA_SQL_URL, {
+    method: "POST",
+    headers: { "content-type": "application/x-www-form-urlencoded", accept: "application/json" },
+    body: new URLSearchParams({ query: EEA_QUERY, p: "1", nrOfHits: "10" }),
+    signal: AbortSignal.timeout(30_000),
+  });
   if (!response.ok) throw new Error(`EEA Discodata HTTP ${response.status}`);
   const payload = await response.json();
   invariant(!payload.errors?.length, `EEA Discodata query failed: ${payload.errors?.[0]?.error ?? "unknown error"}`);
@@ -232,6 +242,7 @@ export function applyEnergyEnrichment(data, { market, annualEmissions, paksOpera
   enriched.source.annualEmissions = annualEmissions?.source ?? "EEA GHG Inventory";
   enriched.system.dayAheadPriceEurMWh = market.status === "available" ? market.current?.eurMWh ?? null : null;
   const paks = enriched.plants.find((plant) => plant.key === "paks");
+  enriched.quality.checksTotal += 2;
   if (paks) {
     paks.mavirCategoryMW = paks.mw;
     paks.operationalDataStatus = paksOperational?.status ?? "unavailable_fetch_failed";
@@ -251,7 +262,6 @@ export function applyEnergyEnrichment(data, { market, annualEmissions, paksOpera
       enriched.source.measurements.paksOperationalAt = paksOperational.measuredAt;
       enriched.quality.paksVsMavirGapMW = rounded(paks.mw - paks.mavirCategoryMW, 1);
       enriched.quality.checksPassed += 2;
-      enriched.quality.checksTotal += 2;
     }
   }
   enriched.source.paksOperational = paksOperational?.source ?? "Országos Atomenergia Hivatal";

@@ -5,7 +5,8 @@ import triggerWorker, { refreshAndVerify } from "../cloudflare/refresh-trigger/i
 const env = {
   SITE_URL: "https://energy.example.test",
   SITES_REFRESH_TOKEN: "test-refresh-token",
-  MAXIMUM_HEALTH_AGE_MINUTES: "10",
+  MAXIMUM_HEALTH_AGE_MINUTES: "30",
+  MAXIMUM_REFRESH_AGE_MINUTES: "10",
   REFRESH_POLL_ATTEMPTS: "2",
   REFRESH_POLL_INTERVAL_MS: "1",
 };
@@ -21,13 +22,13 @@ test("Cloudflare cron authenticates the refresh and verifies health", async () =
     if (String(url).endsWith("/api/refresh")) {
       return json({ status: "refreshed", measuredAt: "2026-08-10T12:00:00.000Z", ageMinutes: 0, checks: "15/15" });
     }
-    return json({ status: "ok", measuredAt: "2026-08-10T12:00:00.000Z", ageMinutes: 0, refreshing: false, checks: "15/15" });
+    return json({ status: "ok", measuredAt: "2026-08-10T12:00:00.000Z", ageMinutes: 16, refreshAgeMinutes: 0, refreshing: false, checks: "16/16" });
   };
 
   const result = await refreshAndVerify(env, { fetcher, wait: async () => {} });
 
   assert.equal(result.trigger.status, "refreshed");
-  assert.equal(result.health.checks, "15/15");
+  assert.equal(result.health.checks, "16/16");
   assert.equal(requests[0].options.method, "POST");
   assert.equal(requests[0].options.headers.authorization, "Bearer test-refresh-token");
   assert.match(requests[1].url, /\/api\/health\?v=/);
@@ -38,7 +39,7 @@ test("Cloudflare cron rejects an unhealthy snapshot after bounded polling", asyn
   const fetcher = async (url) => {
     if (String(url).endsWith("/api/refresh")) return json({ status: "busy" }, 202);
     healthReads += 1;
-    return json({ status: "stale", ageMinutes: 45, refreshing: false, checks: "15/15" });
+    return json({ status: "stale", ageMinutes: 45, refreshAgeMinutes: 45, refreshing: false, checks: "16/16" });
   };
 
   await assert.rejects(
