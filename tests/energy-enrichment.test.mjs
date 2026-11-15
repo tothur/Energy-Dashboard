@@ -71,6 +71,19 @@ test("OAH Paks page accepts the current update label and preserves all four bloc
   assert.equal(paks.source, "Országos Atomenergia Hivatal");
 });
 
+test("OAH Paks parser accepts the signed zero OAH publishes for an offline block", () => {
+  const paks = parseHaeaPaksOperationalPage(`
+    <h1>A Paksi Atomerőmű aktuális üzemi adatai</h1>
+    <tr><td colspan="4">Utolsó frissítés: 2026. 11. 15 17:33 </td></tr>
+    <table><tr><td>A Paksi Atomerőmű elektromos teljesítmény adatai</td></tr>
+    <tr><td>515 MW</td><td>-0 MW</td><td>514 MW</td><td>514 MW</td></tr></table>
+  `, "2026-11-15T16:40:00.000Z");
+
+  assert.deepEqual(paks.blocks.map((block) => block.mw), [515, 0, 514, 514]);
+  assert.ok(!Object.is(paks.blocks[1].mw, -0));
+  assert.equal(paks.totalMW, 1543);
+});
+
 test("OAH Paks parser remains compatible with the former measurement label", () => {
   const paks = parseHaeaPaksOperationalPage(`
     <h1>A Paksi Atomerőmű aktuális üzemi adatai</h1>

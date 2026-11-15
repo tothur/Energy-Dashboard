@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
-import { systemRowIsSettled, systemSolarComponentsAreCoherent, validateNormalizedEnergyData } from "../src/data/energy-schema.mjs";
+import { HISTORY_MIX_KEYS, systemRowIsSettled, systemSolarComponentsAreCoherent, unallocatedPlantMW, validateNormalizedEnergyData } from "../src/data/energy-schema.mjs";
 
 const data = JSON.parse(
   await readFile(new URL("../public/data/energy-latest.json", import.meta.url), "utf8"),
@@ -41,6 +41,29 @@ test("MAVIR rows are settled by their documented internal identities, not by a f
   assert.ok(Math.abs(row.B - row.D - row.W) > 200);
   assert.equal(systemRowIsSettled({ ...row, D: row.D + 100 }), false);
   assert.equal(systemRowIsSettled({ ...row, F: row.F - 100 }), false);
+});
+
+test("plant output MAVIR does not break down by category is bounded and kept separate", () => {
+  // 2026-11-15 17:34 row: G exceeds the published plant categories by ~160 MW.
+  const row = {
+    B: 6145, D: 3245, F: 6145, G: 3245,
+    H: 1544, I: 300, J: 700, K: 0, L: 0,
+    M: 20, N: 150, O: 15, P: 5, Q: 0,
+    R: 20, S: 147, T: 44, U: 0, V: 0,
+    W: 2938,
+  };
+  assert.ok(Math.abs(unallocatedPlantMW(row) - 300) < 1e-9);
+  assert.equal(systemRowIsSettled(row), true);
+  // Larger than 15% of plant output, or meaningfully negative, is rejected.
+  assert.equal(systemRowIsSettled({ ...row, H: row.H - 400 }), false);
+  assert.equal(systemRowIsSettled({ ...row, H: row.H + 320 }), false);
+});
+
+test("the published mix exposes unallocated MAVIR plant output explicitly", () => {
+  const unallocated = data.mix.find((item) => item.key === "Nem részletezett");
+  assert.ok(unallocated && unallocated.mw >= 0);
+  assert.ok(Number.isFinite(data.quality.unallocatedPlantMW));
+  assert.ok(Math.abs(Math.max(0, data.quality.unallocatedPlantMW) - unallocated.mw) <= 1);
 });
 
 test("generation shares and cross-border flows are internally consistent", () => {
@@ -110,7 +133,8 @@ test("15-minute movement reconciles to the retained MAVIR history", () => {
 });
 
 test("every historical point retains a reconciled MAVIR generation mix", () => {
-  const mixKeys = ["nuclearMW", "solarMW", "fossilMW", "renewableMW", "otherMW"];
+  const mixKeys = HISTORY_MIX_KEYS;
+  assert.ok(mixKeys.includes("unallocatedMW"));
   data.history24h.forEach((point) => {
     mixKeys.forEach((key) => assert.ok(Number.isFinite(point[key]), `${key} is missing at ${point.time}`));
     const total = mixKeys.reduce((sum, key) => sum + point[key], 0);

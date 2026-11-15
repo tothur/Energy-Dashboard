@@ -51,7 +51,7 @@ function hasHistoricalMix(data) {
     && Array.isArray(data?.loadHistory24h)
     && data.loadHistory24h.length > 0
     && ["actualMW", "plannedMW", "deviationMW"].every((key) => Number.isFinite(data.loadHistory24h.at(-1)?.[key]))
-    && ["nuclearMW", "solarMW", "fossilMW", "renewableMW", "otherMW", "plantGenerationMW", "estimatedDistributedSolarMW"]
+    && ["nuclearMW", "solarMW", "fossilMW", "renewableMW", "otherMW", "unallocatedMW", "plantGenerationMW", "estimatedDistributedSolarMW"]
       .every((key) => Number.isFinite(data.history24h.at(-1)?.[key]));
 }
 

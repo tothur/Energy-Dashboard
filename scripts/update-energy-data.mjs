@@ -8,6 +8,9 @@ import { parseFirstWorksheet } from "./lib/xlsx-table.mjs";
 
 const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const outputPath = path.join(projectRoot, "public", "data", "energy-latest.json");
+// MAVIR RTDW starts throttling when exports are requested less than ~10 s apart.
+const MAVIR_REQUEST_SPACING_MS = 10_000;
+const MAVIR_THROTTLE_BACKOFF_MS = 15_000;
 const baseUrl = "https://rtdwweb.mavir.hu/rtdwweb/webuser/chart";
 const endTime = Date.now();
 const startTime = endTime - 26 * 60 * 60_000;
@@ -40,11 +43,13 @@ async function fetchChart(chartId) {
       });
       if (!response.ok) {
         const error = new Error(`HTTP ${response.status}`);
-        if (response.status === 429) {
+        // MAVIR RTDW throttles bursts with 429 or with an HTML "404 HIBA" page
+        // for an otherwise valid export URL; both are retried with backoff.
+        if (response.status === 429 || response.status === 404) {
           const retryAfterSeconds = Number(response.headers.get("retry-after"));
           error.retryAfterMs = Number.isFinite(retryAfterSeconds) && retryAfterSeconds > 0
             ? retryAfterSeconds * 1_000
-            : attempt * 15_000;
+            : MAVIR_THROTTLE_BACKOFF_MS * attempt;
         }
         throw error;
       }
@@ -61,11 +66,11 @@ async function fetchChart(chartId) {
 
 const previousSnapshot = await readPreviousSnapshot();
 const systemRows = await fetchChart(20001);
-await delay(2_000);
+await delay(MAVIR_REQUEST_SPACING_MS);
 const flowRows = await fetchChart(5229);
-await delay(2_000);
+await delay(MAVIR_REQUEST_SPACING_MS);
 const frequencyRows = await fetchChart(4444);
-await delay(2_000);
+await delay(MAVIR_REQUEST_SPACING_MS);
 const loadRows = await fetchChart(7678);
 const annualEmissions = await fetchEeaAnnualEmissions(generatedAt).catch((error) => {
   if (previousSnapshot?.annualEmissions?.status === "available") {

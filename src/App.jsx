@@ -14,6 +14,7 @@ import {
   Lightning,
   MapPin,
   Minus,
+  Question,
   ShieldCheck,
   Sun,
   TrendDown,
@@ -42,6 +43,7 @@ const MIX_META = {
   Fosszilis: { className: "fossil", icon: Flame, short: "Fosszilis" },
   "Egyéb megújuló": { className: "renewable", icon: Wind, short: "Megújuló" },
   Egyéb: { className: "other", icon: Factory, short: "Egyéb" },
+  "Nem részletezett": { className: "unallocated", icon: Question, short: "Nem részl." },
 };
 
 const MIX_HISTORY_KEY = {
@@ -50,6 +52,7 @@ const MIX_HISTORY_KEY = {
   Fosszilis: "fossilMW",
   "Egyéb megújuló": "renewableMW",
   Egyéb: "otherMW",
+  "Nem részletezett": "unallocatedMW",
 };
 
 const FLOW_POSITIONS = {
@@ -717,6 +720,7 @@ const HISTORY_MIX_SERIES = [
   { key: "fossilMW", label: "Fosszilis", color: "#c67260", className: "fossil" },
   { key: "renewableMW", label: "Egyéb megújuló", color: "#62c878", className: "renewable" },
   { key: "otherMW", label: "Egyéb", color: "#718594", className: "other" },
+  { key: "unallocatedMW", label: "Nem részletezett", color: "#a59bc4", className: "unallocated" },
   { key: "positiveImportMW", label: "Behozatal", color: "#f39b45", className: "import" },
 ];
 
@@ -960,6 +964,7 @@ function SourcesDrawer({ data, onClose }) {
 
         <div className="quality-box">
           <div><span>Forrásmix összege</span><b>{data.quality.mixGapMW.toFixed(1)} MW eltérés</b></div>
+          {Number.isFinite(data.quality.unallocatedPlantMW) ? <div><span>MAVIR kategóriákra nem bontott erőművi termelés</span><b>{formatMW(data.quality.unallocatedPlantMW)} MW ({data.quality.unallocatedPlantSharePct.toFixed(1)}%)</b></div> : null}
           <div><span>Erőművi + becsült PV egyezés</span><b>{data.quality.generationDefinitionGapMW.toFixed(1)} MW eltérés</b></div>
           {Number.isFinite(data.quality.paksVsMavirGapMW) ? <div><span>Paks OAH − MAVIR</span><b>{formatSigned(data.quality.paksVsMavirGapMW, 1)} MW eltérés</b></div> : null}
           <div><span>Határáramlások</span><b>{data.quality.flowGapMW.toFixed(1)} MW eltérés</b></div>

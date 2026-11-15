@@ -30,6 +30,14 @@ const FLOW_SCHEDULE_COLUMNS = {
 
 const DISTRIBUTED_SOLAR_COMPLETENESS_THRESHOLD_MW = 250;
 const MAX_PUBLISHABLE_SOURCE_AGE_MS = 90 * 60_000;
+// MAVIR's plant total (G) can exceed the sum of its published plant
+// categories. The difference is published as its own "unallocated" category
+// rather than being folded into a named source; it must stay non-negative and
+// a bounded fraction of plant generation.
+const MAX_UNALLOCATED_PLANT_SHARE = 0.15;
+const PLANT_CATEGORY_COLUMNS = ["H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T"];
+export const MIX_KEYS = ["Atom", "Nap", "Fosszilis", "Egyéb megújuló", "Egyéb", "Nem részletezett"];
+export const HISTORY_MIX_KEYS = ["nuclearMW", "solarMW", "fossilMW", "renewableMW", "otherMW", "unallocatedMW"];
 
 const PLANT_DIRECTORY = {
   paks: {
@@ -115,19 +123,27 @@ function nearestComplete(rows, columns, targetTimestamp, label) {
   });
 }
 
+function plantCategorySumMW(row) {
+  return PLANT_CATEGORY_COLUMNS.reduce((sum, column) => sum + row[column], 0);
+}
+
+export function unallocatedPlantMW(row) {
+  return row.G - plantCategorySumMW(row);
+}
+
 export function systemRowIsSettled(row) {
   const distributedSolarMW = row.U + row.V;
-  const plantMixMW = row.H + row.I + row.J + row.K + row.L + row.M + row.N + row.O + row.P + row.Q + row.R + row.S + row.T;
-  const mixTotalMW = plantMixMW + distributedSolarMW;
   const generationToleranceMW = Math.max(5, row.D * 0.0025);
   const loadToleranceMW = Math.max(5, row.B * 0.0025);
+  const unallocatedMW = unallocatedPlantMW(row);
 
   // MAVIR's extended load (B) and generation (D) both add SCTE + HMKE PV to
   // their operational counterparts (F and G). Their difference from physical
   // net imports can legitimately include losses and other system corrections.
-  return Math.abs(row.G - plantMixMW) <= generationToleranceMW
+  // Plant output not broken down by category must be non-negative and bounded.
+  return unallocatedMW >= -generationToleranceMW
+    && unallocatedMW <= Math.max(generationToleranceMW, row.G * MAX_UNALLOCATED_PLANT_SHARE)
     && Math.abs(row.D - row.G - distributedSolarMW) <= generationToleranceMW
-    && Math.abs(row.D - mixTotalMW) <= generationToleranceMW
     && Math.abs(row.B - row.F - distributedSolarMW) <= loadToleranceMW;
 }
 
@@ -144,6 +160,7 @@ function mixFromRow(row) {
     { key: "Fosszilis", mw: row.I + row.J + row.K + row.L },
     { key: "Egyéb megújuló", mw: row.M + row.N + row.O + row.P + row.Q + row.R },
     { key: "Egyéb", mw: row.S },
+    { key: "Nem részletezett", mw: Math.max(0, unallocatedPlantMW(row)) },
   ];
   const total = values.reduce((sum, item) => sum + item.mw, 0);
   return values.map((item) => ({
@@ -265,7 +282,7 @@ export function normalizeMavirTables({ systemRows, flowRows, frequencyRows, load
   const loadPlanMeanAbsoluteErrorMW = loadHistory24h.reduce((sum, point) => sum + Math.abs(point.deviationMW), 0) / loadHistory24h.length;
 
   const history24h = systemRows.slice(1)
-    .filter((row) => hasFiniteColumns(row, systemColumns) && typeof row.A === "string" && systemSolarComponentsAreCoherent(row))
+    .filter((row) => hasFiniteColumns(row, systemColumns) && typeof row.A === "string" && systemRowIsSettled(row) && systemSolarComponentsAreCoherent(row))
     .map((row) => {
       const rowMix = mixFromRow(row);
       const mixByKey = Object.fromEntries(rowMix.map((item) => [item.key, item.mw]));
@@ -292,6 +309,7 @@ export function normalizeMavirTables({ systemRows, flowRows, frequencyRows, load
         fossilMW: mixByKey.Fosszilis,
         renewableMW: mixByKey["Egyéb megújuló"],
         otherMW: mixByKey.Egyéb,
+        unallocatedMW: mixByKey["Nem részletezett"],
         domesticCoveragePct: rounded((row.D / row.B) * 100, 1),
         lowCarbonSharePct: rounded((rowLowCarbonMW / row.D) * 100, 1),
       };
@@ -362,6 +380,8 @@ export function normalizeMavirTables({ systemRows, flowRows, frequencyRows, load
       systemGapMW: rounded(systemGapMW, 1),
       flowGapMW: rounded(flowGapMW, 1),
       mixGapMW: rounded(mixGapMW, 1),
+      unallocatedPlantMW: rounded(unallocatedPlantMW(systemRow), 1),
+      unallocatedPlantSharePct: rounded((Math.max(0, unallocatedPlantMW(systemRow)) / plantGenerationMW) * 100, 1),
       generationDefinitionGapMW: rounded(generationMW - plantGenerationMW - estimatedDistributedSolarMW, 1),
       mixToleranceMW: rounded(allowedMixGapMW, 1),
       maxFeedOffsetMinutes: rounded(alignmentMinutes, 1),
@@ -408,11 +428,13 @@ export function validateNormalizedEnergyData(data) {
   invariant(Math.abs(netImportMW) < 10_000, "Net import is outside the plausible validation range");
   invariant(domesticCoveragePct >= 0 && domesticCoveragePct <= 250, "Domestic coverage is outside the plausible validation range");
 
-  const expectedMixKeys = ["Atom", "Nap", "Fosszilis", "Egyéb megújuló", "Egyéb"];
+  const expectedMixKeys = MIX_KEYS;
   invariant(Array.isArray(data.mix) && expectedMixKeys.every((key) => data.mix.some((item) => item.key === key)), "Generation mix categories are incomplete");
   data.mix.forEach((item) => invariant(Number.isFinite(item.mw) && item.mw >= 0, `Invalid generation mix value: ${item.key}`));
   const mixTotalMW = data.mix.reduce((sum, item) => sum + item.mw, 0);
   invariant(Math.abs(mixTotalMW - generationMW) <= Math.max(5, generationMW * 0.0025), "Published generation mix does not reconcile");
+  const unallocatedMixMW = data.mix.find((item) => item.key === "Nem részletezett")?.mw;
+  invariant(unallocatedMixMW <= Math.max(5, plantGenerationMW * MAX_UNALLOCATED_PLANT_SHARE) + 1, "Unallocated MAVIR plant output is implausibly large");
   const solarMixMW = data.mix.find((item) => item.key === "Nap")?.mw;
   invariant(Math.abs(solarMixMW - industrialSolarMW - estimatedDistributedSolarMW) <= 1, "Solar generation definitions do not reconcile");
   const lowCarbonMW = data.mix.filter((item) => ["Atom", "Nap", "Egyéb megújuló"].includes(item.key)).reduce((sum, item) => sum + item.mw, 0);
@@ -472,7 +494,7 @@ export function validateNormalizedEnergyData(data) {
     invariant(Array.isArray(paks.blocks) && paks.blocks.length === 4, "OAH Paks block series is incomplete");
     paks.blocks.forEach((block, index) => {
       invariant(block.block === index + 1, "OAH Paks block identifiers are invalid");
-      invariant(Number.isFinite(block.mw) && block.mw >= 0 && block.mw <= 600, "OAH Paks block output is implausible");
+      invariant(Number.isFinite(block.mw) && block.mw >= -50 && block.mw <= 600, "OAH Paks block output is implausible");
     });
     const paksBlockTotalMW = paks.blocks.reduce((sum, block) => sum + block.mw, 0);
     invariant(Math.abs(paksBlockTotalMW - paks.mw) <= 1, "OAH Paks blocks do not reconcile to the plant total");
@@ -503,7 +525,7 @@ export function validateNormalizedEnergyData(data) {
     finite(point.loadMW, `history[${index}].loadMW`);
     finite(point.generationMW, `history[${index}].generationMW`);
     finite(point.importMW, `history[${index}].importMW`);
-    const historicalMixKeys = ["nuclearMW", "solarMW", "fossilMW", "renewableMW", "otherMW"];
+    const historicalMixKeys = HISTORY_MIX_KEYS;
     historicalMixKeys.forEach((key) => finite(point[key], `history[${index}].${key}`));
     ["plantGenerationMW", "industrialSolarMW", "scteSolarMW", "householdSolarMW", "estimatedDistributedSolarMW", "generationDefinitionCorrectionMW"].forEach((key) => finite(point[key], `history[${index}].${key}`));
     const historicalMixTotalMW = historicalMixKeys.reduce((sum, key) => sum + point[key], 0);
